@@ -1026,21 +1026,9 @@ namespace SharpTibiaProxy.Network
         {
             Location location = message.ReadLocation();
             var stack = message.ReadByte();
-            var thingId = message.ReadUShort();
+            var thing = GetThing(message);
 
-            if (thingId == 0x0061 || thingId == 0x0062 || thingId == 0x0063)
-            {
-                //creature turn
-
-                Creature creature = client.BattleList.GetCreature(message.ReadUInt());
-
-                if (creature == null)
-                    throw new Exception("[ParseTileTransformThing] Can't find the creature on the battle list");
-
-                creature.TurnDirection = (Direction)message.ReadByte();
-                creature.IsImpassable = message.ReadByte() != 0;
-            }
-            else
+            if (!location.IsCreature)
             {
                 //get tile
                 Tile tile = client.Map.GetTile(location);
@@ -1048,8 +1036,7 @@ namespace SharpTibiaProxy.Network
                 if (tile == null)
                     throw new Exception("[ParseTileTransformThing] Tile not found.");
 
-                tile.ReplaceThing(stack, GetItem(message, thingId));
-
+                tile.ReplaceThing(stack, thing);
                 client.Map.SetTile(tile);
             }
         }

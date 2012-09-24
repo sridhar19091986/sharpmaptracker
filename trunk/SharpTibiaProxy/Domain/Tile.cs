@@ -8,6 +8,11 @@ namespace SharpTibiaProxy.Domain
 {
     public class Tile
     {
+#if DEBUG_TILE
+        private static readonly Location DEBUG_LOCATION = new Location(32806, 32343, 12);
+        private bool debugEnable;
+#endif
+
         public Location Location { get; private set; }
         public int ThingCount { get { return things.Count; } }
 
@@ -17,6 +22,11 @@ namespace SharpTibiaProxy.Domain
         {
             Location = location;
             things = new List<Thing>();
+
+#if DEBUG_TILE
+            if (location.Equals(DEBUG_LOCATION))
+                debugEnable = true;
+#endif
         }
 
         public void AddThing(Thing thing)
@@ -26,6 +36,10 @@ namespace SharpTibiaProxy.Domain
 
         public void AddThing(int index, Thing thing)
         {
+#if DEBUG_TILE
+            if (debugEnable)
+                Trace.WriteLine("[AddThing] Id: " + thing.Id + ", Index: " + index);
+#endif
             if (thing == null)
                 throw new Exception("[AddThing] Null thing.");
 
@@ -80,6 +94,11 @@ namespace SharpTibiaProxy.Domain
 
         public void RemoveThing(int index)
         {
+#if DEBUG_TILE
+            if (debugEnable)
+                Trace.WriteLine("[RemoveThing] Index: " + index);
+#endif
+
             if (index < 0 || index >= ThingCount)
                 throw new Exception("[RemoveThing] Invalid stack value: " + index);
 
@@ -88,6 +107,11 @@ namespace SharpTibiaProxy.Domain
 
         public Thing GetThing(int index)
         {
+#if DEBUG_TILE
+            if (debugEnable)
+                Trace.WriteLine("[GetThing] Index: " + index);
+#endif
+
             if (index < 0 || index >= ThingCount)
                 throw new Exception("[GetThing] Invalid stack value: " + index);
 
@@ -96,6 +120,11 @@ namespace SharpTibiaProxy.Domain
 
         public void ReplaceThing(int index, Thing thing)
         {
+#if DEBUG_TILE
+            if (debugEnable)
+                Trace.WriteLine("[ReplaceThing] Id: " + thing.Id + ", Index: " + index);
+#endif
+
             if (index < 0 || index >= ThingCount)
                 throw new Exception("[ReplaceThing] Invalid stack value: " + index);
 
@@ -114,6 +143,10 @@ namespace SharpTibiaProxy.Domain
 
         public void Clear()
         {
+#if DEBUG_TILE
+            if (debugEnable)
+                Trace.WriteLine("[Clear]");
+#endif
             things.Clear();
         }
     }
