@@ -32,11 +32,9 @@ namespace SharpTibiaProxy.Domain
 
     public class Map
     {
-        //private const int TILE_CACHE = 4096;
-
         private Client client;
-        private Dictionary<Location, Tile> tiles;
-        //private Tile[, ,] tiles;
+        //private Dictionary<ulong, Tile> tiles;
+        private Tile[,,] tiles;
 
         public event EventHandler<TileAddedEventArgs> TileAdded;
         public event EventHandler<TileUpdatedEventArgs> TileUpdated;
@@ -45,117 +43,66 @@ namespace SharpTibiaProxy.Domain
         public Map(Client client)
         {
             this.client = client;
-            tiles = new Dictionary<Location, Tile>();
-            //this.tiles = new Tile[18, 14, 8];
+            //tiles = new Dictionary<ulong, Tile>();
+            tiles = new Tile[18, 14, 8];
         }
-
-        //public Tile GetTile(int x, int y, int z)
-        //{
-        //    return this.tiles[x % 18, y % 14, z % 8];
-        //}
-
-        //public Tile GetTile(Location location)
-        //{
-        //    return this.GetTile(location.X, location.Y, location.Z);
-        //}
-
-        //internal void SetTile(Tile tile)
-        //{
-        //    var location = tile.Location;
-        //    this.tiles[location.X % 18, location.Y % 14, location.Z % 8] = tile; 
-        //}
-
-        //internal void Clear()
-        //{
-        //    for (int x = 0; x < 18; x++)
-        //    {
-        //        for (int y = 0; y < 14; y++)
-        //        {
-        //            for (int z = 0; z < 8; z++)
-        //            {
-        //                tiles[x, y, z] = null;
-        //            }
-        //        }
-        //    }
-        //}
 
         public void Clear()
         {
-            tiles.Clear();
+            for (int x = 0; x < 18; x++)
+            {
+                for (int y = 0; y < 14; y++)
+                {
+                    for (int z = 0; z < 8; z++)
+                    {
+                        tiles[x, y, z] = null;
+                    }
+                }
+            }
+
+            //tiles.Clear();
         }
 
         public void SetTile(Tile tile)
         {
-            if (tiles.ContainsKey(tile.Location))
+            var location = tile.Location;
+            var oldTile = tiles[location.X % 18, location.Y % 14, location.Z % 8];
+
+            tiles[location.X % 18, location.Y % 14, location.Z % 8] = tile;
+
+            if (oldTile != null && location.Equals(oldTile.Location))
+                OnTileUpdated(tile);
+            else
+                OnTileAdded(tile);
+
+            /*var index = tile.Location.ToIndex();
+            if (tiles.ContainsKey(index))
             {
-                tiles[tile.Location] = tile;
+                tiles[index] = tile;
                 OnTileUpdated(tile);
             }
             else
             {
-                //if (tiles.Count > TILE_CACHE)
-                //{
-                //    var freeTiles = new List<Location>();
-
-                //    foreach (var t in tiles.Values)
-                //    {
-                //        if (!PlayerCanSee(t.Location))
-                //            freeTiles.Add(t.Location);
-                //        if (freeTiles.Count >= 384)
-                //            break;
-                //    }
-
-                //    if (freeTiles.Count == 0)
-                //        throw new Exception("Unable to free tiles.");
-                //    else
-                //    {
-                //        foreach (var t in freeTiles)
-                //            tiles.Remove(t);
-                //    }
-                //}
-
-                tiles[tile.Location] = tile;
+                tiles[index] = tile;
                 OnTileAdded(tile);
-            }
+            }*/
         }
 
         public Tile GetTile(Location location)
         {
-            if (tiles.ContainsKey(location))
-                return tiles[location];
+            var tile =  tiles[location.X % 18, location.Y % 14, location.Z % 8];
 
-            return null;
+            if (!tile.Location.Equals(location))
+                return null;
+
+            return tile;
+
+            /*var index = location.ToIndex();
+            if (tiles.ContainsKey(index))
+                return tiles[index];
+
+            return null;*/
         }
-
-        //private bool PlayerCanSee(Location location)
-        //{
-        //    var playerLocation = client.PlayerLocation;
-        //    if (playerLocation.Z <= 7)
-        //    {
-        //        //we are on ground level or above (7 -> 0)
-        //        //view is from 7 -> 0
-        //        if (location.Z > 7)
-        //            return false;
-        //    }
-        //    else if (playerLocation.Z >= 8)
-        //    {
-        //        //we are underground (8 -> 15)
-        //        //view is +/- 2 from the floor we stand on
-        //        if (Math.Abs((int)playerLocation.Z - location.Z) > 2)
-        //            return false;
-        //    }
-
-        //    //negative offset means that the action taken place is on a lower floor than ourself
-        //    int offsetz = playerLocation.Z - location.Z;
-
-        //    if ((location.X >= (int)playerLocation.X - 9 + offsetz) && (location.X <= (int)playerLocation.X + 10 + offsetz) &&
-        //        (location.Y >= (int)playerLocation.Y - 7 + offsetz) && (location.Y <= (int)playerLocation.Y + 8 + offsetz))
-        //    {
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
 
         protected void OnTileAdded(Tile tile)
         {
