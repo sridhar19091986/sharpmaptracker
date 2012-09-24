@@ -33,7 +33,6 @@ namespace SharpTibiaProxy.Domain
     public class Map
     {
         private Client client;
-        //private Dictionary<ulong, Tile> tiles;
         private Tile[,,] tiles;
 
         public event EventHandler<TileAddedEventArgs> TileAdded;
@@ -43,7 +42,6 @@ namespace SharpTibiaProxy.Domain
         public Map(Client client)
         {
             this.client = client;
-            //tiles = new Dictionary<ulong, Tile>();
             tiles = new Tile[18, 14, 8];
         }
 
@@ -59,8 +57,6 @@ namespace SharpTibiaProxy.Domain
                     }
                 }
             }
-
-            //tiles.Clear();
         }
 
         public void SetTile(Tile tile)
@@ -74,34 +70,11 @@ namespace SharpTibiaProxy.Domain
                 OnTileUpdated(tile);
             else
                 OnTileAdded(tile);
-
-            /*var index = tile.Location.ToIndex();
-            if (tiles.ContainsKey(index))
-            {
-                tiles[index] = tile;
-                OnTileUpdated(tile);
-            }
-            else
-            {
-                tiles[index] = tile;
-                OnTileAdded(tile);
-            }*/
         }
 
         public Tile GetTile(Location location)
         {
-            var tile =  tiles[location.X % 18, location.Y % 14, location.Z % 8];
-
-            if (!tile.Location.Equals(location))
-                return null;
-
-            return tile;
-
-            /*var index = location.ToIndex();
-            if (tiles.ContainsKey(index))
-                return tiles[index];
-
-            return null;*/
+            return tiles[location.X % 18, location.Y % 14, location.Z % 8];
         }
 
         protected void OnTileAdded(Tile tile)

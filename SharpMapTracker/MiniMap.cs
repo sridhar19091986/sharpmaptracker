@@ -24,7 +24,6 @@ namespace SharpMapTracker
             colors = new Dictionary<ulong, Color>();
 
             MouseMove += new MouseEventHandler(MiniMap_MouseMove);
-            MouseWheel += new MouseEventHandler(MiniMap_MouseWheel);
             MouseClick += new MouseEventHandler(MiniMap_MouseClick);
             KeyDown += new KeyEventHandler(MiniMap_KeyDown);
         }
@@ -54,21 +53,6 @@ namespace SharpMapTracker
 
             var pos = LocalToGlobal(e.X, e.Y);
             currentLocation = new Location(pos.X, pos.Y, currentLocation.Z);
-
-            if (updateOngoing == 0)
-                Invalidate();
-        }
-
-        void MiniMap_MouseWheel(object sender, MouseEventArgs e)
-        {
-            if (currentLocation == null)
-                return;
-
-            miniMapSize += e.Delta / 3;
-            if (miniMapSize < 32)
-                miniMapSize = 32;
-            else if (miniMapSize > 1024)
-                miniMapSize = 1024;
 
             if (updateOngoing == 0)
                 Invalidate();
@@ -157,21 +141,6 @@ namespace SharpMapTracker
                     }
                 }
 
-                //int cx = (currentLocation.X - xoffset) * PIXEL_FACTOR;
-                //int cy = (currentLocation.Y - yoffset) * PIXEL_FACTOR;
-
-                //for (int px = 0; px < PIXEL_FACTOR; px++)
-                //{
-                //    for (int py = 0; py < PIXEL_FACTOR; py++)
-                //    {
-                //        processor.SetPixel(cx - 1, cy, Color.White);
-                //        processor.SetPixel(cx + 1, cy, Color.White);
-                //        processor.SetPixel(cx, cy - 1, Color.White);
-                //        processor.SetPixel(cx, cy + 1, Color.White);
-                //        processor.SetPixel(cx, cy, Color.White);
-                //    }
-                //}
-
                 processor.UnlockImage();
 
                 e.Graphics.DrawImage(bitmap, 0, 0, Width, Height);
@@ -183,7 +152,6 @@ namespace SharpMapTracker
 
         private void MiniMap_Load(object sender, EventArgs e)
         {
-
         }
     }
 }

@@ -971,7 +971,7 @@ namespace SharpTibiaProxy.Network
                 Thing thing = tile.GetThing(oldStack);
                 Creature creature = thing as Creature;
                 if (creature == null)
-                    throw new Exception("[ParseCreatureMove] Creature not found on tile.");
+                    return; //The client will send update tile.
 
                 tile.RemoveThing(oldStack);
                 client.Map.SetTile(tile);
@@ -1018,6 +1018,10 @@ namespace SharpTibiaProxy.Network
             Tile tile = client.Map.GetTile(location);
             if (tile == null)
                 throw new Exception("[ParseTileRemoveThing] Tile not found.");
+
+            var thing = tile.GetThing(stack);
+            if (thing == null) // The client will send update tile.
+                return;
 
             tile.RemoveThing(stack);
         }

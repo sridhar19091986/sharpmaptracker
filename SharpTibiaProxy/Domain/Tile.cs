@@ -113,7 +113,7 @@ namespace SharpTibiaProxy.Domain
 #endif
 
             if (index < 0 || index >= ThingCount)
-                throw new Exception("[GetThing] Invalid stack value: " + index);
+                return null;
 
             return things[index];
         }
