@@ -1036,9 +1036,12 @@ namespace SharpTibiaProxy.Network
             {
                 //get tile
                 Tile tile = client.Map.GetTile(location);
-
                 if (tile == null)
                     throw new Exception("[ParseTileTransformThing] Tile not found.");
+
+                var oldThing = tile.GetThing(stack);
+                if (oldThing == null)
+                    return; // the client will send update tile.
 
                 tile.ReplaceThing(stack, thing);
                 client.Map.SetTile(tile);
