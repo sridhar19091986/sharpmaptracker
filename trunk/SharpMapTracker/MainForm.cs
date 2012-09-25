@@ -18,6 +18,8 @@ namespace SharpMapTracker
 {
     public partial class MainForm : Form
     {
+        private const int MAP_SCROLL_SPEED = 8;
+
         private Client client;
         private Otb otb;
 
@@ -43,7 +45,50 @@ namespace SharpMapTracker
             DataBindings.Add("TrackCreatures", trackCreaturesCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
+            Trace.Listeners.Add(new TextWriterTraceListener("log.txt"));
+
             Trace.AutoFlush = true;
+
+            KeyDown += new KeyEventHandler(MainForm_KeyDown);
+        }
+
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.PageUp)
+            {
+                e.SuppressKeyPress = true;
+                miniMap.Floor++;
+            }
+            else if (e.KeyCode == Keys.PageDown)
+            {
+                e.SuppressKeyPress = true;
+                miniMap.Floor--;
+            }
+            else if (e.KeyCode == Keys.Up)
+            {
+                e.SuppressKeyPress = true;
+                if (miniMap.CenterLocation != null)
+                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X, miniMap.CenterLocation.Y - MAP_SCROLL_SPEED, miniMap.CenterLocation.Z);
+            }
+            else if (e.KeyCode == Keys.Down)
+            {
+                e.SuppressKeyPress = true;
+                if (miniMap.CenterLocation != null)
+                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X, miniMap.CenterLocation.Y + MAP_SCROLL_SPEED, miniMap.CenterLocation.Z);
+            }
+            else if (e.KeyCode == Keys.Left)
+            {
+                e.SuppressKeyPress = true;
+                if (miniMap.CenterLocation != null)
+                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X - MAP_SCROLL_SPEED, miniMap.CenterLocation.Y, miniMap.CenterLocation.Z);
+            }
+            else if (e.KeyCode == Keys.Right)
+            {
+                e.SuppressKeyPress = true;
+                if (miniMap.CenterLocation != null)
+                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X + MAP_SCROLL_SPEED, miniMap.CenterLocation.Y, miniMap.CenterLocation.Z);
+            }
+
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -160,14 +205,28 @@ namespace SharpMapTracker
                         tiles[mapTile.Location] = mapTile;
                     }
 
-                    miniMap.SetLocation(client.PlayerLocation);
+                    miniMap.CenterLocation = client.PlayerLocation;
                     miniMap.EndUpdate();
+
+                    UpdateCounters(tiles.Count, creatures.Count);
                 }
             }
             catch (Exception ex)
             {
                 Trace.WriteLine("[Error] Unable to convert tibia tile to open tibia tile. Details: " + ex.Message);
             }
+        }
+
+        private void UpdateCounters(int tileCount, int creatureCount)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<int, int>(UpdateCounters), tileCount, creatureCount);
+                return;
+            }
+
+            tileCountTextBox.Text = tileCount.ToString();
+            creatureCountTextBox.Text = creatureCount.ToString();
         }
 
         private void LoadItems()
@@ -240,6 +299,7 @@ namespace SharpMapTracker
 
                     var reader = new TibiaCastReader(client);
                     reader.BeginRead(openFileDialog.FileNames, ReadTibiaCastFilesCallback, null);
+
                 }
                 catch (Exception ex)
                 {
@@ -270,7 +330,15 @@ namespace SharpMapTracker
                 creatures.Clear();
                 miniMap.Clear();
                 traceTextBox.Text = "";
+                tileCountTextBox.Text = "0";
+                creatureCountTextBox.Text = "0";
             }
+        }
+
+        private void otserverCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (client != null)
+                client.IsOpenTibiaServer = otserverCheckBox.Checked;
         }
     }
 }

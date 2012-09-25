@@ -36,8 +36,17 @@
             this.trackcamButton = new System.Windows.Forms.Button();
             this.trackMoveableItemCheckBox = new System.Windows.Forms.CheckBox();
             this.trackSplashItemsCheckBox = new System.Windows.Forms.CheckBox();
-            this.miniMap = new SharpMapTracker.MiniMap();
             this.trackCreaturesCheckBox = new System.Windows.Forms.CheckBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tileCountTextBox = new System.Windows.Forms.TextBox();
+            this.creatureCountTextBox = new System.Windows.Forms.TextBox();
+            this.otserverCheckBox = new System.Windows.Forms.CheckBox();
+            this.miniMap = new SharpMapTracker.MiniMap();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // traceTextBox
@@ -49,7 +58,7 @@
             this.traceTextBox.Name = "traceTextBox";
             this.traceTextBox.ReadOnly = true;
             this.traceTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.traceTextBox.Size = new System.Drawing.Size(504, 131);
+            this.traceTextBox.Size = new System.Drawing.Size(587, 131);
             this.traceTextBox.TabIndex = 0;
             // 
             // clearButton
@@ -66,7 +75,7 @@
             // saveMapButton
             // 
             this.saveMapButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.saveMapButton.Location = new System.Drawing.Point(13, 52);
+            this.saveMapButton.Location = new System.Drawing.Point(151, 12);
             this.saveMapButton.Name = "saveMapButton";
             this.saveMapButton.Size = new System.Drawing.Size(129, 34);
             this.saveMapButton.TabIndex = 4;
@@ -76,11 +85,10 @@
             // 
             // topMostCheckBox
             // 
-            this.topMostCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.topMostCheckBox.AutoSize = true;
             this.topMostCheckBox.Checked = true;
             this.topMostCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.topMostCheckBox.Location = new System.Drawing.Point(13, 266);
+            this.topMostCheckBox.Location = new System.Drawing.Point(142, 42);
             this.topMostCheckBox.Name = "topMostCheckBox";
             this.topMostCheckBox.Size = new System.Drawing.Size(92, 17);
             this.topMostCheckBox.TabIndex = 5;
@@ -90,9 +98,9 @@
             // trackcamButton
             // 
             this.trackcamButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.trackcamButton.Location = new System.Drawing.Point(13, 92);
+            this.trackcamButton.Location = new System.Drawing.Point(14, 52);
             this.trackcamButton.Name = "trackcamButton";
-            this.trackcamButton.Size = new System.Drawing.Size(129, 50);
+            this.trackcamButton.Size = new System.Drawing.Size(266, 34);
             this.trackcamButton.TabIndex = 10;
             this.trackcamButton.Text = "Track TibiaCast File";
             this.trackcamButton.UseVisualStyleBackColor = true;
@@ -100,11 +108,10 @@
             // 
             // trackMoveableItemCheckBox
             // 
-            this.trackMoveableItemCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.trackMoveableItemCheckBox.AutoSize = true;
             this.trackMoveableItemCheckBox.Checked = true;
             this.trackMoveableItemCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trackMoveableItemCheckBox.Location = new System.Drawing.Point(13, 177);
+            this.trackMoveableItemCheckBox.Location = new System.Drawing.Point(6, 19);
             this.trackMoveableItemCheckBox.Name = "trackMoveableItemCheckBox";
             this.trackMoveableItemCheckBox.Size = new System.Drawing.Size(130, 17);
             this.trackMoveableItemCheckBox.TabIndex = 13;
@@ -113,16 +120,101 @@
             // 
             // trackSplashItemsCheckBox
             // 
-            this.trackSplashItemsCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.trackSplashItemsCheckBox.AutoSize = true;
             this.trackSplashItemsCheckBox.Checked = true;
             this.trackSplashItemsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trackSplashItemsCheckBox.Location = new System.Drawing.Point(13, 200);
+            this.trackSplashItemsCheckBox.Location = new System.Drawing.Point(142, 19);
             this.trackSplashItemsCheckBox.Name = "trackSplashItemsCheckBox";
             this.trackSplashItemsCheckBox.Size = new System.Drawing.Size(98, 17);
             this.trackSplashItemsCheckBox.TabIndex = 14;
             this.trackSplashItemsCheckBox.Text = "Track splashes";
             this.trackSplashItemsCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // trackCreaturesCheckBox
+            // 
+            this.trackCreaturesCheckBox.AutoSize = true;
+            this.trackCreaturesCheckBox.Checked = true;
+            this.trackCreaturesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.trackCreaturesCheckBox.Location = new System.Drawing.Point(6, 42);
+            this.trackCreaturesCheckBox.Name = "trackCreaturesCheckBox";
+            this.trackCreaturesCheckBox.Size = new System.Drawing.Size(101, 17);
+            this.trackCreaturesCheckBox.TabIndex = 16;
+            this.trackCreaturesCheckBox.Text = "Track creatures";
+            this.trackCreaturesCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.otserverCheckBox);
+            this.groupBox1.Controls.Add(this.trackMoveableItemCheckBox);
+            this.groupBox1.Controls.Add(this.trackCreaturesCheckBox);
+            this.groupBox1.Controls.Add(this.trackSplashItemsCheckBox);
+            this.groupBox1.Controls.Add(this.topMostCheckBox);
+            this.groupBox1.Location = new System.Drawing.Point(14, 94);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(266, 88);
+            this.groupBox1.TabIndex = 17;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Options";
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.creatureCountTextBox);
+            this.groupBox2.Controls.Add(this.tileCountTextBox);
+            this.groupBox2.Controls.Add(this.label2);
+            this.groupBox2.Controls.Add(this.label1);
+            this.groupBox2.Location = new System.Drawing.Point(14, 188);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(266, 65);
+            this.groupBox2.TabIndex = 18;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Statistics";
+            // 
+            // label2
+            // 
+            this.label2.Location = new System.Drawing.Point(6, 38);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(101, 13);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "Creature Count:";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(6, 16);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(101, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Tile Count:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // tileCountTextBox
+            // 
+            this.tileCountTextBox.Location = new System.Drawing.Point(113, 13);
+            this.tileCountTextBox.Name = "tileCountTextBox";
+            this.tileCountTextBox.ReadOnly = true;
+            this.tileCountTextBox.Size = new System.Drawing.Size(59, 20);
+            this.tileCountTextBox.TabIndex = 2;
+            this.tileCountTextBox.Text = "0";
+            // 
+            // creatureCountTextBox
+            // 
+            this.creatureCountTextBox.Location = new System.Drawing.Point(113, 35);
+            this.creatureCountTextBox.Name = "creatureCountTextBox";
+            this.creatureCountTextBox.ReadOnly = true;
+            this.creatureCountTextBox.Size = new System.Drawing.Size(59, 20);
+            this.creatureCountTextBox.TabIndex = 3;
+            this.creatureCountTextBox.Text = "0";
+            // 
+            // otserverCheckBox
+            // 
+            this.otserverCheckBox.AutoSize = true;
+            this.otserverCheckBox.Location = new System.Drawing.Point(6, 65);
+            this.otserverCheckBox.Name = "otserverCheckBox";
+            this.otserverCheckBox.Size = new System.Drawing.Size(83, 17);
+            this.otserverCheckBox.TabIndex = 17;
+            this.otserverCheckBox.Text = "Is OTServer";
+            this.otserverCheckBox.UseVisualStyleBackColor = true;
+            this.otserverCheckBox.CheckedChanged += new System.EventHandler(this.otserverCheckBox_CheckedChanged);
             // 
             // miniMap
             // 
@@ -130,45 +222,37 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.miniMap.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.miniMap.Location = new System.Drawing.Point(165, 12);
+            this.miniMap.CenterLocation = null;
+            this.miniMap.Floor = 0;
+            this.miniMap.Location = new System.Drawing.Point(286, 12);
             this.miniMap.Name = "miniMap";
-            this.miniMap.Size = new System.Drawing.Size(352, 271);
+            this.miniMap.Size = new System.Drawing.Size(314, 271);
             this.miniMap.TabIndex = 15;
-            // 
-            // trackCreaturesCheckBox
-            // 
-            this.trackCreaturesCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.trackCreaturesCheckBox.AutoSize = true;
-            this.trackCreaturesCheckBox.Checked = true;
-            this.trackCreaturesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trackCreaturesCheckBox.Location = new System.Drawing.Point(13, 223);
-            this.trackCreaturesCheckBox.Name = "trackCreaturesCheckBox";
-            this.trackCreaturesCheckBox.Size = new System.Drawing.Size(101, 17);
-            this.trackCreaturesCheckBox.TabIndex = 16;
-            this.trackCreaturesCheckBox.Text = "Track creatures";
-            this.trackCreaturesCheckBox.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(529, 433);
-            this.Controls.Add(this.trackCreaturesCheckBox);
+            this.ClientSize = new System.Drawing.Size(612, 433);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.miniMap);
-            this.Controls.Add(this.trackSplashItemsCheckBox);
-            this.Controls.Add(this.trackMoveableItemCheckBox);
             this.Controls.Add(this.trackcamButton);
-            this.Controls.Add(this.topMostCheckBox);
             this.Controls.Add(this.saveMapButton);
             this.Controls.Add(this.clearButton);
             this.Controls.Add(this.traceTextBox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = "SharpMapTracker v0.1";
+            this.Text = "SharpMapTracker";
             this.TopMost = true;
             this.Load += new System.EventHandler(this.MainForm_Load);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -185,5 +269,12 @@
         private System.Windows.Forms.CheckBox trackSplashItemsCheckBox;
         private MiniMap miniMap;
         private System.Windows.Forms.CheckBox trackCreaturesCheckBox;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox creatureCountTextBox;
+        private System.Windows.Forms.TextBox tileCountTextBox;
+        private System.Windows.Forms.CheckBox otserverCheckBox;
     }
 }

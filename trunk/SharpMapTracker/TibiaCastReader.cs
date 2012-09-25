@@ -5,6 +5,7 @@ using SharpTibiaProxy.Domain;
 using SharpTibiaProxy.Network;
 using System.IO.Compression;
 using System.Diagnostics;
+using SharpTibiaProxy;
 
 namespace SharpMapTracker
 {
@@ -50,8 +51,12 @@ namespace SharpMapTracker
         private delegate void ReadDelegate(string[] fileNames);
         public void Read(string[] fileNames)
         {
+            int count = 0;
+
             foreach (var fileName in fileNames)
             {
+                ++count;
+
                 try
                 {
                     if (!File.Exists(fileName))
@@ -60,7 +65,7 @@ namespace SharpMapTracker
                         continue;
                     }
 
-                    Trace.WriteLine("Tracking " + Path.GetFileName(fileName) + ".");
+                    Trace.WriteLine("Tracking " + Path.GetFileName(fileName) + " (" + count + " of " + fileNames.Length + ").");
 
                     using (var fileStream = File.OpenRead(fileName))
                     {
@@ -68,9 +73,9 @@ namespace SharpMapTracker
                         var reader = new BinaryReader(fileStream);
                         var majorVersion = reader.ReadByte();
                         var minorVersion = reader.ReadByte();
-                        uint num = 0;
+                        uint totalTime = 0;
                         if (majorVersion > 4 || (majorVersion == 4 && minorVersion >= 5))
-                            num = reader.ReadUInt32();
+                            totalTime = reader.ReadUInt32();
                         else
                         {
                             Trace.WriteLine("[Error] (" + Path.GetFileName(fileName) + ") Unsupported TibiaCast Version " + majorVersion + "." + minorVersion);
@@ -96,6 +101,7 @@ namespace SharpMapTracker
                             ParsePacket(message);
 
                             nextPacketTime = reader.ReadUInt32();
+
                         } while (packetSize != 0);
                     }
 

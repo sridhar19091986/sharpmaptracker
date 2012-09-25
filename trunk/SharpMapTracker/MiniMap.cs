@@ -15,8 +15,39 @@ namespace SharpMapTracker
         private const int PIXEL_FACTOR = 2;
         private int miniMapSize = 192;
         private Dictionary<ulong, Color> colors;
+
         private int updateOngoing;
-        private Location currentLocation;
+        private Location mapLocation;
+
+        public Location CenterLocation
+        {
+            get { return mapLocation; }
+            set
+            {
+                mapLocation = value;
+                if (updateOngoing == 0)
+                    Invalidate();
+            }
+        }
+
+        public int Floor
+        {
+            get { return mapLocation != null ? mapLocation.Z : 0; }
+            set
+            {
+                if (mapLocation == null)
+                    return;
+                if (value > 15)
+                    value = 15;
+                else if (value < 0)
+                    value = 0;
+
+                mapLocation = new Location(mapLocation.X, mapLocation.Y, value);
+
+                if (updateOngoing == 0)
+                    Invalidate();
+            }
+        }
 
         public MiniMap()
         {
@@ -25,34 +56,15 @@ namespace SharpMapTracker
 
             MouseMove += new MouseEventHandler(MiniMap_MouseMove);
             MouseClick += new MouseEventHandler(MiniMap_MouseClick);
-            KeyDown += new KeyEventHandler(MiniMap_KeyDown);
-        }
-
-        void MiniMap_KeyDown(object sender, KeyEventArgs e)
-        {
-            var newZ = currentLocation.Z;
-            if (e.KeyCode == Keys.PageDown)
-                newZ++;
-            else if (e.KeyCode == Keys.PageUp)
-                newZ--;
-            if (newZ > 15)
-                newZ = 15;
-            else if (newZ < 0)
-                newZ = 0;
-
-            currentLocation = new Location(currentLocation.X, currentLocation.Y, newZ);
-
-            if (updateOngoing == 0)
-                Invalidate();
         }
 
         void MiniMap_MouseClick(object sender, MouseEventArgs e)
         {
-            if (currentLocation == null)
+            if (CenterLocation == null)
                 return;
 
             var pos = LocalToGlobal(e.X, e.Y);
-            currentLocation = new Location(pos.X, pos.Y, currentLocation.Z);
+            CenterLocation = new SharpTibiaProxy.Domain.Location(pos.X, pos.Y, CenterLocation.Z);
 
             if (updateOngoing == 0)
                 Invalidate();
@@ -60,17 +72,17 @@ namespace SharpMapTracker
 
         void MiniMap_MouseMove(object sender, MouseEventArgs e)
         {
-            if (currentLocation == null)
+            if (CenterLocation == null)
                 return;
 
             var pos = LocalToGlobal(e.X, e.Y);
-            coorLabel.Text = String.Format("[{0}, {1}, {2}]", pos.X, pos.Y, currentLocation.Z);
+            coorLabel.Text = String.Format("[{0}, {1}, {2}]", pos.X, pos.Y, CenterLocation.Z);
         }
 
         protected Point LocalToGlobal(int x, int y)
         {
-            int xoffset = currentLocation.X - miniMapSize / 2;
-            int yoffset = currentLocation.Y - miniMapSize / 2;
+            int xoffset = mapLocation.X - miniMapSize / 2;
+            int yoffset = mapLocation.Y - miniMapSize / 2;
 
             return new Point(((x * miniMapSize) / Width) + xoffset, ((y * miniMapSize) / Height) + yoffset);
         }
@@ -95,13 +107,6 @@ namespace SharpMapTracker
                 Invalidate();
         }
 
-        public void SetLocation(Location location)
-        {
-            currentLocation = location;
-            if (updateOngoing == 0)
-                Invalidate();
-        }
-
         public void Clear()
         {
             colors.Clear();
@@ -111,15 +116,15 @@ namespace SharpMapTracker
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (currentLocation != null)
+            if (CenterLocation != null)
             {
                 Bitmap bitmap = new Bitmap(miniMapSize * PIXEL_FACTOR, miniMapSize * PIXEL_FACTOR);
                 FastBitmap processor = new FastBitmap(bitmap);
 
                 processor.LockImage();
 
-                int xoffset = currentLocation.X - miniMapSize / 2;
-                int yoffset = currentLocation.Y - miniMapSize / 2;
+                int xoffset = CenterLocation.X - miniMapSize / 2;
+                int yoffset = CenterLocation.Y - miniMapSize / 2;
 
                 for (int x = 0; x < miniMapSize; x++)
                 {
@@ -127,7 +132,7 @@ namespace SharpMapTracker
                     {
                         var color = Color.Black;
 
-                        var index = SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, currentLocation.Z);
+                        var index = SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z);
                         if (colors.ContainsKey(index))
                             color = colors[index];
 
@@ -148,10 +153,6 @@ namespace SharpMapTracker
             }
             else
                 base.OnPaint(e);
-        }
-
-        private void MiniMap_Load(object sender, EventArgs e)
-        {
         }
     }
 }

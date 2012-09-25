@@ -49,7 +49,6 @@
             this.Controls.Add(this.coorLabel);
             this.Name = "MiniMap";
             this.Size = new System.Drawing.Size(342, 308);
-            this.Load += new System.EventHandler(this.MiniMap_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -38,6 +38,8 @@ namespace SharpTibiaProxy.Domain
 
         private IntPtr handle;
 
+        public bool IsOpenTibiaServer { get; set; }
+
         public uint PlayerId { get; set; }
         public Location PlayerLocation { get; set; }
         public bool PlayerCanReportBugs { get; set; }
