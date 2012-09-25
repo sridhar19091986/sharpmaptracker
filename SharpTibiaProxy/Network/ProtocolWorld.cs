@@ -281,7 +281,7 @@ namespace SharpTibiaProxy.Network
             }
             catch (Exception ex)
             {
-                Trace.TraceWarning(ex.Message + "\nLast Packets: " + packets.ToArray().ToHexString() + 
+                Trace.TraceWarning(ex.Message + "\nLast Packets: " + packets.ToArray().ToHexString() +
                     "\nPacket Bytes: " + message.Buffer.ToHexString(packetStart, message.ReadPosition - packetStart));
             }
         }
@@ -489,6 +489,13 @@ namespace SharpTibiaProxy.Network
                 var outfitID = message.ReadUShort();
                 var name = message.ReadString();
                 var addons = message.ReadByte();
+            }
+
+            int mountCount = message.ReadByte();
+            for (int i = 0; i < mountCount; ++i)
+            {
+                int mountId = message.ReadUShort(); // mount type
+                string mountName = message.ReadString(); // mount name
             }
         }
 

@@ -34,7 +34,7 @@ namespace SharpTibiaProxy.Network
         private OutMessage clientOutMessage;
 
         private InMessage serverInMessage;
-        private OutMessage servertOutMessage;
+        private OutMessage serverOutMessage;
 
         private bool accepting;
 
@@ -65,7 +65,7 @@ namespace SharpTibiaProxy.Network
             clientOutMessage = new OutMessage();
 
             serverInMessage = new InMessage();
-            servertOutMessage = new OutMessage();
+            serverOutMessage = new OutMessage();
 
             StartListen();
         }
@@ -348,9 +348,9 @@ namespace SharpTibiaProxy.Network
 
                 Rsa.OpenTibiaDecrypt(clientInMessage);
 
-                Array.Copy(clientInMessage.Buffer, servertOutMessage.Buffer, clientInMessage.Size);
-                servertOutMessage.Size = clientInMessage.Size;
-                servertOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
+                Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
+                serverOutMessage.Size = clientInMessage.Size;
+                serverOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
 
                 xteaKey = new uint[4];
                 xteaKey[0] = clientInMessage.ReadUInt();
@@ -361,14 +361,18 @@ namespace SharpTibiaProxy.Network
                 var acc = clientInMessage.ReadString(); //account name
                 var pass = clientInMessage.ReadString(); //password
 
-                Rsa.RealTibiaEncrypt(servertOutMessage);
-                Adler.Generate(servertOutMessage, true);
-                servertOutMessage.WriteHead();
+                if (client.IsOpenTibiaServer)
+                    Rsa.OpenTibiaEncrypt(serverOutMessage);
+                else
+                    Rsa.RealTibiaEncrypt(serverOutMessage);
+
+                Adler.Generate(serverOutMessage, true);
+                serverOutMessage.WriteHead();
 
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 serverSocket.Connect(loginServers[0].Server, loginServers[0].Port);
 
-                serverSocket.Send(servertOutMessage.Buffer, 0, servertOutMessage.Size, SocketFlags.None);
+                serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
 
                 serverInMessage.Reset();
                 serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
@@ -382,9 +386,9 @@ namespace SharpTibiaProxy.Network
 
                 Rsa.OpenTibiaDecrypt(clientInMessage);
 
-                Array.Copy(clientInMessage.Buffer, servertOutMessage.Buffer, clientInMessage.Size);
-                servertOutMessage.Size = clientInMessage.Size;
-                servertOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
+                Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
+                serverOutMessage.Size = clientInMessage.Size;
+                serverOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
 
                 xteaKey = new uint[4];
                 xteaKey[0] = clientInMessage.ReadUInt();
@@ -398,11 +402,15 @@ namespace SharpTibiaProxy.Network
                 var characterName = clientInMessage.ReadString();
                 var password = clientInMessage.ReadString();
 
-                Rsa.RealTibiaEncrypt(servertOutMessage);
-                Adler.Generate(servertOutMessage, true);
-                servertOutMessage.WriteHead();
+                if (client.IsOpenTibiaServer)
+                    Rsa.OpenTibiaEncrypt(serverOutMessage);
+                else
+                    Rsa.RealTibiaEncrypt(serverOutMessage);
 
-                serverSocket.Send(servertOutMessage.Buffer, 0, servertOutMessage.Size, SocketFlags.None);
+                Adler.Generate(serverOutMessage, true);
+                serverOutMessage.WriteHead();
+
+                serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
             }
             else
             {
@@ -446,7 +454,7 @@ namespace SharpTibiaProxy.Network
             clientInMessage.Reset();
             clientOutMessage.Reset();
             serverInMessage.Reset();
-            servertOutMessage.Reset();
+            serverOutMessage.Reset();
 
             StartListen();
         }

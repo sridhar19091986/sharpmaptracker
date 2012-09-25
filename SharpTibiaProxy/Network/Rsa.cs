@@ -11,6 +11,7 @@ namespace SharpTibiaProxy.Network
     public class Rsa
     {
         private static readonly RsaEngine openTibiaDecryptEngine;
+        private static readonly RsaEngine openTibiaEncryptEngine;
         private static readonly RsaEngine realTibiaEncryptEngine;
 
         static Rsa()
@@ -25,6 +26,10 @@ namespace SharpTibiaProxy.Network
             var realTibiaEncryptKey = new RsaKeyParameters(false, new BigInteger(Constants.RSAKey.RealTibiaM), new BigInteger(Constants.RSAKey.RealTibiaE));
             realTibiaEncryptEngine = new RsaEngine();
             realTibiaEncryptEngine.Init(true, realTibiaEncryptKey);
+
+            var openTibiaEncryptKey = new RsaKeyParameters(false, new BigInteger(Constants.RSAKey.OpenTibiaM), new BigInteger(Constants.RSAKey.OpenTibiaE));
+            openTibiaEncryptEngine = new RsaEngine();
+            openTibiaEncryptEngine.Init(true, openTibiaEncryptKey);
         }
 
         public static void OpenTibiaDecrypt(InMessage msg)
@@ -48,15 +53,25 @@ namespace SharpTibiaProxy.Network
             msg.Encrypted = false;
         }
 
-        public static void RealTibiaEncrypt(OutMessage msg)
+        private static void Encrypt(OutMessage msg, RsaEngine engine)
         {
-            var encrpted = realTibiaEncryptEngine.ProcessBlock(msg.Buffer, msg.WritePosition, 128);
-            
+            var encrpted = engine.ProcessBlock(msg.Buffer, msg.WritePosition, 128);
+
             if (msg.WritePosition + 128 > msg.Size)
                 msg.Size = msg.WritePosition + 128;
 
             Array.Copy(encrpted, 0, msg.Buffer, msg.WritePosition, 128);
             msg.Encrypted = true;
+        }
+
+        public static void OpenTibiaEncrypt(OutMessage msg)
+        {
+            Encrypt(msg, openTibiaEncryptEngine);
+        }
+
+        public static void RealTibiaEncrypt(OutMessage msg)
+        {
+            Encrypt(msg, realTibiaEncryptEngine);
         }
     }
 }
