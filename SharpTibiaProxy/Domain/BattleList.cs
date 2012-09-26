@@ -37,7 +37,6 @@ namespace SharpTibiaProxy.Domain
                 creatures.Remove(id);
         }
 
-
         internal void Clear()
         {
             

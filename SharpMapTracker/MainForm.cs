@@ -9,10 +9,10 @@ using System.Windows.Forms;
 using SharpTibiaProxy.Domain;
 using System.Diagnostics;
 using System.IO;
-using SharpTibiaProxy.Memory;
 using SharpTibiaProxy;
 using SharpTibiaProxy.Network;
 using System.Threading;
+using SharpTibiaProxy.Util;
 
 namespace SharpMapTracker
 {
@@ -23,8 +23,9 @@ namespace SharpMapTracker
         private Client client;
         private Otb otb;
 
-        private Dictionary<Location, OtMapTile> tiles;
+        private Dictionary<ulong, OtMapTile> tiles;
         private Dictionary<uint, OtMapCreature> creatures;
+        private HashSet<ulong> creatureLocations;
 
         public bool TrackMoveableItems { get; set; }
         public bool TrackSplashItems { get; set; }
@@ -36,8 +37,9 @@ namespace SharpMapTracker
 
             Text = "SharpMapTracker v" + Constants.MAP_TRACKER_VERSION;
 
-            tiles = new Dictionary<Location, OtMapTile>();
+            tiles = new Dictionary<ulong, OtMapTile>();
             creatures = new Dictionary<uint, OtMapCreature>();
+            creatureLocations = new HashSet<ulong>();
 
             DataBindings.Add("TopMost", topMostCheckBox, "Checked");
             DataBindings.Add("TrackMoveableItems", trackMoveableItemCheckBox, "Checked");
@@ -94,41 +96,6 @@ namespace SharpMapTracker
         private void MainForm_Load(object sender, EventArgs e)
         {
             LoadItems();
-            LoadClient();
-        }
-
-        private void LoadClient()
-        {
-            if (client != null)
-                return;
-
-            try
-            {
-                foreach (Process process in Process.GetProcesses())
-                {
-                    StringBuilder classname = new StringBuilder();
-                    WinApi.GetClassName(process.MainWindowHandle, classname, 12);
-
-                    if (classname.ToString().Equals("TibiaClient", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        if (process.MainModule.FileVersionInfo.FileVersion == "9.6.3.0")
-                            client = new Client(process);
-                    }
-                }
-
-                if (client != null)
-                {
-                    client.EnableProxy();
-                    client.Map.Updated += Map_Updated;
-                    Trace.WriteLine("Client successfully loaded.");
-                }
-                else
-                    Trace.WriteLine("[Error] Tibia client not found.");
-            }
-            catch (Exception e)
-            {
-                Trace.WriteLine("[Error] Unable to locate tibia client. Details: " + e.Message);
-            }
         }
 
         private void Map_Updated(object sender, MapUpdatedEventArgs e)
@@ -141,8 +108,10 @@ namespace SharpMapTracker
 
                     foreach (var tile in e.Tiles)
                     {
+                        var index = tile.Location.ToIndex();
+
                         OtMapTile mapTile = null;
-                        tiles.TryGetValue(tile.Location, out mapTile);
+                        tiles.TryGetValue(index, out mapTile);
                         if (mapTile == null)
                             mapTile = new OtMapTile();
 
@@ -163,6 +132,10 @@ namespace SharpMapTracker
                                 if (creature.Type != CreatureType.MONSTER || creatures.ContainsKey(creature.Id))
                                     continue;
 
+                                if (creatureLocations.Contains(index))
+                                    continue;
+
+                                creatureLocations.Add(index);
                                 creatures.Add(creature.Id, new OtMapCreature { Id = creature.Id, Name = creature.Name, Location = creature.Location });
                             }
                             else if (thing is Item)
@@ -202,7 +175,7 @@ namespace SharpMapTracker
                         }
 
                         miniMap.SetColor(mapTile.Location, mapTile.MapColor);
-                        tiles[mapTile.Location] = mapTile;
+                        tiles[index] = mapTile;
                     }
 
                     miniMap.CenterLocation = client.PlayerLocation;
@@ -231,26 +204,17 @@ namespace SharpMapTracker
 
         private void LoadItems()
         {
-            if (File.Exists("items.otb"))
+            try
             {
-                try
-                {
-                    var otbReader = new OtbReader();
-                    otb = otbReader.Open("items.otb", false);
-                    Trace.WriteLine("Open Tibia items successfully loaded.");
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show(this, "Unable to load items.otb. Details: " + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Application.Exit();
-                }
+                var otbReader = new OtbReader();
+                otb = otbReader.Open("items.otb", false);
+                Trace.WriteLine("Open Tibia items successfully loaded.");
             }
-            else
+            catch (Exception e)
             {
-                MessageBox.Show(this, "File items.otb not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Unable to load items.otb. Details: " + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Application.Exit();
             }
-
         }
 
         private void saveMapButton_Click(object sender, EventArgs e)
@@ -335,10 +299,35 @@ namespace SharpMapTracker
             }
         }
 
-        private void otserverCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void loadClientButton_Click(object sender, EventArgs e)
         {
-            if (client != null)
-                client.IsOpenTibiaServer = otserverCheckBox.Checked;
+            try
+            {
+                if (client != null)
+                {
+                    client.DisableProxy();
+                    client = null;
+                }
+
+                var chooserOptions = new ClientChooserOptions();
+                chooserOptions.Version = SharpTibiaProxy.Constants.Versions.Version963;
+                chooserOptions.Smart = true;
+                chooserOptions.ShowOTOption = true;
+                chooserOptions.OfflineOnly = true;
+
+                client = ClientChooser.ShowBox(chooserOptions);
+
+                if (client != null)
+                {
+                    client.EnableProxy();
+                    client.Map.Updated += Map_Updated;
+                    Trace.WriteLine("Client successfully loaded.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("[Error] Unable to load tibia client. Details: " + ex.Message);
+            }
         }
     }
 }

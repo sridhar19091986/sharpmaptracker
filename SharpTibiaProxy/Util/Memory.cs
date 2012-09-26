@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpTibiaProxy.Memory
+namespace SharpTibiaProxy.Util
 {
     /// <summary>
     /// Helper methods for reading memory.

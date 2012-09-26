@@ -58,7 +58,6 @@
     <Compile Include="Domain\Creature.cs" />
     <Compile Include="Domain\Direction.cs" />
     <Compile Include="Domain\Item.cs" />
-    <Compile Include="Domain\ItemList.cs" />
     <Compile Include="Domain\Items.cs" />
     <Compile Include="Domain\ItemType.cs" />
     <Compile Include="Domain\Location.cs" />
@@ -70,9 +69,18 @@
     <Compile Include="Domain\Thing.cs" />
     <Compile Include="Domain\Tile.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="Memory\Memory.cs" />
-    <Compile Include="Memory\WinApi.cs" />
-    <Compile Include="Misc.cs" />
+    <Compile Include="Util\MemoryAddresses.cs" />
+    <Compile Include="Util\Memory.cs" />
+    <Compile Include="Util\WinApi.cs" />
+    <Compile Include="Util\ClientChooser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Util\ClientChooser.designer.cs">
+      <DependentUpon>ClientChooser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Util\ClientChooserBase.cs" />
+    <Compile Include="Util\ClientChooserOptions.cs" />
+    <Compile Include="Util\Misc.cs" />
     <Compile Include="Network\Adler.cs" />
     <Compile Include="Network\InMessage.cs" />
     <Compile Include="Network\NetworkException.cs" />
@@ -86,6 +94,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="BouncyCastle.Crypto.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Util\ClientChooser.resx">
+      <DependentUpon>ClientChooser.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
