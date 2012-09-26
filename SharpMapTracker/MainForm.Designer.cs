@@ -45,6 +45,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.loadClientButton = new System.Windows.Forms.Button();
             this.miniMap = new SharpMapTracker.MiniMap();
+            this.trackOnlyCurrentFloorCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -144,13 +145,14 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.trackOnlyCurrentFloorCheckBox);
             this.groupBox1.Controls.Add(this.trackMoveableItemCheckBox);
             this.groupBox1.Controls.Add(this.trackCreaturesCheckBox);
             this.groupBox1.Controls.Add(this.trackSplashItemsCheckBox);
             this.groupBox1.Controls.Add(this.topMostCheckBox);
             this.groupBox1.Location = new System.Drawing.Point(14, 94);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(266, 66);
+            this.groupBox1.Size = new System.Drawing.Size(266, 89);
             this.groupBox1.TabIndex = 17;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Options";
@@ -161,7 +163,7 @@
             this.groupBox2.Controls.Add(this.tileCountTextBox);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.label1);
-            this.groupBox2.Location = new System.Drawing.Point(14, 166);
+            this.groupBox2.Location = new System.Drawing.Point(14, 189);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(266, 65);
             this.groupBox2.TabIndex = 18;
@@ -228,6 +230,18 @@
             this.miniMap.Size = new System.Drawing.Size(314, 271);
             this.miniMap.TabIndex = 15;
             // 
+            // trackOnlyCurrentFloorCheckBox
+            // 
+            this.trackOnlyCurrentFloorCheckBox.AutoSize = true;
+            this.trackOnlyCurrentFloorCheckBox.Checked = true;
+            this.trackOnlyCurrentFloorCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.trackOnlyCurrentFloorCheckBox.Location = new System.Drawing.Point(6, 65);
+            this.trackOnlyCurrentFloorCheckBox.Name = "trackOnlyCurrentFloorCheckBox";
+            this.trackOnlyCurrentFloorCheckBox.Size = new System.Drawing.Size(135, 17);
+            this.trackOnlyCurrentFloorCheckBox.TabIndex = 17;
+            this.trackOnlyCurrentFloorCheckBox.Text = "Track only current floor";
+            this.trackOnlyCurrentFloorCheckBox.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -276,5 +290,6 @@
         private System.Windows.Forms.TextBox creatureCountTextBox;
         private System.Windows.Forms.TextBox tileCountTextBox;
         private System.Windows.Forms.Button loadClientButton;
+        private System.Windows.Forms.CheckBox trackOnlyCurrentFloorCheckBox;
     }
 }

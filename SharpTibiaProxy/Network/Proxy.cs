@@ -90,6 +90,10 @@ namespace SharpTibiaProxy.Network
                     if (accepting)
                         return;
 
+#if DEBUG_PROXY
+                    Trace.WriteLine("[DEBUG] Proxy [StartListen]");
+#endif
+
                     protocol = Protocol.None;
 
                     loginClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -120,6 +124,10 @@ namespace SharpTibiaProxy.Network
                 {
                     if (!accepting)
                         return;
+
+#if DEBUG_PROXY
+                    Trace.WriteLine("[DEBUG] Proxy [ClientBeginAcceptCallback]");
+#endif
 
                     if (loginClientSocket == null || worldClientSocket == null)
                         return;
@@ -166,6 +174,10 @@ namespace SharpTibiaProxy.Network
                 if (serverSocket == null)
                     return;
 
+#if DEBUG_PROXY
+                Trace.WriteLine("[DEBUG] Proxy [ServerReceiveCallback]");
+#endif
+
                 int count = serverSocket.EndReceive(ar);
 
                 if (count <= 0)
@@ -191,13 +203,18 @@ namespace SharpTibiaProxy.Network
             }
             catch (Exception ex)
             {
-                //Trace.WriteLine("[Error] Proxy [ServerReceiveCallback]: " + ex.Message);
+#if DEBUG_PROXY
+                Trace.WriteLine("[DEBUG] Proxy [ServerReceiveCallback] " + ex.Message);
+#endif
                 Restart();
             }
         }
 
         private void ParseServerMessage()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseServerMessage]");
+#endif
             switch (protocol)
             {
                 case Protocol.None:
@@ -214,6 +231,9 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerWorldMessage()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseServerWorldMessage]");
+#endif
             clientOutMessage.Reset();
             Array.Copy(serverInMessage.Buffer, clientOutMessage.Buffer, serverInMessage.Size);
             clientOutMessage.Size = serverInMessage.Size;
@@ -234,6 +254,9 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerLoginMessage()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseServerLoginMessage]");
+#endif
             serverInMessage.ReadPosition = 2;
 
             if (Adler.Generate(serverInMessage) != serverInMessage.ReadChecksum())
@@ -304,6 +327,10 @@ namespace SharpTibiaProxy.Network
                 if (clientSocket == null)
                     return;
 
+#if DEBUG_PROXY
+                Trace.WriteLine("[DEBUG] Proxy [ClientReceiveCallback]");
+#endif
+
                 int count = clientSocket.EndReceive(ar);
 
                 if (count <= 0)
@@ -329,13 +356,19 @@ namespace SharpTibiaProxy.Network
             }
             catch (Exception ex)
             {
-                //Trace.WriteLine("[Error] Proxy [ClientReceiveCallback]: " + ex.Message);
+#if DEBUG_PROXY
+                Trace.WriteLine("[DEBUG] Proxy [ClientReceiveCallback] " + ex.Message);
+#endif
                 Restart();
             }
         }
 
         private void ParseClientMessage()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseClientMessage]");
+#endif
+
             switch (protocol)
             {
                 case Protocol.None:
@@ -351,6 +384,10 @@ namespace SharpTibiaProxy.Network
 
         private void ParseFirstClientMessage()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseFirstClientMessage]");
+#endif
+
             clientInMessage.ReadPosition = 2;
             clientInMessage.Encrypted = false;
 
@@ -443,11 +480,19 @@ namespace SharpTibiaProxy.Network
 
         private void ParseClientWorldMessage()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseClientWorldMessage]");
+#endif
+
             serverSocket.Send(clientInMessage.Buffer, 0, clientInMessage.Size, SocketFlags.None);
         }
 
         private void Close()
         {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [Close]");
+#endif
+
             if (loginClientSocket != null)
             {
                 try
@@ -502,38 +547,26 @@ namespace SharpTibiaProxy.Network
 
         private void Restart()
         {
-            if (clientSocket != null && clientSocket.Connected)
+            lock (this)
             {
-                try
-                {
-                    clientSocket.Close();
-                    clientSocket = null;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
-                }
+                if (accepting)
+                    return;
+
+#if DEBUG_PROXY
+                Trace.WriteLine("[DEBUG] Proxy [Restart]");
+#endif
+
+                Thread.Sleep(500);
+
+                Close();
+
+                clientInMessage.Reset();
+                clientOutMessage.Reset();
+                serverInMessage.Reset();
+                serverOutMessage.Reset();
+
+                StartListen();
             }
-
-            if (serverSocket != null && serverSocket.Connected)
-            {
-                try
-                {
-                    serverSocket.Close();
-                    serverSocket = null;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
-                }
-            }
-
-            clientInMessage.Reset();
-            clientOutMessage.Reset();
-            serverInMessage.Reset();
-            serverOutMessage.Reset();
-
-            StartListen();
         }
 
         private static int GetFreePort()

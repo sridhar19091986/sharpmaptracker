@@ -30,6 +30,7 @@ namespace SharpMapTracker
         public bool TrackMoveableItems { get; set; }
         public bool TrackSplashItems { get; set; }
         public bool TrackCreatures { get; set; }
+        public bool TrackOnlyCurrentFloor { get; set; }
 
         public MainForm()
         {
@@ -45,6 +46,7 @@ namespace SharpMapTracker
             DataBindings.Add("TrackMoveableItems", trackMoveableItemCheckBox, "Checked");
             DataBindings.Add("TrackSplashItems", trackSplashItemsCheckBox, "Checked");
             DataBindings.Add("TrackCreatures", trackCreaturesCheckBox, "Checked");
+            DataBindings.Add("TrackOnlyCurrentFloor", trackOnlyCurrentFloorCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
             Trace.Listeners.Add(new TextWriterTraceListener("log.txt"));
@@ -108,6 +110,9 @@ namespace SharpMapTracker
 
                     foreach (var tile in e.Tiles)
                     {
+                        if (TrackOnlyCurrentFloor && tile.Location.Z != client.PlayerLocation.Z)
+                            continue;
+
                         var index = tile.Location.ToIndex();
 
                         OtMapTile mapTile = null;
