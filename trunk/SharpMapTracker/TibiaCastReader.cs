@@ -65,24 +65,25 @@ namespace SharpMapTracker
                         continue;
                     }
 
-                    Trace.WriteLine("Tracking " + Path.GetFileName(fileName) + " (" + count + " of " + fileNames.Length + ").");
-
                     using (var fileStream = File.OpenRead(fileName))
                     {
 
                         var reader = new BinaryReader(fileStream);
                         var majorVersion = reader.ReadByte();
                         var minorVersion = reader.ReadByte();
-                        uint totalTime = 0;
-                        if (majorVersion > 4 || (majorVersion == 4 && minorVersion >= 5))
-                            totalTime = reader.ReadUInt32();
-                        else
+
+                        if(majorVersion < 4 || (majorVersion == 4 && minorVersion < 3))
                         {
                             Trace.WriteLine("[Error] (" + Path.GetFileName(fileName) + ") Unsupported TibiaCast Version " + majorVersion + "." + minorVersion);
                             continue;
                         }
 
+                        if (majorVersion > 4 || (majorVersion == 4 && minorVersion >= 5))
+                            reader.ReadUInt32();
+
                         reader = new BinaryReader(new DeflateStream(fileStream, CompressionMode.Decompress));
+
+                        Trace.WriteLine("[" + majorVersion + "." + minorVersion + "] Tracking " + Path.GetFileName(fileName) + " (" + count + " of " + fileNames.Length + ").");
 
                         var nextPacketTime = reader.ReadUInt32();
 

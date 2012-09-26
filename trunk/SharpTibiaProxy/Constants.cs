@@ -7,7 +7,22 @@ namespace SharpTibiaProxy
 {
     public class Constants
     {
-        //private const string CLIENT_VERSION = "9.6.3.0";
+        public static string AppDataPath = System.IO.Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SharpTibiaProxy");
+
+        public enum LoginStatus : byte
+        {
+            LoggedOut = 0,
+            NotLoggedIn = LoggedOut,
+            LoggingIn = 6,
+            LoggedIn = 8
+        }
+
+        public static class Versions
+        {
+            public static string Version963 = "9.6.3.0";
+            public static string VersionCurrent = Version963;
+        }
+
         public static class RSAKey
         {
             public static string OpenTibiaP = "14299623962416399520070177382898895550795403345466153217470516082934737582776038882967213386204600674145392845853859217990626450972452084065728686565928113";

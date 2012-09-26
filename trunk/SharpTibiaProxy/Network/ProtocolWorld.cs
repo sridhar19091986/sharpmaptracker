@@ -788,14 +788,14 @@ namespace SharpTibiaProxy.Network
 
         private void ParseOpenContainer(InMessage message)
         {
-            var cid = message.ReadByte();
-            var itemid = message.ReadUShort();
+            var containerId = message.ReadByte();
+            var containerItem = GetItem(message, ushort.MaxValue);
             var name = message.ReadString();
             var capacity = message.ReadByte();
             var hasParent = message.ReadByte();
-            var size = message.ReadByte();
+            var itemCount = message.ReadByte();
 
-            for (uint i = 0; i < size; ++i)
+            for (uint i = 0; i < itemCount; ++i)
             {
                 Item item = GetItem(message, ushort.MaxValue);
                 if (item == null)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using SharpTibiaProxy.Memory;
 using SharpTibiaProxy.Domain;
 using System.IO;
 using System.Net.Sockets;
@@ -48,6 +47,10 @@ namespace SharpTibiaProxy.Network
         public Proxy(Client client)
         {
             this.client = client;
+        }
+
+        public void Enable()
+        {
             client.Rsa = Constants.RSAKey.OpenTibiaM;
 
             loginClientPort = GetFreePort();
@@ -68,6 +71,14 @@ namespace SharpTibiaProxy.Network
             serverOutMessage = new OutMessage();
 
             StartListen();
+        }
+
+        public void Disable()
+        {
+            Close();
+
+            if (!client.HasExited)
+                client.LoginServers = loginServers;
         }
 
         private void StartListen()
@@ -110,6 +121,9 @@ namespace SharpTibiaProxy.Network
                     if (!accepting)
                         return;
 
+                    if (loginClientSocket == null || worldClientSocket == null)
+                        return;
+
                     accepting = false;
 
                     Protocol protocol = (Protocol)ar.AsyncState;
@@ -132,6 +146,9 @@ namespace SharpTibiaProxy.Network
                     loginClientSocket.Close();
                     worldClientSocket.Close();
 
+                    loginClientSocket = null;
+                    worldClientSocket = null;
+
                     clientInMessage.Reset();
                     clientSocket.BeginReceive(clientInMessage.Buffer, 0, 2, SocketFlags.None, ClientReceiveCallback, null);
                 }
@@ -146,6 +163,9 @@ namespace SharpTibiaProxy.Network
         {
             try
             {
+                if (serverSocket == null)
+                    return;
+
                 int count = serverSocket.EndReceive(ar);
 
                 if (count <= 0)
@@ -169,7 +189,7 @@ namespace SharpTibiaProxy.Network
                 serverInMessage.Reset();
                 serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 //Trace.WriteLine("[Error] Proxy [ServerReceiveCallback]: " + ex.Message);
                 Restart();
@@ -281,6 +301,9 @@ namespace SharpTibiaProxy.Network
         {
             try
             {
+                if (clientSocket == null)
+                    return;
+
                 int count = clientSocket.EndReceive(ar);
 
                 if (count <= 0)
@@ -421,6 +444,60 @@ namespace SharpTibiaProxy.Network
         private void ParseClientWorldMessage()
         {
             serverSocket.Send(clientInMessage.Buffer, 0, clientInMessage.Size, SocketFlags.None);
+        }
+
+        private void Close()
+        {
+            if (loginClientSocket != null)
+            {
+                try
+                {
+                    loginClientSocket.Close();
+                    loginClientSocket = null;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+                }
+            }
+
+            if (worldClientSocket != null)
+            {
+                try
+                {
+                    worldClientSocket.Close();
+                    worldClientSocket = null;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+                }
+            }
+            if (clientSocket != null && clientSocket.Connected)
+            {
+                try
+                {
+                    clientSocket.Close();
+                    clientSocket = null;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+                }
+            }
+
+            if (serverSocket != null && serverSocket.Connected)
+            {
+                try
+                {
+                    serverSocket.Close();
+                    serverSocket = null;
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+                }
+            }
         }
 
         private void Restart()

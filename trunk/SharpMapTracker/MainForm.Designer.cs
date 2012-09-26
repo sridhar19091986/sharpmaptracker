@@ -39,11 +39,11 @@
             this.trackCreaturesCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.creatureCountTextBox = new System.Windows.Forms.TextBox();
+            this.tileCountTextBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.tileCountTextBox = new System.Windows.Forms.TextBox();
-            this.creatureCountTextBox = new System.Windows.Forms.TextBox();
-            this.otserverCheckBox = new System.Windows.Forms.CheckBox();
+            this.loadClientButton = new System.Windows.Forms.Button();
             this.miniMap = new SharpMapTracker.MiniMap();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -64,7 +64,7 @@
             // clearButton
             // 
             this.clearButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.clearButton.Location = new System.Drawing.Point(13, 12);
+            this.clearButton.Location = new System.Drawing.Point(13, 52);
             this.clearButton.Name = "clearButton";
             this.clearButton.Size = new System.Drawing.Size(129, 34);
             this.clearButton.TabIndex = 3;
@@ -75,7 +75,7 @@
             // saveMapButton
             // 
             this.saveMapButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.saveMapButton.Location = new System.Drawing.Point(151, 12);
+            this.saveMapButton.Location = new System.Drawing.Point(151, 52);
             this.saveMapButton.Name = "saveMapButton";
             this.saveMapButton.Size = new System.Drawing.Size(129, 34);
             this.saveMapButton.TabIndex = 4;
@@ -98,11 +98,11 @@
             // trackcamButton
             // 
             this.trackcamButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.trackcamButton.Location = new System.Drawing.Point(14, 52);
+            this.trackcamButton.Location = new System.Drawing.Point(151, 12);
             this.trackcamButton.Name = "trackcamButton";
-            this.trackcamButton.Size = new System.Drawing.Size(266, 34);
+            this.trackcamButton.Size = new System.Drawing.Size(129, 34);
             this.trackcamButton.TabIndex = 10;
-            this.trackcamButton.Text = "Track TibiaCast File";
+            this.trackcamButton.Text = "Track TibiaCast";
             this.trackcamButton.UseVisualStyleBackColor = true;
             this.trackcamButton.Click += new System.EventHandler(this.trackcamButton_Click);
             // 
@@ -144,14 +144,13 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.otserverCheckBox);
             this.groupBox1.Controls.Add(this.trackMoveableItemCheckBox);
             this.groupBox1.Controls.Add(this.trackCreaturesCheckBox);
             this.groupBox1.Controls.Add(this.trackSplashItemsCheckBox);
             this.groupBox1.Controls.Add(this.topMostCheckBox);
             this.groupBox1.Location = new System.Drawing.Point(14, 94);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(266, 88);
+            this.groupBox1.Size = new System.Drawing.Size(266, 66);
             this.groupBox1.TabIndex = 17;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Options";
@@ -162,12 +161,30 @@
             this.groupBox2.Controls.Add(this.tileCountTextBox);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.label1);
-            this.groupBox2.Location = new System.Drawing.Point(14, 188);
+            this.groupBox2.Location = new System.Drawing.Point(14, 166);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(266, 65);
             this.groupBox2.TabIndex = 18;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Statistics";
+            // 
+            // creatureCountTextBox
+            // 
+            this.creatureCountTextBox.Location = new System.Drawing.Point(113, 35);
+            this.creatureCountTextBox.Name = "creatureCountTextBox";
+            this.creatureCountTextBox.ReadOnly = true;
+            this.creatureCountTextBox.Size = new System.Drawing.Size(59, 20);
+            this.creatureCountTextBox.TabIndex = 3;
+            this.creatureCountTextBox.Text = "0";
+            // 
+            // tileCountTextBox
+            // 
+            this.tileCountTextBox.Location = new System.Drawing.Point(113, 13);
+            this.tileCountTextBox.Name = "tileCountTextBox";
+            this.tileCountTextBox.ReadOnly = true;
+            this.tileCountTextBox.Size = new System.Drawing.Size(59, 20);
+            this.tileCountTextBox.TabIndex = 2;
+            this.tileCountTextBox.Text = "0";
             // 
             // label2
             // 
@@ -187,34 +204,16 @@
             this.label1.Text = "Tile Count:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
-            // tileCountTextBox
+            // loadClientButton
             // 
-            this.tileCountTextBox.Location = new System.Drawing.Point(113, 13);
-            this.tileCountTextBox.Name = "tileCountTextBox";
-            this.tileCountTextBox.ReadOnly = true;
-            this.tileCountTextBox.Size = new System.Drawing.Size(59, 20);
-            this.tileCountTextBox.TabIndex = 2;
-            this.tileCountTextBox.Text = "0";
-            // 
-            // creatureCountTextBox
-            // 
-            this.creatureCountTextBox.Location = new System.Drawing.Point(113, 35);
-            this.creatureCountTextBox.Name = "creatureCountTextBox";
-            this.creatureCountTextBox.ReadOnly = true;
-            this.creatureCountTextBox.Size = new System.Drawing.Size(59, 20);
-            this.creatureCountTextBox.TabIndex = 3;
-            this.creatureCountTextBox.Text = "0";
-            // 
-            // otserverCheckBox
-            // 
-            this.otserverCheckBox.AutoSize = true;
-            this.otserverCheckBox.Location = new System.Drawing.Point(6, 65);
-            this.otserverCheckBox.Name = "otserverCheckBox";
-            this.otserverCheckBox.Size = new System.Drawing.Size(83, 17);
-            this.otserverCheckBox.TabIndex = 17;
-            this.otserverCheckBox.Text = "Is OTServer";
-            this.otserverCheckBox.UseVisualStyleBackColor = true;
-            this.otserverCheckBox.CheckedChanged += new System.EventHandler(this.otserverCheckBox_CheckedChanged);
+            this.loadClientButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.loadClientButton.Location = new System.Drawing.Point(13, 12);
+            this.loadClientButton.Name = "loadClientButton";
+            this.loadClientButton.Size = new System.Drawing.Size(129, 34);
+            this.loadClientButton.TabIndex = 19;
+            this.loadClientButton.Text = "Load Client";
+            this.loadClientButton.UseVisualStyleBackColor = true;
+            this.loadClientButton.Click += new System.EventHandler(this.loadClientButton_Click);
             // 
             // miniMap
             // 
@@ -234,6 +233,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(612, 433);
+            this.Controls.Add(this.loadClientButton);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.miniMap);
@@ -275,6 +275,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox creatureCountTextBox;
         private System.Windows.Forms.TextBox tileCountTextBox;
-        private System.Windows.Forms.CheckBox otserverCheckBox;
+        private System.Windows.Forms.Button loadClientButton;
     }
 }
