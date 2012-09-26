@@ -43,6 +43,9 @@ namespace SharpTibiaProxy.Domain
         public BattleList BattleList { get; private set; }
         public ProtocolWorld ProtocolWorld { get; private set; }
 
+        public Dispatcher Dispatcher { get; private set; }
+        public Scheduler Scheduler { get; private set; }
+
         public MemoryAddresses MemoryAddresses
         {
             get
@@ -71,7 +74,11 @@ namespace SharpTibiaProxy.Domain
 
         ~Client()
         {
-            WinApi.CloseHandle(processHandle);
+            Scheduler.Shutdown();
+            Dispatcher.Shutdown();
+
+            if(processHandle != null && processHandle != IntPtr.Zero)
+                WinApi.CloseHandle(processHandle);
         }
 
         public Client(string datFilename)
@@ -81,6 +88,12 @@ namespace SharpTibiaProxy.Domain
 
         private void Initialize(string datFilename)
         {
+            Dispatcher = new Dispatcher();
+            Scheduler = new Scheduler(Dispatcher);
+
+            Dispatcher.Start();
+            Scheduler.Start();
+
             Items = new Items();
             Items.Load(datFilename);
 

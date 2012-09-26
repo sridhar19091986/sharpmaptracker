@@ -69,8 +69,15 @@
     <Compile Include="Domain\Thing.cs" />
     <Compile Include="Domain\Tile.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Util\Dispatcher.cs" />
+    <Compile Include="Util\DispatcherState.cs" />
     <Compile Include="Util\MemoryAddresses.cs" />
     <Compile Include="Util\Memory.cs" />
+    <Compile Include="Util\PriorityQueue.cs" />
+    <Compile Include="Util\Schedule.cs" />
+    <Compile Include="Util\Scheduler.cs" />
+    <Compile Include="Util\SchedulerState.cs" />
+    <Compile Include="Util\Task.cs" />
     <Compile Include="Util\WinApi.cs" />
     <Compile Include="Util\ClientChooser.cs">
       <SubType>Form</SubType>
