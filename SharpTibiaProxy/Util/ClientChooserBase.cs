@@ -97,12 +97,12 @@ namespace SharpTibiaProxy.Util
                     client.LoginServers = new LoginServer[] { loginServer };
                     client.IsOpenTibiaServer = true;
 
-                    client.WindowText = string.Format("SharpTibiaTracker - {0}:{1}", loginServer.Server, loginServer.Port);
+                    client.WindowText = string.Format("SharpMapTracker - {0}:{1}", loginServer.Server, loginServer.Port);
                     SaveOtServer(options.SavedServersLocation, loginServer, client.Version.FileVersion);
                 }
                 else
                 {
-                    client.WindowText = "SharpTibiaTracker - Global";
+                    client.WindowText = "SharpMapTracker - Global";
                 }
 
                 // Set client to run on one processor if instructed by the user
