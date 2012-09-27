@@ -18,6 +18,11 @@ namespace SharpTibiaProxy.Domain
             get { return Type.AlwaysOnTopOrder; }
         }
 
+        public override bool IsBlockingPath
+        {
+            get { return IsBlocking; }
+        }
+
         public Item(ItemType type, byte count = 0, byte subType = 0)
         {
             this.Type = type;
@@ -30,8 +35,6 @@ namespace SharpTibiaProxy.Domain
         public bool IsGround { get { return Type.IsGround; } }
 
         public bool IsStackable { get { return Type.IsStackable; } }
-
-        
 
         public bool IsSplash { get { return Type.IsSplash; } }
 

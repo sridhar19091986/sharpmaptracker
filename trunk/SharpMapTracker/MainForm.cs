@@ -29,7 +29,8 @@ namespace SharpMapTracker
 
         public bool TrackMoveableItems { get; set; }
         public bool TrackSplashItems { get; set; }
-        public bool TrackCreatures { get; set; }
+        public bool TrackMonsters { get; set; }
+        public bool TrackNPCs { get; set; }
         public bool TrackOnlyCurrentFloor { get; set; }
 
         public MainForm()
@@ -45,7 +46,8 @@ namespace SharpMapTracker
             DataBindings.Add("TopMost", topMostCheckBox, "Checked");
             DataBindings.Add("TrackMoveableItems", trackMoveableItemCheckBox, "Checked");
             DataBindings.Add("TrackSplashItems", trackSplashItemsCheckBox, "Checked");
-            DataBindings.Add("TrackCreatures", trackCreaturesCheckBox, "Checked");
+            DataBindings.Add("TrackMonsters", trackMonstersCheckBox, "Checked");
+            DataBindings.Add("TrackNPCs", trackNPCsCheckbox, "Checked");
             DataBindings.Add("TrackOnlyCurrentFloor", trackOnlyCurrentFloorCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
@@ -138,19 +140,17 @@ namespace SharpMapTracker
 
                             if (thing is Creature)
                             {
-                                if (!TrackCreatures)
-                                    continue;
-
                                 var creature = thing as Creature;
 
-                                if (creature.Type != CreatureType.MONSTER || creatures.ContainsKey(creature.Id))
+                                if (creature.Type == CreatureType.PLAYER || (!TrackMonsters && creature.Type == CreatureType.MONSTER) ||
+                                    (!TrackNPCs && creature.Type == CreatureType.NPC) || creatures.ContainsKey(creature.Id) ||
+                                    creatureLocations.Contains(index))
+                                {
                                     continue;
-
-                                if (creatureLocations.Contains(index))
-                                    continue;
+                                }
 
                                 creatureLocations.Add(index);
-                                creatures.Add(creature.Id, new OtMapCreature { Id = creature.Id, Name = creature.Name, Location = creature.Location });
+                                creatures.Add(creature.Id, new OtMapCreature { Id = creature.Id, Name = creature.Name, Location = creature.Location, Type = creature.Type });
                             }
                             else if (thing is Item)
                             {

@@ -28,6 +28,11 @@ namespace SharpTibiaProxy.Domain
             get { return 4; }
         }
 
+        public override bool IsBlockingPath
+        {
+            get { return !IsImpassable; }
+        }
+
         public byte Health { get; set; }
 
         public Direction LookDirection { get; set; }

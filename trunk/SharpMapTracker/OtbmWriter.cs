@@ -233,14 +233,14 @@ namespace SharpMapTracker
                 spawn.Add(new XAttribute("centerz", creature.Location.Z.ToString()));
                 spawn.Add(new XAttribute("radius", "1"));
 
-                XElement monster = new XElement("monster");
-                monster.Add(new XAttribute("name", creature.Name));
-                monster.Add(new XAttribute("x", "1"));
-                monster.Add(new XAttribute("y", "0"));
-                monster.Add(new XAttribute("z", creature.Location.Z.ToString()));
-                monster.Add(new XAttribute("spawntime", "60"));
+                XElement creatureSpawn = new XElement(creature.Type == CreatureType.NPC ? "npc" : "monster");
+                creatureSpawn.Add(new XAttribute("name", creature.Name));
+                creatureSpawn.Add(new XAttribute("x", "1"));
+                creatureSpawn.Add(new XAttribute("y", "0"));
+                creatureSpawn.Add(new XAttribute("z", creature.Location.Z.ToString()));
+                creatureSpawn.Add(new XAttribute("spawntime", "60"));
 
-                spawn.Add(monster);
+                spawn.Add(creatureSpawn);
                 spawns.Add(spawn);
             }
 
