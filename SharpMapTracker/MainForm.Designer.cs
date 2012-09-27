@@ -36,7 +36,7 @@
             this.trackcamButton = new System.Windows.Forms.Button();
             this.trackMoveableItemCheckBox = new System.Windows.Forms.CheckBox();
             this.trackSplashItemsCheckBox = new System.Windows.Forms.CheckBox();
-            this.trackCreaturesCheckBox = new System.Windows.Forms.CheckBox();
+            this.trackMonstersCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.trackOnlyCurrentFloorCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -45,6 +45,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.loadClientButton = new System.Windows.Forms.Button();
+            this.trackNPCsCheckbox = new System.Windows.Forms.CheckBox();
             this.miniMap = new SharpMapTracker.MiniMap();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -131,23 +132,24 @@
             this.trackSplashItemsCheckBox.Text = "Track splashes";
             this.trackSplashItemsCheckBox.UseVisualStyleBackColor = true;
             // 
-            // trackCreaturesCheckBox
+            // trackMonstersCheckBox
             // 
-            this.trackCreaturesCheckBox.AutoSize = true;
-            this.trackCreaturesCheckBox.Checked = true;
-            this.trackCreaturesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trackCreaturesCheckBox.Location = new System.Drawing.Point(147, 42);
-            this.trackCreaturesCheckBox.Name = "trackCreaturesCheckBox";
-            this.trackCreaturesCheckBox.Size = new System.Drawing.Size(101, 17);
-            this.trackCreaturesCheckBox.TabIndex = 16;
-            this.trackCreaturesCheckBox.Text = "Track creatures";
-            this.trackCreaturesCheckBox.UseVisualStyleBackColor = true;
+            this.trackMonstersCheckBox.AutoSize = true;
+            this.trackMonstersCheckBox.Checked = true;
+            this.trackMonstersCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.trackMonstersCheckBox.Location = new System.Drawing.Point(147, 42);
+            this.trackMonstersCheckBox.Name = "trackMonstersCheckBox";
+            this.trackMonstersCheckBox.Size = new System.Drawing.Size(99, 17);
+            this.trackMonstersCheckBox.TabIndex = 16;
+            this.trackMonstersCheckBox.Text = "Track monsters";
+            this.trackMonstersCheckBox.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.trackNPCsCheckbox);
             this.groupBox1.Controls.Add(this.trackOnlyCurrentFloorCheckBox);
             this.groupBox1.Controls.Add(this.trackMoveableItemCheckBox);
-            this.groupBox1.Controls.Add(this.trackCreaturesCheckBox);
+            this.groupBox1.Controls.Add(this.trackMonstersCheckBox);
             this.groupBox1.Controls.Add(this.trackSplashItemsCheckBox);
             this.groupBox1.Controls.Add(this.topMostCheckBox);
             this.groupBox1.Location = new System.Drawing.Point(14, 94);
@@ -227,6 +229,18 @@
             this.loadClientButton.UseVisualStyleBackColor = true;
             this.loadClientButton.Click += new System.EventHandler(this.loadClientButton_Click);
             // 
+            // trackNPCsCheckbox
+            // 
+            this.trackNPCsCheckbox.AutoSize = true;
+            this.trackNPCsCheckbox.Checked = true;
+            this.trackNPCsCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.trackNPCsCheckbox.Location = new System.Drawing.Point(147, 65);
+            this.trackNPCsCheckbox.Name = "trackNPCsCheckbox";
+            this.trackNPCsCheckbox.Size = new System.Drawing.Size(80, 17);
+            this.trackNPCsCheckbox.TabIndex = 18;
+            this.trackNPCsCheckbox.Text = "Track npcs";
+            this.trackNPCsCheckbox.UseVisualStyleBackColor = true;
+            // 
             // miniMap
             // 
             this.miniMap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -280,7 +294,7 @@
         private System.Windows.Forms.CheckBox trackMoveableItemCheckBox;
         private System.Windows.Forms.CheckBox trackSplashItemsCheckBox;
         private MiniMap miniMap;
-        private System.Windows.Forms.CheckBox trackCreaturesCheckBox;
+        private System.Windows.Forms.CheckBox trackMonstersCheckBox;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label2;
@@ -289,5 +303,6 @@
         private System.Windows.Forms.TextBox tileCountTextBox;
         private System.Windows.Forms.Button loadClientButton;
         private System.Windows.Forms.CheckBox trackOnlyCurrentFloorCheckBox;
+        private System.Windows.Forms.CheckBox trackNPCsCheckbox;
     }
 }

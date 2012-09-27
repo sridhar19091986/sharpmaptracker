@@ -47,6 +47,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.Controls.Add(this.coorLabel);
+            this.DoubleBuffered = true;
             this.Name = "MiniMap";
             this.Size = new System.Drawing.Size(342, 308);
             this.ResumeLayout(false);

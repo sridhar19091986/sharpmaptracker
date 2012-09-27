@@ -29,6 +29,8 @@ namespace SharpTibiaProxy.Domain
 #endif
         }
 
+        public bool IsBlocked { get { return things.Any(x => x.IsBlockingPath); } }
+
         public void AddThing(Thing thing)
         {
             AddThing(0xFF, thing);

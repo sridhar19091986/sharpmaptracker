@@ -34,6 +34,7 @@ namespace SharpTibiaProxy.Domain
     {
         private Client client;
         private Tile[,,] tiles;
+        private Dictionary<ulong, bool> knowMap;
 
         public event EventHandler<TileAddedEventArgs> TileAdded;
         public event EventHandler<TileUpdatedEventArgs> TileUpdated;
@@ -43,6 +44,7 @@ namespace SharpTibiaProxy.Domain
         {
             this.client = client;
             tiles = new Tile[18, 14, 8];
+            knowMap = new Dictionary<ulong, bool>();
         }
 
         public void Clear()
@@ -65,6 +67,8 @@ namespace SharpTibiaProxy.Domain
             var oldTile = tiles[location.X % 18, location.Y % 14, location.Z % 8];
 
             tiles[location.X % 18, location.Y % 14, location.Z % 8] = tile;
+
+            knowMap[tile.Location.ToIndex()] = tile.IsBlocked;
 
             if (oldTile != null && location.Equals(oldTile.Location))
                 OnTileUpdated(tile);
