@@ -90,17 +90,25 @@ namespace SharpTibiaProxy.Util
             }
 
             // Set OT server
-            if (client != null && options.UseOT)
+            if (client != null)
             {
-                client.LoginServers = new LoginServer[] { loginServer };
-                client.IsOpenTibiaServer = true;
+                if (options.UseOT)
+                {
+                    client.LoginServers = new LoginServer[] { loginServer };
+                    client.IsOpenTibiaServer = true;
 
-                SaveOtServer(options.SavedServersLocation, loginServer, client.Version.FileVersion);
+                    client.WindowText = string.Format("SharpTibiaTracker - {0}:{1}", loginServer.Server, loginServer.Port);
+                    SaveOtServer(options.SavedServersLocation, loginServer, client.Version.FileVersion);
+                }
+                else
+                {
+                    client.WindowText = "SharpTibiaTracker - Global";
+                }
+
+                // Set client to run on one processor if instructed by the user
+                if (options.UseSingleProcessor)
+                    client.Process.ProcessorAffinity = (IntPtr)1;
             }
-            
-            // Set client to run on one processor if instructed by the user
-            if (options.UseSingleProcessor)
-                client.Process.ProcessorAffinity = (IntPtr)1;
 
             return client;
         }

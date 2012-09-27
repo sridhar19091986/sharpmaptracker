@@ -32,6 +32,8 @@ namespace SharpTibiaProxy.Domain
 
         private IntPtr processHandle;
 
+        private bool disposed;
+
         public bool IsOpenTibiaServer { get; set; }
 
         public uint PlayerId { get; set; }
@@ -85,6 +87,7 @@ namespace SharpTibiaProxy.Domain
 
         ~Client()
         {
+            Dispose();
         }
 
         public Client(string datFilename, ClientVersion version)
@@ -119,6 +122,15 @@ namespace SharpTibiaProxy.Domain
             catch (Exception ex)
             {
                 Trace.WriteLine("[Error] " + ex.Message);
+            }
+        }
+
+        public string WindowText
+        {
+            set
+            {
+                if (Process == null) return;
+                WinApi.SetWindowText(Process.MainWindowHandle, value);
             }
         }
 
@@ -167,6 +179,10 @@ namespace SharpTibiaProxy.Domain
 
         public bool HasExited { get { return Process != null && Process.HasExited; } }
 
+        public bool LoggedIn { get { return Status == Constants.LoginStatus.LoggedIn; } }
+
+        public Constants.LoginStatus Status { get { return (Constants.LoginStatus)Memory.ReadByte(processHandle, MemoryAddresses.ClientStatus); } }
+
         public void EnableProxy()
         {
             if (Process == null)
@@ -186,16 +202,6 @@ namespace SharpTibiaProxy.Domain
 
             proxy.Disable();
             proxy = null;
-        }
-
-        public Constants.LoginStatus Status
-        {
-            get { return (Constants.LoginStatus)Memory.ReadByte(processHandle, Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientStatus); }
-        }
-
-        public bool LoggedIn
-        {
-            get { return Status == Constants.LoginStatus.LoggedIn; }
         }
 
         #region Open Client
@@ -326,13 +332,21 @@ namespace SharpTibiaProxy.Domain
 
         public void Dispose()
         {
+            if (disposed)
+                return;
+
+            disposed = true;
+
             DisableProxy();
 
             Scheduler.Shutdown();
             Dispatcher.Shutdown();
 
             if (processHandle != null && processHandle != IntPtr.Zero)
+            {
                 WinApi.CloseHandle(processHandle);
+                processHandle = IntPtr.Zero;
+            }
         }
 
         public override string ToString()
