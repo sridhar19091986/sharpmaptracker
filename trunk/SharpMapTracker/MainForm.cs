@@ -54,6 +54,15 @@ namespace SharpMapTracker
             Trace.AutoFlush = true;
 
             KeyDown += new KeyEventHandler(MainForm_KeyDown);
+            FormClosed += new FormClosedEventHandler(MainForm_FormClosed);
+        }
+
+        void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (client != null)
+                client.Dispose();
+
+            client = null;
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -257,7 +266,7 @@ namespace SharpMapTracker
                 {
                     if (client == null)
                     {
-                        client = new Client("Tibia.dat");
+                        client = new Client("Tibia.dat", ClientVersion.Version963);
                         client.Map.Updated += Map_Updated;
                     }
 
@@ -310,12 +319,12 @@ namespace SharpMapTracker
             {
                 if (client != null)
                 {
-                    client.DisableProxy();
+                    client.Dispose();
                     client = null;
                 }
 
                 var chooserOptions = new ClientChooserOptions();
-                chooserOptions.Version = SharpTibiaProxy.Constants.Versions.Version963;
+                chooserOptions.Version = ClientVersion.Version963.FileVersion;
                 chooserOptions.Smart = true;
                 chooserOptions.ShowOTOption = true;
                 chooserOptions.OfflineOnly = true;

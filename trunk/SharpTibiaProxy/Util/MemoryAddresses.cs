@@ -2,39 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SharpTibiaProxy.Domain;
 
 namespace SharpTibiaProxy.Util
 {
     public class MemoryAddresses
     {
-        public readonly int ClientRsa;
-        public readonly int ClientServerStart;
-        public readonly int ClientServerStep;
-        public readonly int ClientServerMax;
-        public readonly int ClientServerDistancePort;
-        public readonly int ClientSelectedCharacter;
+        public readonly long ClientRsa;
+        public readonly long ClientServerStart;
+        public readonly long ClientServerStep;
+        public readonly long ClientServerMax;
+        public readonly long ClientServerDistancePort;
+        public readonly long ClientSelectedCharacter;
 
-        public readonly int ClientMultiClient;
+        public readonly long ClientMultiClient;
         public readonly byte ClientMultiClientJMP = 0xEB;
         public readonly byte ClientMultiClientJNZ = 0x75;
 
         public readonly int ClientStatus = 0x3BCCC4;
 
-        public MemoryAddresses(string version)
+        public MemoryAddresses(Client client)
         {
-            if (Constants.Versions.Version963.Equals(version))
+            if (client.Version == ClientVersion.Version963)
             {
-                ClientRsa = 0x324EC0;
-                ClientServerStart = 0x3B34F8;
+                ClientRsa = client.BaseAddress + 0x324EC0;
+                ClientServerStart = client.BaseAddress + 0x3B34F8;
                 ClientServerStep = 112;
                 ClientServerMax = 10;
                 ClientServerDistancePort = 100;
-                ClientSelectedCharacter = 0x3BCD10;
-                ClientMultiClient = 0x12E807;
+                ClientSelectedCharacter = client.BaseAddress + 0x3BCD10;
+                ClientMultiClient = client.BaseAddress + 0x12E807;
             }
             else
             {
-                throw new Exception("The client version " + version + " is not supported.");
+                throw new Exception("The client version " + client.Version + " is not supported.");
             }
         }
     }

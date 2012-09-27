@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SharpTibiaProxy.Domain;
 
 namespace SharpTibiaProxy
 {
@@ -15,12 +16,6 @@ namespace SharpTibiaProxy
             NotLoggedIn = LoggedOut,
             LoggingIn = 6,
             LoggedIn = 8
-        }
-
-        public static class Versions
-        {
-            public static string Version963 = "9.6.3.0";
-            public static string VersionCurrent = Version963;
         }
 
         public static class RSAKey

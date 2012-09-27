@@ -9,7 +9,7 @@ using SharpTibiaProxy.Util;
 
 namespace SharpTibiaProxy.Domain
 {
-    public class Client
+    public class Client : IDisposable
     {
         public static readonly LoginServer[] DefaultServers = 
         {
@@ -27,7 +27,8 @@ namespace SharpTibiaProxy.Domain
 
         private Proxy proxy;
         private MemoryAddresses memoryAddresses;
-        private string cachedVersion;
+
+        private long baseAddress;
 
         private IntPtr processHandle;
 
@@ -46,43 +47,46 @@ namespace SharpTibiaProxy.Domain
         public Dispatcher Dispatcher { get; private set; }
         public Scheduler Scheduler { get; private set; }
 
+        public ClientVersion Version { get; private set; }
+
         public MemoryAddresses MemoryAddresses
         {
             get
             {
                 if (memoryAddresses == null)
-                    memoryAddresses = new MemoryAddresses(Version);
+                    memoryAddresses = new MemoryAddresses(this);
 
                 return memoryAddresses;
             }
         }
 
-
-        public Client(Process process)
+        public Client(Process process, ClientVersion version)
+            : this(process, version, Path.GetDirectoryName(process.MainModule.FileName))
         {
+        }
+
+        private Client(Process process, ClientVersion version, string dataDirectory)
+        {
+            this.Version = version;
+
             this.Process = process;
             this.Process.EnableRaisingEvents = true;
             this.Process.Exited += new EventHandler(Process_Exited);
 
-            this.Process.WaitForInputIdle();
-
-            memoryAddresses = new MemoryAddresses(Version);
+            //this.Process.WaitForInputIdle();
 
             processHandle = WinApi.OpenProcess(WinApi.PROCESS_ALL_ACCESS, 0, (uint)process.Id);
-            Initialize(Path.Combine(Path.GetDirectoryName(process.MainModule.FileName), "Tibia.dat"));
+
+            Initialize(Path.Combine(dataDirectory, "Tibia.dat"));
         }
 
         ~Client()
         {
-            Scheduler.Shutdown();
-            Dispatcher.Shutdown();
-
-            if(processHandle != null && processHandle != IntPtr.Zero)
-                WinApi.CloseHandle(processHandle);
         }
 
-        public Client(string datFilename)
+        public Client(string datFilename, ClientVersion version)
         {
+            this.Version = version;
             Initialize(datFilename);
         }
 
@@ -160,6 +164,17 @@ namespace SharpTibiaProxy.Domain
 
         public bool HasExited { get { return Process != null && Process.HasExited; } }
 
+        public long BaseAddress
+        {
+            get
+            {
+                if (baseAddress == 0 && Process != null)
+                    baseAddress = WinApi.GetBaseAddress(processHandle).ToInt64();
+
+                return baseAddress;
+            }
+        }
+
         public void EnableProxy()
         {
             if (Process == null)
@@ -191,33 +206,13 @@ namespace SharpTibiaProxy.Domain
             get { return Status == Constants.LoginStatus.LoggedIn; }
         }
 
-        public string Version
-        {
-            get
-            {
-                if (cachedVersion == null)
-                {
-                    cachedVersion = Process.MainModule.FileVersionInfo.FileVersion;
-                }
-                return cachedVersion;
-            }
-        }
-
         #region Open Client
-        /// <summary>
-        /// Open a client at the default path
-        /// </summary>
-        /// <returns></returns>
+
         public static Client Open()
         {
             return Open(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Tibia\tibia.exe"));
         }
 
-        /// <summary>
-        /// Open a client from the specified path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
         public static Client Open(string path)
         {
             ProcessStartInfo psi = new ProcessStartInfo(path);
@@ -226,12 +221,6 @@ namespace SharpTibiaProxy.Domain
             return Open(psi);
         }
 
-        /// <summary>
-        /// Open a client from the specified path with arguments
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="arguments"></param>
-        /// <returns></returns>
         public static Client Open(string path, string arguments)
         {
             ProcessStartInfo psi = new ProcessStartInfo(path, arguments);
@@ -240,13 +229,16 @@ namespace SharpTibiaProxy.Domain
             return Open(psi);
         }
 
-        /// <summary>
-        /// Opens a client given a process start info object.
-        /// </summary>
         public static Client Open(ProcessStartInfo psi)
         {
+            var fileVersion = FileVersionInfo.GetVersionInfo(psi.FileName).FileVersion;
+            var version = ClientVersion.GetFromFileVersion(fileVersion);
+
+            if (version == null)
+                throw new Exception("The version " + fileVersion + " is not supported.");
+
             Process p = Process.Start(psi);
-            return new Client(p);
+            return new Client(p, version);
         }
 
 
@@ -255,70 +247,55 @@ namespace SharpTibiaProxy.Domain
             return OpenMC(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Tibia\tibia.exe"), "");
         }
 
-        /// <summary>
-        /// Opens a client with dynamic multi-clienting support
-        /// </summary>
+
         public static Client OpenMC(string path, string arguments)
         {
-            Util.WinApi.PROCESS_INFORMATION pi = new WinApi.PROCESS_INFORMATION();
-            Util.WinApi.STARTUPINFO si = new WinApi.STARTUPINFO();
+            var fileVersion = FileVersionInfo.GetVersionInfo(path).FileVersion;
+            var version = ClientVersion.GetFromFileVersion(fileVersion);
+
+            if (version == null)
+                throw new Exception("The version " + fileVersion + " is not supported.");
+
+            WinApi.PROCESS_INFORMATION pi = new WinApi.PROCESS_INFORMATION();
+            WinApi.STARTUPINFO si = new WinApi.STARTUPINFO();
 
             if (arguments == null)
                 arguments = "";
 
-            Util.WinApi.CreateProcess(path, " " + arguments, IntPtr.Zero, IntPtr.Zero,
-                false, Util.WinApi.CREATE_SUSPENDED, IntPtr.Zero,
-                System.IO.Path.GetDirectoryName(path), ref si, out pi);
+            WinApi.CreateProcess(path, " " + arguments, IntPtr.Zero, IntPtr.Zero, false, WinApi.CREATE_SUSPENDED, IntPtr.Zero, Path.GetDirectoryName(path), ref si, out pi);
 
-            IntPtr handle = Util.WinApi.OpenProcess(Util.WinApi.PROCESS_ALL_ACCESS, 0, pi.dwProcessId);
             Process p = Process.GetProcessById(Convert.ToInt32(pi.dwProcessId));
 
-            IntPtr baseAddress = WinApi.GetBaseAddress(handle);
+            var client = new Client(p, version, Path.GetDirectoryName(path));
 
-            var addresses = new MemoryAddresses(Constants.Versions.Version963);
+            Memory.WriteByte(client.processHandle, client.MemoryAddresses.ClientMultiClient, client.MemoryAddresses.ClientMultiClientJMP);
 
-            Util.Memory.WriteByte(handle, baseAddress.ToInt64() + addresses.ClientMultiClient,
-                addresses.ClientMultiClientJMP);
-
-            Util.WinApi.ResumeThread(pi.hThread);
+            WinApi.ResumeThread(pi.hThread);
             p.WaitForInputIdle();
 
-            Util.Memory.WriteByte(handle, baseAddress.ToInt64() + addresses.ClientMultiClient,
-                addresses.ClientMultiClientJNZ);
+            Memory.WriteByte(client.processHandle, client.MemoryAddresses.ClientMultiClient, client.MemoryAddresses.ClientMultiClientJNZ);
 
-            Util.WinApi.CloseHandle(handle);
-            Util.WinApi.CloseHandle(pi.hProcess);
-            Util.WinApi.CloseHandle(pi.hThread);
+            WinApi.CloseHandle(pi.hProcess);
+            WinApi.CloseHandle(pi.hThread);
 
-            return new Client(p);
+            return client;
         }
 
         #endregion
 
         #region Client Processes
-        /// <summary>
-        /// Get a list of all the open clients. Class method.
-        /// </summary>
-        /// <returns></returns>
+
         public static List<Client> GetClients()
         {
 
             return GetClients(null);
         }
 
-        /// <summary>
-        /// Get a list of all the open clients of certain version. Class method.
-        /// </summary>
-        /// <returns></returns>
         public static List<Client> GetClients(string version)
         {
             return GetClients(version, false);
         }
 
-        /// <summary>
-        /// Get a list of all the open clients of certain version. Class method.
-        /// </summary>
-        /// <returns></returns>
         public static List<Client> GetClients(string version, bool offline)
         {
             List<Client> clients = new List<Client>();
@@ -326,13 +303,19 @@ namespace SharpTibiaProxy.Domain
             foreach (Process process in Process.GetProcesses())
             {
                 StringBuilder classname = new StringBuilder();
-                Util.WinApi.GetClassName(process.MainWindowHandle, classname, 12);
+                WinApi.GetClassName(process.MainWindowHandle, classname, 12);
 
                 if (classname.ToString().Equals("TibiaClient", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    if (version == null || process.MainModule.FileVersionInfo.FileVersion == version)
+                    var clientVersion = ClientVersion.GetFromFileVersion(process.MainModule.FileVersionInfo.FileVersion);
+
+                    //Version not supported.
+                    if (clientVersion == null)
+                        continue;
+
+                    if (version == null || clientVersion.FileVersion == version)
                     {
-                        var client = new Client(process);
+                        var client = new Client(process, clientVersion);
                         if (!offline || !client.LoggedIn)
                             clients.Add(client);
                     }
@@ -349,9 +332,20 @@ namespace SharpTibiaProxy.Domain
 
         #endregion
 
+        public void Dispose()
+        {
+            DisableProxy();
+
+            Scheduler.Shutdown();
+            Dispatcher.Shutdown();
+
+            if (processHandle != null && processHandle != IntPtr.Zero)
+                WinApi.CloseHandle(processHandle);
+        }
+
         public override string ToString()
         {
-            string s = "[" + Version + "] ";
+            string s = "[" + Version.Id + "] ";
             if (!LoggedIn)
                 s += "Not logged in.";
             else

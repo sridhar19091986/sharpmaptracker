@@ -44,6 +44,8 @@ namespace SharpTibiaProxy.Network
         private uint[] xteaKey;
         private CharacterLoginInfo[] charList;
 
+        private int pendingSend;
+
         public Proxy(Client client)
         {
             this.client = client;
@@ -210,6 +212,13 @@ namespace SharpTibiaProxy.Network
             }
         }
 
+        private void SendToClient(NetworkMessage message)
+        {
+            pendingSend++;
+            clientSocket.Send(message.Buffer, 0, message.Size, SocketFlags.None);
+            pendingSend--;
+        }
+
         private void ParseServerMessage()
         {
 #if DEBUG_PROXY
@@ -218,7 +227,7 @@ namespace SharpTibiaProxy.Network
             switch (protocol)
             {
                 case Protocol.None:
-                    clientSocket.Send(serverInMessage.Buffer, 0, serverInMessage.Size, SocketFlags.None);
+                    SendToClient(serverInMessage);
                     break;
                 case Protocol.Login:
                     ParseServerLoginMessage();
@@ -249,7 +258,7 @@ namespace SharpTibiaProxy.Network
 
             client.ProtocolWorld.ParseMessage(serverInMessage);
 
-            clientSocket.Send(clientOutMessage.Buffer, 0, clientOutMessage.Size, SocketFlags.None);
+            SendToClient(clientOutMessage);
         }
 
         private void ParseServerLoginMessage()
@@ -317,7 +326,7 @@ namespace SharpTibiaProxy.Network
             Adler.Generate(clientOutMessage, true);
             clientOutMessage.WriteHead();
 
-            clientSocket.Send(clientOutMessage.Buffer, 0, clientOutMessage.Size, SocketFlags.None);
+            SendToClient(clientOutMessage);
         }
 
         private void ClientReceiveCallback(IAsyncResult ar)
@@ -377,7 +386,7 @@ namespace SharpTibiaProxy.Network
                 case Protocol.Login:
                     throw new Exception("Invalid client message.");
                 case Protocol.World:
-                    ParseClientWorldMessage();
+                    serverSocket.Send(clientInMessage.Buffer, 0, clientInMessage.Size, SocketFlags.None);
                     break;
             }
         }
@@ -478,14 +487,6 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseClientWorldMessage()
-        {
-#if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseClientWorldMessage]");
-#endif
-
-            serverSocket.Send(clientInMessage.Buffer, 0, clientInMessage.Size, SocketFlags.None);
-        }
 
         private void Close()
         {
@@ -556,7 +557,11 @@ namespace SharpTibiaProxy.Network
                 Trace.WriteLine("[DEBUG] Proxy [Restart]");
 #endif
 
-                Thread.Sleep(500);
+                if (pendingSend > 0)
+                {
+                    client.Scheduler.Add(new Util.Schedule(500, Restart));
+                    return;
+                }
 
                 Close();
 
