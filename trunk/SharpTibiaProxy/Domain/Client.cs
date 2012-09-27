@@ -28,7 +28,7 @@ namespace SharpTibiaProxy.Domain
         private Proxy proxy;
         private MemoryAddresses memoryAddresses;
 
-        private long baseAddress;
+        public long BaseAddress { get; private set; }
 
         private IntPtr processHandle;
 
@@ -48,6 +48,8 @@ namespace SharpTibiaProxy.Domain
         public Scheduler Scheduler { get; private set; }
 
         public ClientVersion Version { get; private set; }
+
+        
 
         public MemoryAddresses MemoryAddresses
         {
@@ -76,6 +78,7 @@ namespace SharpTibiaProxy.Domain
             //this.Process.WaitForInputIdle();
 
             processHandle = WinApi.OpenProcess(WinApi.PROCESS_ALL_ACCESS, 0, (uint)process.Id);
+            BaseAddress = WinApi.GetBaseAddress(processHandle).ToInt64();
 
             Initialize(Path.Combine(dataDirectory, "Tibia.dat"));
         }
@@ -121,8 +124,8 @@ namespace SharpTibiaProxy.Domain
 
         public string Rsa
         {
-            get { return Memory.ReadString(processHandle, Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientRsa, 309); }
-            set { Memory.WriteRSA(processHandle, Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientRsa, value); }
+            get { return Memory.ReadString(processHandle, MemoryAddresses.ClientRsa, 309); }
+            set { Memory.WriteRSA(processHandle, MemoryAddresses.ClientRsa, value); }
         }
 
         public LoginServer[] LoginServers
@@ -130,7 +133,7 @@ namespace SharpTibiaProxy.Domain
             get
             {
                 LoginServer[] servers = new LoginServer[MemoryAddresses.ClientServerMax];
-                long address = Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientServerStart;
+                long address = MemoryAddresses.ClientServerStart;
 
                 for (int i = 0; i < MemoryAddresses.ClientServerMax; i++)
                 {
@@ -144,7 +147,7 @@ namespace SharpTibiaProxy.Domain
             }
             set
             {
-                long address = Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientServerStart;
+                long address = MemoryAddresses.ClientServerStart;
                 for (int i = 0; i < MemoryAddresses.ClientServerMax; i++)
                 {
                     Memory.WriteString(processHandle, address, value[i % value.Length].Server);
@@ -156,24 +159,13 @@ namespace SharpTibiaProxy.Domain
 
         public int SelectedChar
         {
-            get { return Memory.ReadInt32(processHandle, Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientSelectedCharacter); }
-            set { Memory.WriteInt32(processHandle, Process.MainModule.BaseAddress.ToInt64() + MemoryAddresses.ClientSelectedCharacter, value); }
+            get { return Memory.ReadInt32(processHandle, MemoryAddresses.ClientSelectedCharacter); }
+            set { Memory.WriteInt32(processHandle, MemoryAddresses.ClientSelectedCharacter, value); }
         }
 
         public bool ProxyEnabled { get { return proxy != null; } }
 
         public bool HasExited { get { return Process != null && Process.HasExited; } }
-
-        public long BaseAddress
-        {
-            get
-            {
-                if (baseAddress == 0 && Process != null)
-                    baseAddress = WinApi.GetBaseAddress(processHandle).ToInt64();
-
-                return baseAddress;
-            }
-        }
 
         public void EnableProxy()
         {
