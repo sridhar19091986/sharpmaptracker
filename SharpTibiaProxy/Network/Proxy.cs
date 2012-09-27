@@ -153,6 +153,8 @@ namespace SharpTibiaProxy.Network
                         serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
                     }
 
+                    clientSocket.LingerState = new LingerOption(true, 2);
+
                     loginClientSocket.Close();
                     worldClientSocket.Close();
 

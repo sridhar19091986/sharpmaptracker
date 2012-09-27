@@ -89,7 +89,7 @@
             this.topMostCheckBox.AutoSize = true;
             this.topMostCheckBox.Checked = true;
             this.topMostCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.topMostCheckBox.Location = new System.Drawing.Point(142, 42);
+            this.topMostCheckBox.Location = new System.Drawing.Point(6, 65);
             this.topMostCheckBox.Name = "topMostCheckBox";
             this.topMostCheckBox.Size = new System.Drawing.Size(92, 17);
             this.topMostCheckBox.TabIndex = 5;
@@ -124,7 +124,7 @@
             this.trackSplashItemsCheckBox.AutoSize = true;
             this.trackSplashItemsCheckBox.Checked = true;
             this.trackSplashItemsCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trackSplashItemsCheckBox.Location = new System.Drawing.Point(142, 19);
+            this.trackSplashItemsCheckBox.Location = new System.Drawing.Point(147, 19);
             this.trackSplashItemsCheckBox.Name = "trackSplashItemsCheckBox";
             this.trackSplashItemsCheckBox.Size = new System.Drawing.Size(98, 17);
             this.trackSplashItemsCheckBox.TabIndex = 14;
@@ -136,7 +136,7 @@
             this.trackCreaturesCheckBox.AutoSize = true;
             this.trackCreaturesCheckBox.Checked = true;
             this.trackCreaturesCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trackCreaturesCheckBox.Location = new System.Drawing.Point(6, 42);
+            this.trackCreaturesCheckBox.Location = new System.Drawing.Point(147, 42);
             this.trackCreaturesCheckBox.Name = "trackCreaturesCheckBox";
             this.trackCreaturesCheckBox.Size = new System.Drawing.Size(101, 17);
             this.trackCreaturesCheckBox.TabIndex = 16;
@@ -160,7 +160,7 @@
             // trackOnlyCurrentFloorCheckBox
             // 
             this.trackOnlyCurrentFloorCheckBox.AutoSize = true;
-            this.trackOnlyCurrentFloorCheckBox.Location = new System.Drawing.Point(6, 65);
+            this.trackOnlyCurrentFloorCheckBox.Location = new System.Drawing.Point(6, 42);
             this.trackOnlyCurrentFloorCheckBox.Name = "trackOnlyCurrentFloorCheckBox";
             this.trackOnlyCurrentFloorCheckBox.Size = new System.Drawing.Size(135, 17);
             this.trackOnlyCurrentFloorCheckBox.TabIndex = 17;
