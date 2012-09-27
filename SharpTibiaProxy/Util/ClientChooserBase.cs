@@ -36,7 +36,7 @@ namespace SharpTibiaProxy.Util
         public const string NewClientDefaultText = "New default client...";
         public const string NewClientCustomText = "New client (choose location)...";
 
-        public static Client ChooseClient(ClientChooserOptions options, object selectedItem, LoginServer ls)
+        public static Client ChooseClient(ClientChooserOptions options, object selectedItem, LoginServer loginServer)
         {
             Client client = null;
             if (selectedItem.GetType() == typeof(string))
@@ -92,10 +92,10 @@ namespace SharpTibiaProxy.Util
             // Set OT server
             if (client != null && options.UseOT)
             {
-                client.LoginServers = new LoginServer[] { ls };
+                client.LoginServers = new LoginServer[] { loginServer };
                 client.IsOpenTibiaServer = true;
 
-                SaveOtServer(options.SavedServersLocation, ls, client.Version);
+                SaveOtServer(options.SavedServersLocation, loginServer, client.Version.FileVersion);
             }
             
             // Set client to run on one processor if instructed by the user
