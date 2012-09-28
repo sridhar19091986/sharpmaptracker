@@ -9,7 +9,7 @@ namespace SharpMapTracker
 {
     public class OtbReader
     {
-        private enum ItemGroup
+        private enum OtbItemGroup
         {
             NONE = 0,
             GROUND,
@@ -29,7 +29,7 @@ namespace SharpMapTracker
             LAST
         };
 
-        private enum ItemAttr
+        private enum OtbItemAttr
         {
             ITEM_ATTR_FIRST = 0x10,
             ITEM_ATTR_SERVERID = ITEM_ATTR_FIRST,
@@ -74,7 +74,7 @@ namespace SharpMapTracker
         };
 
         [FlagsAttribute]
-        private enum ItemFlags
+        private enum OtbItemFlags
         {
             BLOCK_SOLID = 1,
             BLOCK_PROJECTILE = 2,
@@ -104,261 +104,6 @@ namespace SharpMapTracker
             WALKSTACK = 33554432
         };
 
-        private class OtbLoader : BinaryReader
-        {
-            private enum SpecialChars
-            {
-                NODE_START = 0xFE,
-                NODE_END = 0xFF,
-                ESCAPE_CHAR = 0xFD,
-            };
-
-            public OtbLoader(Stream input)
-                : base(input)
-            {
-                //
-            }
-
-            public BinaryReader getRootNode()
-            {
-                return getChildNode();
-            }
-
-            public BinaryReader getChildNode()
-            {
-                advance();
-                return getNodeData();
-            }
-
-            public BinaryReader getNextNode()
-            {
-                BaseStream.Seek(currentNodePos, SeekOrigin.Begin);
-
-                byte value = ReadByte();
-                if ((SpecialChars)value != SpecialChars.NODE_START)
-                {
-                    return null;
-                }
-
-                value = ReadByte();
-
-                Int32 level = 1;
-                while (true)
-                {
-                    value = ReadByte();
-                    if ((SpecialChars)value == SpecialChars.NODE_END)
-                    {
-                        --level;
-                        if (level == 0)
-                        {
-                            value = ReadByte();
-                            if ((SpecialChars)value == SpecialChars.NODE_END)
-                            {
-                                return null;
-                            }
-                            else if ((SpecialChars)value != SpecialChars.NODE_START)
-                            {
-                                return null;
-                            }
-                            else
-                            {
-                                currentNodePos = BaseStream.Position - 1;
-                                return getNodeData();
-                            }
-                        }
-                    }
-                    else if ((SpecialChars)value == SpecialChars.NODE_START)
-                    {
-                        ++level;
-                    }
-                    else if ((SpecialChars)value == SpecialChars.ESCAPE_CHAR)
-                    {
-                        ReadByte();
-                    }
-                }
-            }
-
-            private BinaryReader getNodeData()
-            {
-                BaseStream.Seek(currentNodePos, SeekOrigin.Begin);
-
-                //read node type
-                byte value = ReadByte();
-
-                if ((SpecialChars)value != SpecialChars.NODE_START)
-                {
-                    return null;
-                }
-
-                MemoryStream ms = new MemoryStream(200);
-
-                currentNodeSize = 0;
-                while (true)
-                {
-                    value = ReadByte();
-                    if ((SpecialChars)value == SpecialChars.NODE_END || (SpecialChars)value == SpecialChars.NODE_START)
-                        break;
-                    else if ((SpecialChars)value == SpecialChars.ESCAPE_CHAR)
-                    {
-                        value = ReadByte();
-                    }
-                    ++currentNodeSize;
-                    ms.WriteByte(value);
-                }
-
-                BaseStream.Seek(currentNodePos, SeekOrigin.Begin);
-                ms.Position = 0;
-                return new BinaryReader(ms);
-            }
-
-            private bool advance()
-            {
-                try
-                {
-                    Int64 seekPos = 0;
-                    if (currentNodePos == 0)
-                    {
-                        seekPos = 4;
-                    }
-                    else
-                    {
-                        seekPos = currentNodePos;
-                    }
-
-                    BaseStream.Seek(seekPos, SeekOrigin.Begin);
-
-                    byte value = ReadByte();
-                    if ((SpecialChars)value != SpecialChars.NODE_START)
-                    {
-                        return false;
-                    }
-
-                    if (currentNodePos == 0)
-                    {
-                        currentNodePos = BaseStream.Position - 1;
-                        return true;
-                    }
-                    else
-                    {
-                        value = ReadByte();
-
-                        while (true)
-                        {
-                            value = ReadByte();
-                            if ((SpecialChars)value == SpecialChars.NODE_END)
-                            {
-                                return false;
-                            }
-                            else if ((SpecialChars)value == SpecialChars.NODE_START)
-                            {
-                                currentNodePos = BaseStream.Position - 1;
-                                return true;
-                            }
-                            else if ((SpecialChars)value == SpecialChars.ESCAPE_CHAR)
-                            {
-                                ReadByte();
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-            }
-
-            public void createNode(byte type)
-            {
-                writeByte((byte)SpecialChars.NODE_START, false);
-                writeByte(type);
-            }
-
-            public void closeNode()
-            {
-                writeByte((byte)SpecialChars.NODE_END, false);
-            }
-
-            public void writeByte(byte value)
-            {
-                byte[] bytes = new byte[1] { value };
-                writeBytes(bytes, true);
-            }
-
-            public void writeByte(byte value, bool unescape)
-            {
-                byte[] bytes = new byte[1] { value };
-                writeBytes(bytes, unescape);
-            }
-
-            public void writeUInt16(UInt16 value)
-            {
-                byte[] bytes = BitConverter.GetBytes(value);
-                writeBytes(bytes, true);
-            }
-
-            public void writeUInt16(UInt16 value, bool unescape)
-            {
-                byte[] bytes = BitConverter.GetBytes(value);
-                writeBytes(bytes, unescape);
-            }
-
-            public void writeUInt32(UInt32 value)
-            {
-                byte[] bytes = BitConverter.GetBytes(value);
-                writeBytes(bytes, true);
-            }
-
-            public void writeUInt32(UInt32 value, bool unescape)
-            {
-                byte[] bytes = BitConverter.GetBytes(value);
-                writeBytes(bytes, unescape);
-            }
-
-            public void writeProp(ItemAttr attr, BinaryWriter writer)
-            {
-                writer.BaseStream.Position = 0;
-                byte[] bytes = new byte[writer.BaseStream.Length];
-                writer.BaseStream.Read(bytes, 0, (int)writer.BaseStream.Length);
-                writer.BaseStream.Position = 0;
-                writer.BaseStream.SetLength(0);
-
-                writeProp((byte)attr, bytes);
-            }
-
-            public void writeProp(RootAttr attr, BinaryWriter writer)
-            {
-                writer.BaseStream.Position = 0;
-                byte[] bytes = new byte[writer.BaseStream.Length];
-                writer.BaseStream.Read(bytes, 0, (int)writer.BaseStream.Length);
-                writer.BaseStream.Position = 0;
-                writer.BaseStream.SetLength(0);
-
-                writeProp((byte)attr, bytes);
-            }
-
-            private void writeProp(byte attr, byte[] bytes)
-            {
-                writeByte((byte)attr);
-                writeUInt16((UInt16)bytes.Length);
-                writeBytes(bytes, true);
-            }
-
-            public void writeBytes(byte[] bytes, bool unescape)
-            {
-                foreach (byte b in bytes)
-                {
-                    if (unescape && (b == (byte)SpecialChars.NODE_START || b == (byte)SpecialChars.NODE_END || b == (byte)SpecialChars.ESCAPE_CHAR))
-                    {
-                        BaseStream.WriteByte((byte)SpecialChars.ESCAPE_CHAR);
-                    }
-
-                    BaseStream.WriteByte(b);
-                }
-            }
-
-            public Int64 currentNodePos = 0;
-            public UInt32 currentNodeSize = 0;
-        };
 
         public Otb Open(string filename, bool outputDebug = false)
         {
@@ -367,10 +112,10 @@ namespace SharpMapTracker
 
             try
             {
-                using (OtbLoader reader = new OtbLoader(fileStream))
+                using (FileLoader reader = new FileLoader(fileStream))
                 {
                     //get root node
-                    BinaryReader nodeReader = reader.getRootNode();
+                    BinaryReader nodeReader = reader.GetRootNode();
                     if (nodeReader == null)
                         throw new Exception("Null root node.");
 
@@ -390,7 +135,7 @@ namespace SharpMapTracker
                         nodeReader.BaseStream.Seek(128, SeekOrigin.Current);
                     }
 
-                    nodeReader = reader.getChildNode();
+                    nodeReader = reader.GetChildNode();
                     if (nodeReader == null)
                         throw new Exception("Null child node.");
 
@@ -400,45 +145,41 @@ namespace SharpMapTracker
 
                         byte itemGroup = nodeReader.ReadByte();
                         if (outputDebug)
-                        {
-                            Trace.WriteLine(String.Format("Node:ItemGroup {0}", (ItemGroup)itemGroup));
-                        }
+                            Trace.WriteLine(String.Format("Node:ItemGroup {0}", (OtbItemGroup)itemGroup));
 
-                        switch ((ItemGroup)itemGroup)
+                        switch ((OtbItemGroup)itemGroup)
                         {
-                            case ItemGroup.NONE: item.Type = OtbItemType.None; break;
-                            case ItemGroup.GROUND: item.Type = OtbItemType.Ground; break;
-                            case ItemGroup.SPLASH: item.Type = OtbItemType.Splash; break;
-                            case ItemGroup.FLUID: item.Type = OtbItemType.FluidContainer; break;
-                            case ItemGroup.CONTAINER: item.Type = OtbItemType.Container; break;
-                            case ItemGroup.DEPRECATED: item.Type = OtbItemType.Deprecated; break;
+                            case OtbItemGroup.NONE: item.Type = OtbItemType.None; break;
+                            case OtbItemGroup.GROUND: item.Type = OtbItemType.Ground; break;
+                            case OtbItemGroup.SPLASH: item.Type = OtbItemType.Splash; break;
+                            case OtbItemGroup.FLUID: item.Type = OtbItemType.FluidContainer; break;
+                            case OtbItemGroup.CONTAINER: item.Type = OtbItemType.Container; break;
+                            case OtbItemGroup.DEPRECATED: item.Type = OtbItemType.Deprecated; break;
                             default: break;
                         }
 
-                        ItemFlags flags = (ItemFlags)nodeReader.ReadUInt32();
+                        OtbItemFlags flags = (OtbItemFlags)nodeReader.ReadUInt32();
                         if (outputDebug)
-                        {
                             Trace.WriteLine(String.Format("Node:flags {0}", flags));
-                        }
 
-                        item.BlockObject = ((flags & ItemFlags.BLOCK_SOLID) == ItemFlags.BLOCK_SOLID);
-                        item.BlockProjectile = ((flags & ItemFlags.BLOCK_PROJECTILE) == ItemFlags.BLOCK_PROJECTILE);
-                        item.BlockPathFind = ((flags & ItemFlags.BLOCK_PATHFIND) == ItemFlags.BLOCK_PATHFIND);
-                        item.IsPickupable = ((flags & ItemFlags.PICKUPABLE) == ItemFlags.PICKUPABLE);
-                        item.IsMoveable = ((flags & ItemFlags.MOVEABLE) == ItemFlags.MOVEABLE);
-                        item.IsStackable = ((flags & ItemFlags.STACKABLE) == ItemFlags.STACKABLE);
-                        item.AlwaysOnTop = ((flags & ItemFlags.ALWAYSONTOP) == ItemFlags.ALWAYSONTOP);
-                        item.IsVertical = ((flags & ItemFlags.VERTICAL) == ItemFlags.VERTICAL);
-                        item.IsHorizontal = ((flags & ItemFlags.HORIZONTAL) == ItemFlags.HORIZONTAL);
-                        item.IsHangable = ((flags & ItemFlags.HANGABLE) == ItemFlags.HANGABLE);
-                        item.IsRotatable = ((flags & ItemFlags.ROTABLE) == ItemFlags.ROTABLE);
-                        item.IsReadable = ((flags & ItemFlags.READABLE) == ItemFlags.READABLE);
-                        item.HasUseWith = ((flags & ItemFlags.USEABLE) == ItemFlags.USEABLE);
-                        item.HasHeight = ((flags & ItemFlags.HAS_HEIGHT) == ItemFlags.HAS_HEIGHT);
-                        item.LookThrough = ((flags & ItemFlags.LOOKTHROUGH) == ItemFlags.LOOKTHROUGH);
-                        item.AllowDistRead = ((flags & ItemFlags.ALLOWDISTREAD) == ItemFlags.ALLOWDISTREAD);
-                        item.IsAnimation = ((flags & ItemFlags.ANIMATION) == ItemFlags.ANIMATION);
-                        item.WalkStack = ((flags & ItemFlags.WALKSTACK) == ItemFlags.WALKSTACK);
+                        item.BlockObject = ((flags & OtbItemFlags.BLOCK_SOLID) == OtbItemFlags.BLOCK_SOLID);
+                        item.BlockProjectile = ((flags & OtbItemFlags.BLOCK_PROJECTILE) == OtbItemFlags.BLOCK_PROJECTILE);
+                        item.BlockPathFind = ((flags & OtbItemFlags.BLOCK_PATHFIND) == OtbItemFlags.BLOCK_PATHFIND);
+                        item.IsPickupable = ((flags & OtbItemFlags.PICKUPABLE) == OtbItemFlags.PICKUPABLE);
+                        item.IsMoveable = ((flags & OtbItemFlags.MOVEABLE) == OtbItemFlags.MOVEABLE);
+                        item.IsStackable = ((flags & OtbItemFlags.STACKABLE) == OtbItemFlags.STACKABLE);
+                        item.AlwaysOnTop = ((flags & OtbItemFlags.ALWAYSONTOP) == OtbItemFlags.ALWAYSONTOP);
+                        item.IsVertical = ((flags & OtbItemFlags.VERTICAL) == OtbItemFlags.VERTICAL);
+                        item.IsHorizontal = ((flags & OtbItemFlags.HORIZONTAL) == OtbItemFlags.HORIZONTAL);
+                        item.IsHangable = ((flags & OtbItemFlags.HANGABLE) == OtbItemFlags.HANGABLE);
+                        item.IsRotatable = ((flags & OtbItemFlags.ROTABLE) == OtbItemFlags.ROTABLE);
+                        item.IsReadable = ((flags & OtbItemFlags.READABLE) == OtbItemFlags.READABLE);
+                        item.HasUseWith = ((flags & OtbItemFlags.USEABLE) == OtbItemFlags.USEABLE);
+                        item.HasHeight = ((flags & OtbItemFlags.HAS_HEIGHT) == OtbItemFlags.HAS_HEIGHT);
+                        item.LookThrough = ((flags & OtbItemFlags.LOOKTHROUGH) == OtbItemFlags.LOOKTHROUGH);
+                        item.AllowDistRead = ((flags & OtbItemFlags.ALLOWDISTREAD) == OtbItemFlags.ALLOWDISTREAD);
+                        item.IsAnimation = ((flags & OtbItemFlags.ANIMATION) == OtbItemFlags.ANIMATION);
+                        item.WalkStack = ((flags & OtbItemFlags.WALKSTACK) == OtbItemFlags.WALKSTACK);
 
                         while (nodeReader.PeekChar() != -1)
                         {
@@ -446,14 +187,11 @@ namespace SharpMapTracker
                             UInt16 datalen = nodeReader.ReadUInt16();
 
                             if (outputDebug)
-                            {
-                                Trace.WriteLine(String.Format("Node[{0}]:attribut {1}, size: {2}",
-                                    reader.currentNodePos, ((ItemAttr)attribute), datalen, reader.currentNodePos + nodeReader.BaseStream.Position));
-                            }
+                                Trace.WriteLine(String.Format("Node[{0}]:attribut {1}, size: {2}", reader.currentNodePos, ((OtbItemAttr)attribute), datalen, reader.currentNodePos + nodeReader.BaseStream.Position));
 
-                            switch ((ItemAttr)attribute)
+                            switch ((OtbItemAttr)attribute)
                             {
-                                case ItemAttr.ITEM_ATTR_SERVERID:
+                                case OtbItemAttr.ITEM_ATTR_SERVERID:
                                     if (datalen != sizeof(UInt16))
                                         throw new Exception("Unexpected data length of server id block (Should be 2 bytes)");
 
@@ -463,7 +201,7 @@ namespace SharpMapTracker
 
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_CLIENTID:
+                                case OtbItemAttr.ITEM_ATTR_CLIENTID:
                                     if (datalen != sizeof(UInt16))
                                         throw new Exception("Unexpected data length of client id block (Should be 2 bytes)");
 
@@ -472,7 +210,7 @@ namespace SharpMapTracker
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}", item.SpriteId));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_WAREID:
+                                case OtbItemAttr.ITEM_ATTR_WAREID:
                                     if (datalen != sizeof(UInt16))
                                         throw new Exception("Unexpected data length of ware id block (Should be 2 bytes)");
 
@@ -481,7 +219,7 @@ namespace SharpMapTracker
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}", item.WareId));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_SPEED:
+                                case OtbItemAttr.ITEM_ATTR_SPEED:
                                     if (datalen != sizeof(UInt16))
                                         throw new Exception("Unexpected data length of speed block (Should be 2 bytes)");
 
@@ -490,13 +228,13 @@ namespace SharpMapTracker
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}", item.GroundSpeed));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_NAME:
+                                case OtbItemAttr.ITEM_ATTR_NAME:
                                     item.Name = new string(nodeReader.ReadChars(datalen));
                                     if (outputDebug)
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}", item.Name));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_SPRITEHASH:
+                                case OtbItemAttr.ITEM_ATTR_SPRITEHASH:
                                     if (datalen != 16)
                                         throw new Exception("Unexpected data length of sprite hash (Should be 16 bytes)");
 
@@ -505,7 +243,7 @@ namespace SharpMapTracker
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}", item.AlwaysOnTopOrder));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_MINIMAPCOLOR:
+                                case OtbItemAttr.ITEM_ATTR_MINIMAPCOLOR:
                                     if (datalen != 2)
                                         throw new Exception("Unexpected data length of minimap color (Should be 2 bytes)");
 
@@ -514,7 +252,7 @@ namespace SharpMapTracker
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}", item.MinimapColor));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_07:
+                                case OtbItemAttr.ITEM_ATTR_07:
                                     //read/write-able
                                     if (datalen != 2)
                                         throw new Exception("Unexpected data length of attr 07 (Should be 2 bytes)");
@@ -522,7 +260,7 @@ namespace SharpMapTracker
                                     item.MaxReadWriteChars = nodeReader.ReadUInt16();
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_08:
+                                case OtbItemAttr.ITEM_ATTR_08:
                                     //readable
                                     if (datalen != 2)
                                         throw new Exception("Unexpected data length of attr 08 (Should be 2 bytes)");
@@ -530,7 +268,7 @@ namespace SharpMapTracker
                                     item.MaxReadChars = nodeReader.ReadUInt16();
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_LIGHT2:
+                                case OtbItemAttr.ITEM_ATTR_LIGHT2:
                                     if (datalen != sizeof(UInt16) * 2)
                                         throw new Exception("Unexpected data length of item light (2) block");
 
@@ -540,7 +278,7 @@ namespace SharpMapTracker
                                         Trace.WriteLine(String.Format("Node:attribute:data {0}, {1}", item.LightLevel, item.LightColor));
                                     break;
 
-                                case ItemAttr.ITEM_ATTR_TOPORDER:
+                                case OtbItemAttr.ITEM_ATTR_TOPORDER:
                                     if (datalen != sizeof(byte))
                                         throw new Exception("Unexpected data length of item toporder block (Should be 1 byte)");
 
@@ -580,19 +318,13 @@ namespace SharpMapTracker
         private Dictionary<ushort, OtbItem> serverItemMap = new Dictionary<ushort, OtbItem>();
 
         public uint MajorVersion { get; set; }
-
         public uint MinorVersion { get; set; }
-
         public uint BuildNumber { get; set; }
 
         public void AddItem(OtbItem item)
         {
             serverItemMap[item.Id] = item;
-
-            //if (!clientItemMap.ContainsKey(item.SpriteId))
-                clientItemMap[item.SpriteId] = item;
-            //else
-            //    Trace.TraceWarning("Duplicate client item " + item.Id + " and " + clientItemMap[item.SpriteId].Id); 
+            clientItemMap[item.SpriteId] = item;
         }
 
         public OtbItem GetItem(ushort id)

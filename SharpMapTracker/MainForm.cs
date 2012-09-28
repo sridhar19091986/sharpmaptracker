@@ -23,31 +23,29 @@ namespace SharpMapTracker
         private Client client;
         private Otb otb;
 
-        private Dictionary<ulong, OtMapTile> tiles;
-        private Dictionary<uint, OtMapCreature> creatures;
-        private HashSet<ulong> creatureLocations;
+        private OtMap map;
 
         public bool TrackMoveableItems { get; set; }
-        public bool TrackSplashItems { get; set; }
+        public bool TrackSplashes { get; set; }
         public bool TrackMonsters { get; set; }
         public bool TrackNPCs { get; set; }
         public bool TrackOnlyCurrentFloor { get; set; }
 
         public MainForm()
         {
+            LoadItems();
+
             InitializeComponent();
 
             Text = "SharpMapTracker v" + Constants.MAP_TRACKER_VERSION;
 
-            tiles = new Dictionary<ulong, OtMapTile>();
-            creatures = new Dictionary<uint, OtMapCreature>();
-            creatureLocations = new HashSet<ulong>();
+            map = new OtMap();
 
-            DataBindings.Add("TopMost", topMostCheckBox, "Checked");
-            DataBindings.Add("TrackMoveableItems", trackMoveableItemCheckBox, "Checked");
-            DataBindings.Add("TrackSplashItems", trackSplashItemsCheckBox, "Checked");
+            DataBindings.Add("TopMost", alwaysOnTopCheckBox, "Checked");
+            DataBindings.Add("TrackMoveableItems", trackMoveableItemsCheckBox, "Checked");
+            DataBindings.Add("TrackSplashes", trackSplashesCheckBox, "Checked");
             DataBindings.Add("TrackMonsters", trackMonstersCheckBox, "Checked");
-            DataBindings.Add("TrackNPCs", trackNPCsCheckbox, "Checked");
+            DataBindings.Add("TrackNPCs", trackNpcsCheckBox, "Checked");
             DataBindings.Add("TrackOnlyCurrentFloor", trackOnlyCurrentFloorCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
@@ -106,16 +104,11 @@ namespace SharpMapTracker
 
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-            LoadItems();
-        }
-
         private void Map_Updated(object sender, MapUpdatedEventArgs e)
         {
             try
             {
-                lock (tiles)
+                lock (map)
                 {
                     miniMap.BeginUpdate();
 
@@ -126,12 +119,10 @@ namespace SharpMapTracker
 
                         var index = tile.Location.ToIndex();
 
-                        OtMapTile mapTile = null;
-                        tiles.TryGetValue(index, out mapTile);
+                        OtMapTile mapTile = map.GetTile(tile.Location);
                         if (mapTile == null)
-                            mapTile = new OtMapTile();
+                            mapTile = new OtMapTile(tile.Location);
 
-                        mapTile.Location = tile.Location;
                         mapTile.Clear();
 
                         for (int i = 0; i < tile.ThingCount; i++)
@@ -143,14 +134,12 @@ namespace SharpMapTracker
                                 var creature = thing as Creature;
 
                                 if (creature.Type == CreatureType.PLAYER || (!TrackMonsters && creature.Type == CreatureType.MONSTER) ||
-                                    (!TrackNPCs && creature.Type == CreatureType.NPC) || creatures.ContainsKey(creature.Id) ||
-                                    creatureLocations.Contains(index))
+                                    (!TrackNPCs && creature.Type == CreatureType.NPC) || mapTile.Creature != null)
                                 {
                                     continue;
                                 }
 
-                                creatureLocations.Add(index);
-                                creatures.Add(creature.Id, new OtMapCreature { Id = creature.Id, Name = creature.Name, Location = creature.Location, Type = creature.Type });
+                                mapTile.Creature = new OtMapCreature { Id = creature.Id, Name = creature.Name, Location = creature.Location, Type = creature.Type };
                             }
                             else if (thing is Item)
                             {
@@ -166,7 +155,7 @@ namespace SharpMapTracker
                                 if (item.Type.IsMoveable && !TrackMoveableItems)
                                     continue;
 
-                                if (item.IsSplash && !TrackSplashItems)
+                                if (item.IsSplash && !TrackSplashes)
                                     continue;
 
                                 OtMapItem mapItem = new OtMapItem(info);
@@ -189,13 +178,13 @@ namespace SharpMapTracker
                         }
 
                         miniMap.SetColor(mapTile.Location, mapTile.MapColor);
-                        tiles[index] = mapTile;
+                        map.SetTile(mapTile);
                     }
 
                     miniMap.CenterLocation = client.PlayerLocation;
                     miniMap.EndUpdate();
 
-                    UpdateCounters(tiles.Count, creatures.Count);
+                    UpdateCounters(map.TileCount, map.NpcCount, map.MonsterCount);
                 }
             }
             catch (Exception ex)
@@ -204,16 +193,17 @@ namespace SharpMapTracker
             }
         }
 
-        private void UpdateCounters(int tileCount, int creatureCount)
+        private void UpdateCounters(int tileCount, int npcCount, int monsterCount)
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action<int, int>(UpdateCounters), tileCount, creatureCount);
+                BeginInvoke(new Action<int, int,int>(UpdateCounters), tileCount, npcCount, monsterCount);
                 return;
             }
 
-            tileCountTextBox.Text = tileCount.ToString();
-            creatureCountTextBox.Text = creatureCount.ToString();
+            tileCountLabel.Text = "Tiles: " + tileCount.ToString();
+            npcCountLabel.Text = "NPCs: " + npcCount.ToString();
+            monsterCountLabel.Text = "Monsters: " + monsterCount.ToString();
         }
 
         private void LoadItems()
@@ -231,61 +221,6 @@ namespace SharpMapTracker
             }
         }
 
-        private void saveMapButton_Click(object sender, EventArgs e)
-        {
-            var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Map Files (*.otbm)|*.otbm";
-
-            if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                lock (tiles)
-                {
-                    try
-                    {
-                        OtbmWriter.WriteMapTilesToFile(saveFileDialog.FileName, tiles.Values, creatures.Values, Constants.GetMapVersion(963));
-                        Trace.WriteLine("Map successfully saved.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine("[Error] Unable to save map file. Details: " + ex.Message);
-                    }
-
-                }
-            }
-        }
-
-        private void trackcamButton_Click(object sender, EventArgs e)
-        {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "TibiaCast Files (*.recording)|*.recording";
-            openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Tibiacast\\Recordings";
-            openFileDialog.Multiselect = true;
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                try
-                {
-                    if (client == null)
-                    {
-                        client = new Client("Tibia.dat", ClientVersion.Version963);
-                        client.Map.Updated += Map_Updated;
-                    }
-
-                    trackcamButton.Enabled = false;
-                    clearButton.Enabled = false;
-                    saveMapButton.Enabled = false;
-                    miniMap.BeginUpdate();
-
-                    var reader = new TibiaCastReader(client);
-                    reader.BeginRead(openFileDialog.FileNames, ReadTibiaCastFilesCallback, null);
-
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine("Exception while tracking tibia cast files. Details: " + ex.Message);
-                }
-            }
-        }
-
         private void ReadTibiaCastFilesCallback(IAsyncResult ar)
         {
             if (InvokeRequired)
@@ -294,26 +229,23 @@ namespace SharpMapTracker
                 return;
             }
 
-            trackcamButton.Enabled = true;
-            clearButton.Enabled = true;
-            saveMapButton.Enabled = true;
             miniMap.EndUpdate();
         }
 
         private void clearButton_Click(object sender, EventArgs e)
         {
-            lock (tiles)
+            lock (map)
             {
-                tiles.Clear();
-                creatures.Clear();
+                map.Clear();
                 miniMap.Clear();
                 traceTextBox.Text = "";
-                tileCountTextBox.Text = "0";
-                creatureCountTextBox.Text = "0";
+                tileCountLabel.Text = "Tiles: 0";
+                npcCountLabel.Text = "NPCs: 0";
+                monsterCountLabel.Text = "Monsters: 0";
             }
         }
 
-        private void loadClientButton_Click(object sender, EventArgs e)
+        private void loadClientToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -329,7 +261,7 @@ namespace SharpMapTracker
                 chooserOptions.ShowOTOption = true;
                 chooserOptions.OfflineOnly = true;
 
-                client = ClientChooser.ShowBox(chooserOptions);
+                client = ClientChooser.ShowBox(chooserOptions, this);
 
                 if (client != null)
                 {
@@ -341,6 +273,81 @@ namespace SharpMapTracker
             catch (Exception ex)
             {
                 Trace.WriteLine("[Error] Unable to load tibia client. Details: " + ex.Message);
+            }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void saveMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Map Files (*.otbm)|*.otbm";
+
+            if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                lock (map)
+                {
+                    try
+                    {
+                        OtbmWriter.WriteMapTilesToFile(saveFileDialog.FileName, map.Tiles, map.Creatures, Constants.GetMapVersion(963));
+                        Trace.WriteLine("Map successfully saved.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine("[Error] Unable to save map file. Details: " + ex.Message);
+                    }
+
+                }
+            }
+        }
+
+        private void trackTibiaCastFilesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "TibiaCast Files (*.recording)|*.recording";
+            openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Tibiacast\\Recordings";
+            openFileDialog.Multiselect = true;
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                try
+                {
+                    if (client == null)
+                    {
+                        client = new Client("Tibia.dat", ClientVersion.Version963);
+                        client.Map.Updated += Map_Updated;
+                    }
+
+                    miniMap.BeginUpdate();
+
+                    var reader = new TibiaCastReader(client);
+                    reader.BeginRead(openFileDialog.FileNames, ReadTibiaCastFilesCallback, null);
+
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine("Exception while tracking tibia cast files. Details: " + ex.Message);
+                }
+            }
+        }
+
+        private void loadMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "OpenTibia Map (*.otbm)|*.otbm";
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                try
+                {
+                    var reader = new OtbmReader();
+                    var map = reader.Open(openFileDialog.FileName, otb);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine("Exception while loading map file. Details: " + ex.Message);
+                }
             }
         }
     }
