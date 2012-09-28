@@ -14,55 +14,6 @@ namespace SharpMapTracker
         private const byte NodeEnd = 0xFF;
         private const byte Escape = 0xFD;
 
-        private enum OtMapNodeTypes
-        {
-            ROOTV1 = 0,
-            ROOTV2 = 1,
-            MAP_DATA = 2,
-            ITEM_DEF = 3,
-            TILE_AREA = 4,
-            TILE = 5,
-            ITEM = 6,
-            TILE_SQUARE = 7,
-            TILE_REF = 8,
-            SPAWNS = 9,
-            SPAWN_AREA = 10,
-            MONSTER = 11,
-            TOWNS = 12,
-            TOWN = 13,
-            HOUSETILE = 14,
-            WAYPOINTS = 15,
-            WAYPOINT = 16
-        };
-
-        private enum OtMapAttrTypes
-        {
-            DESCRIPTION = 1,
-            EXT_FILE = 2,
-            TILE_FLAGS = 3,
-            ACTION_ID = 4,
-            UNIQUE_ID = 5,
-            TEXT = 6,
-            DESC = 7,
-            TELE_DEST = 8,
-            ITEM = 9,
-            DEPOT_ID = 10,
-            EXT_SPAWN_FILE = 11,
-            RUNE_CHARGES = 12,
-            EXT_HOUSE_FILE = 13,
-            HOUSEDOORID = 14,
-            COUNT = 15,
-            DURATION = 16,
-            DECAYING_STATE = 17,
-            WRITTENDATE = 18,
-            WRITTENBY = 19,
-            SLEEPERGUID = 20,
-            SLEEPSTART = 21,
-            CHARGES = 22,
-            CONTAINER_ITEMS = 23,
-            ATTRIBUTE_MAP = 128
-        };
-
         #region Vars/Properties
         private string fileName;
         private FileStream fileStream;
@@ -104,7 +55,7 @@ namespace SharpMapTracker
             WriteUInt32(0, false);
 
             // Root node
-            WriteNodeStart(OtMapNodeTypes.ROOTV1);
+            WriteNodeStart(OtMap.OtMapNodeTypes.ROOTV1);
 
             // Header information
             // Version
@@ -122,19 +73,19 @@ namespace SharpMapTracker
 
         private void WriteMapStart(string houseFileName, string spawnFileName)
         {
-            WriteNodeStart(OtMapNodeTypes.MAP_DATA);
+            WriteNodeStart(OtMap.OtMapNodeTypes.MAP_DATA);
 
-            WriteByte((byte)OtMapAttrTypes.DESCRIPTION);
+            WriteByte((byte)OtMap.OtMapAttrTypes.DESCRIPTION);
             WriteString("Created with SharpMapTracker v" + Constants.MAP_TRACKER_VERSION);
 
-            WriteByte((byte)OtMapAttrTypes.EXT_HOUSE_FILE);
+            WriteByte((byte)OtMap.OtMapAttrTypes.EXT_HOUSE_FILE);
             WriteString(houseFileName);
 
-            WriteByte((byte)OtMapAttrTypes.EXT_SPAWN_FILE);
+            WriteByte((byte)OtMap.OtMapAttrTypes.EXT_SPAWN_FILE);
             WriteString(spawnFileName);
         }
 
-        private void WriteNodeStart(OtMapNodeTypes type)
+        private void WriteNodeStart(OtMap.OtMapNodeTypes type)
         {
             WriteByte(NodeStart, false);
             WriteByte((byte)type);
@@ -273,20 +224,20 @@ namespace SharpMapTracker
             mapWriter.WriteMapStart(houseFileName, spawnFileName);
             foreach (OtMapTile tile in mapTiles)
             {
-                mapWriter.WriteNodeStart(OtMapNodeTypes.TILE_AREA);
+                mapWriter.WriteNodeStart(OtMap.OtMapNodeTypes.TILE_AREA);
                 mapWriter.WriteTileAreaCoords(tile.Location);
-                mapWriter.WriteNodeStart(OtMapNodeTypes.TILE);
+                mapWriter.WriteNodeStart(OtMap.OtMapNodeTypes.TILE);
                 mapWriter.WriteTileCoords(tile.Location);
 
                 if (tile.TileId > 0)
                 {
-                    mapWriter.WriteByte((byte)OtMapAttrTypes.ITEM);
+                    mapWriter.WriteByte((byte)OtMap.OtMapAttrTypes.ITEM);
                     mapWriter.WriteUInt16(tile.TileId);
                 }
 
                 foreach (OtMapItem item in tile.Items)
                 {
-                    mapWriter.WriteNodeStart(OtMapNodeTypes.ITEM);
+                    mapWriter.WriteNodeStart(OtMap.OtMapNodeTypes.ITEM);
                     mapWriter.WriteUInt16(item.Info.Id);
                     if (item.AttrType != OtMapItemAttrTypes.NONE)
                     {

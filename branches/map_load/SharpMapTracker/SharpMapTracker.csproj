@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Constants.cs" />
     <Compile Include="FastBitmap.cs" />
+    <Compile Include="FileLoader.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -67,8 +68,10 @@
       <DependentUpon>MiniMap.cs</DependentUpon>
     </Compile>
     <Compile Include="OtbItem.cs" />
+    <Compile Include="OtbmReader.cs" />
     <Compile Include="OtbReader.cs" />
     <Compile Include="OtbmWriter.cs" />
+    <Compile Include="OtMap.cs" />
     <Compile Include="OtMapCreature.cs" />
     <Compile Include="OtMapItem.cs" />
     <Compile Include="OtMapTile.cs" />
