@@ -71,7 +71,6 @@
     <Compile Include="OtbReader.cs" />
     <Compile Include="OtbmWriter.cs" />
     <Compile Include="OtMap.cs" />
-    <Compile Include="OtMapCreature.cs" />
     <Compile Include="OtMapItem.cs" />
     <Compile Include="OtMapTile.cs" />
     <Compile Include="Program.cs" />

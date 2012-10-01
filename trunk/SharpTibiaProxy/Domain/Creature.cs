@@ -23,6 +23,11 @@ namespace SharpTibiaProxy.Domain
 
         public Location Location { get; set; }
 
+        /// <summary>
+        /// Level from chat
+        /// </summary>
+        public ushort Level { get; set; }
+
         public override int Order
         {
             get { return 4; }

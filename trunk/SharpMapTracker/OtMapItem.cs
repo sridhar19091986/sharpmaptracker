@@ -45,11 +45,11 @@ namespace SharpMapTracker
 
     public class OtMapItem
     {
-        public OtbItem Info { get; private set; }
+        public OtItemType Info { get; private set; }
         public OtMapItemAttrTypes AttrType;
         public byte Extra;
 
-        public OtMapItem(OtbItem info)
+        public OtMapItem(OtItemType info)
         {
             Info = info;
         }

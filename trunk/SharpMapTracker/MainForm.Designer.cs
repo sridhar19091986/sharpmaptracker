@@ -37,6 +37,7 @@
             this.trackTibiaCastFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.saveMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveNPCsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,7 +48,6 @@
             this.trackOnlyCurrentFloorCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.alwaysOnTopCheckBox = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.tileCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -74,8 +74,7 @@
             // 
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.optionsToolStripMenuItem,
-            this.aboutToolStripMenuItem});
+            this.optionsToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
             this.menuStrip.Size = new System.Drawing.Size(398, 24);
@@ -89,6 +88,7 @@
             this.trackTibiaCastFilesToolStripMenuItem,
             this.toolStripSeparator1,
             this.saveMapToolStripMenuItem,
+            this.saveNPCsToolStripMenuItem,
             this.toolStripSeparator2,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -125,6 +125,13 @@
             this.saveMapToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
             this.saveMapToolStripMenuItem.Text = "&Save Map...";
             this.saveMapToolStripMenuItem.Click += new System.EventHandler(this.saveMapToolStripMenuItem_Click);
+            // 
+            // saveNPCsToolStripMenuItem
+            // 
+            this.saveNPCsToolStripMenuItem.Name = "saveNPCsToolStripMenuItem";
+            this.saveNPCsToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.saveNPCsToolStripMenuItem.Text = "Save &NPCs...";
+            this.saveNPCsToolStripMenuItem.Click += new System.EventHandler(this.saveNPCsToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -207,12 +214,6 @@
             this.alwaysOnTopCheckBox.Name = "alwaysOnTopCheckBox";
             this.alwaysOnTopCheckBox.Size = new System.Drawing.Size(204, 22);
             this.alwaysOnTopCheckBox.Text = "Always On Top";
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
-            this.aboutToolStripMenuItem.Text = "&About";
             // 
             // statusStrip
             // 
@@ -307,7 +308,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel tileCountLabel;
         private System.Windows.Forms.ToolStripStatusLabel npcCountLabel;
@@ -322,5 +322,6 @@
         private System.Windows.Forms.ToolStripMenuItem alwaysOnTopCheckBox;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem trackTibiaCastFilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveNPCsToolStripMenuItem;
     }
 }

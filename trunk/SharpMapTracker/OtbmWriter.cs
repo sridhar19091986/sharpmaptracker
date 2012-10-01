@@ -5,6 +5,7 @@ using System.IO;
 using System.Xml;
 using SharpTibiaProxy.Domain;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace SharpMapTracker
 {
@@ -160,35 +161,35 @@ namespace SharpMapTracker
         #endregion
 
         #region Static Methods
-        public static void WriteMapTilesToFile(String filename, IEnumerable<OtMapTile> mapTiles, IEnumerable<OtMapCreature> creatures, Version version)
+        public static void WriteMapToFile(String filename, OtMap map, Version version)
         {
             var dir = Path.GetDirectoryName(filename);
             var baseFileName = Path.GetFileNameWithoutExtension(filename);
             string otbmFileName = baseFileName + ".otbm";
             string houseFileName = baseFileName + "-house.xml";
             string spawnFileName = baseFileName + "-spawn.xml";
-            WriteOtbm(Path.Combine(dir, otbmFileName), houseFileName, spawnFileName, version, mapTiles);
+            WriteOtbm(Path.Combine(dir, otbmFileName), houseFileName, spawnFileName, version, map.Tiles);
             WriteHouses(Path.Combine(dir, baseFileName + "-house.xml"));
-            WriteCreatures(Path.Combine(dir, baseFileName + "-spawn.xml"), creatures);
+            WriteCreatures(Path.Combine(dir, baseFileName + "-spawn.xml"), map.Tiles);
         }
 
-        private static void WriteCreatures(string spawnFileName, IEnumerable<OtMapCreature> creatures)
+        private static void WriteCreatures(string spawnFileName, IEnumerable<OtMapTile> mapTiles)
         {
             XElement spawns = new XElement("spawns");
 
-            foreach (var creature in creatures)
+            foreach (var tile in mapTiles.Where(x => x.Creature != null))
             {
                 XElement spawn = new XElement("spawn");
-                spawn.Add(new XAttribute("centerx", (creature.Location.X - 1).ToString()));
-                spawn.Add(new XAttribute("centery", creature.Location.Y.ToString()));
-                spawn.Add(new XAttribute("centerz", creature.Location.Z.ToString()));
+                spawn.Add(new XAttribute("centerx", (tile.Location.X - 1).ToString()));
+                spawn.Add(new XAttribute("centery", tile.Location.Y.ToString()));
+                spawn.Add(new XAttribute("centerz", tile.Location.Z.ToString()));
                 spawn.Add(new XAttribute("radius", "1"));
 
-                XElement creatureSpawn = new XElement(creature.Type == CreatureType.NPC ? "npc" : "monster");
-                creatureSpawn.Add(new XAttribute("name", creature.Name));
+                XElement creatureSpawn = new XElement(tile.Creature.Type == CreatureType.NPC ? "npc" : "monster");
+                creatureSpawn.Add(new XAttribute("name", tile.Creature.Name));
                 creatureSpawn.Add(new XAttribute("x", "1"));
                 creatureSpawn.Add(new XAttribute("y", "0"));
-                creatureSpawn.Add(new XAttribute("z", creature.Location.Z.ToString()));
+                creatureSpawn.Add(new XAttribute("z", tile.Location.Z.ToString()));
                 creatureSpawn.Add(new XAttribute("spawntime", "60"));
 
                 spawn.Add(creatureSpawn);
