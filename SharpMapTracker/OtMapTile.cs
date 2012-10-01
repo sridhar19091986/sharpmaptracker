@@ -8,11 +8,21 @@ namespace SharpMapTracker
 {
     public class OtMapTile
     {
-        public Location Location;
-        public ushort TileId;
-        public List<OtMapItem> Items = new List<OtMapItem>();
-        public int DownItemCount { get; private set; }
-        public Color MapColor;
+        public Location Location { get; private set; }
+        public ushort TileId { get; private set; }
+        
+        public List<OtMapItem> Items { get; private set; }
+        public OtMapCreature Creature { get; set; }
+
+        public Color MapColor { get; private set; }
+
+        private int downItemCount;
+
+        public OtMapTile(Location location)
+        {
+            Location = location;
+            Items = new List<OtMapItem>();
+        }
 
         public void AddItem(OtMapItem item)
         {
@@ -27,7 +37,7 @@ namespace SharpMapTracker
                 {
                     bool inserted = false;
 
-                    for (int i = DownItemCount; i < Items.Count; i++)
+                    for (int i = downItemCount; i < Items.Count; i++)
                     {
                         if (Items[i].Info.AlwaysOnTopOrder <= item.Info.AlwaysOnTopOrder)
                         {
@@ -46,7 +56,7 @@ namespace SharpMapTracker
                 {
                     bool inserted = false;
 
-                    for (int i = DownItemCount; i < Items.Count; i++)
+                    for (int i = downItemCount; i < Items.Count; i++)
                     {
                         if (Items[i].Info.AlwaysOnTopOrder < item.Info.AlwaysOnTopOrder)
                         {
@@ -64,7 +74,7 @@ namespace SharpMapTracker
                 else
                 {
                     Items.Insert(0, item);
-                    ++DownItemCount;
+                    ++downItemCount;
                 }
 
                 Color color = Misc.GetAutomapColor(item.Info.MinimapColor);
@@ -76,7 +86,7 @@ namespace SharpMapTracker
         public void Clear()
         {
             Items.Clear();
-            DownItemCount = 0;
+            downItemCount = 0;
         }
     }
 }
