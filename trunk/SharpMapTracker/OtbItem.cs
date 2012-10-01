@@ -5,10 +5,6 @@ using System.Text;
 
 namespace SharpMapTracker
 {
-
-
-
-
     public enum OtbItemType
     {
         None,
