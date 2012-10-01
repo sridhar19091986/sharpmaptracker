@@ -47,7 +47,7 @@ namespace SharpTibiaProxy.Domain
             knowMap = new Dictionary<ulong, bool>();
         }
 
-        public void Clear()
+        internal void Clear()
         {
             for (int x = 0; x < 18; x++)
             {

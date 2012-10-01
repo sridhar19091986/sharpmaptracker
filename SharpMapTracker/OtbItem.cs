@@ -15,7 +15,7 @@ namespace SharpMapTracker
         Deprecated
     };
 
-    public class OtbItem
+    public class OtItemType
     {
         public UInt16 Id;
         public UInt16 SpriteId;

@@ -45,6 +45,7 @@ namespace SharpTibiaProxy.Domain
         public Map Map { get; private set; }
         public BattleList BattleList { get; private set; }
         public ProtocolWorld ProtocolWorld { get; private set; }
+        public Chat Chat { get; private set; }
 
         public Dispatcher Dispatcher { get; private set; }
         public Scheduler Scheduler { get; private set; }
@@ -109,9 +110,9 @@ namespace SharpTibiaProxy.Domain
 
             Map = new Map(this);
             BattleList = new BattleList(this);
+            Chat = new Chat(this);
             ProtocolWorld = new ProtocolWorld(this);
         }
-
 
         private void Process_Exited(object sender, EventArgs e)
         {

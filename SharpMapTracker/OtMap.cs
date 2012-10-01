@@ -122,7 +122,7 @@ namespace SharpMapTracker
         }
 
         public IEnumerable<OtMapTile> Tiles { get { return tiles.Values; } }
-        public IEnumerable<OtMapCreature> Creatures { get { return Tiles.Where(x => x.Creature != null).Select(x => x.Creature); } }
+        public IEnumerable<Creature> Creatures { get { return Tiles.Where(x => x.Creature != null).Select(x => x.Creature); } }
 
         public int TileCount { get { return tiles.Count; } }
         public int NpcCount { get { return npcCount; } }

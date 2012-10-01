@@ -54,6 +54,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Domain\BattleList.cs" />
     <Compile Include="Domain\CharacterLoginInfo.cs" />
+    <Compile Include="Domain\Chat.cs" />
     <Compile Include="Domain\Client.cs" />
     <Compile Include="Domain\ClientVersion.cs" />
     <Compile Include="Domain\Creature.cs" />

@@ -12,7 +12,7 @@ namespace SharpMapTracker
         public ushort TileId { get; private set; }
         
         public List<OtMapItem> Items { get; private set; }
-        public OtMapCreature Creature { get; set; }
+        public Creature Creature { get; set; }
 
         public Color MapColor { get; private set; }
 

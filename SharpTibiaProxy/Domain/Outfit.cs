@@ -72,31 +72,6 @@ namespace SharpTibiaProxy.Domain
             this.mountId = mountId;
         }
 
-        public byte[] ToByteArray()
-        {
-            byte[] temp;
-
-            if (LookType != 0)
-            {
-                temp = new byte[9];
-                Array.Copy(BitConverter.GetBytes(LookType), temp, 2);
-                temp[2] = Head;
-                temp[3] = Body;
-                temp[4] = Legs;
-                temp[5] = Feet;
-                temp[6] = Addons;
-                Array.Copy(BitConverter.GetBytes(mountId), 0, temp, 7, 2);
-            }
-            else
-            {
-                temp = new byte[4];
-                Array.Copy(BitConverter.GetBytes(LookType), temp, 2);
-                Array.Copy(BitConverter.GetBytes(LookItem), 0, temp, 2, 2);
-            }
-
-            return temp;
-        }
-
         public override string ToString()
         {
             return "LookType: " + LookType.ToString();

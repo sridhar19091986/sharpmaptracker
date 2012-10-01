@@ -105,10 +105,10 @@ namespace SharpMapTracker
         };
 
 
-        public Otb Open(string filename, bool outputDebug = false)
+        public OtItems Open(string filename, bool outputDebug = false)
         {
             FileStream fileStream = new FileStream(filename, FileMode.Open);
-            Otb otb = new Otb();
+            OtItems otb = new OtItems();
 
             try
             {
@@ -141,7 +141,7 @@ namespace SharpMapTracker
 
                     do
                     {
-                        OtbItem item = new OtbItem();
+                        OtItemType item = new OtItemType();
 
                         byte itemGroup = nodeReader.ReadByte();
                         if (outputDebug)
@@ -312,22 +312,22 @@ namespace SharpMapTracker
 
     }
 
-    public class Otb
+    public class OtItems
     {
-        private Dictionary<ushort, OtbItem> clientItemMap = new Dictionary<ushort, OtbItem>();
-        private Dictionary<ushort, OtbItem> serverItemMap = new Dictionary<ushort, OtbItem>();
+        private Dictionary<ushort, OtItemType> clientItemMap = new Dictionary<ushort, OtItemType>();
+        private Dictionary<ushort, OtItemType> serverItemMap = new Dictionary<ushort, OtItemType>();
 
         public uint MajorVersion { get; set; }
         public uint MinorVersion { get; set; }
         public uint BuildNumber { get; set; }
 
-        public void AddItem(OtbItem item)
+        public void AddItem(OtItemType item)
         {
             serverItemMap[item.Id] = item;
             clientItemMap[item.SpriteId] = item;
         }
 
-        public OtbItem GetItem(ushort id)
+        public OtItemType GetItem(ushort id)
         {
             if (serverItemMap.ContainsKey(id))
                 return serverItemMap[id];
@@ -335,7 +335,7 @@ namespace SharpMapTracker
             return null;
         }
 
-        public OtbItem GetItemBySpriteId(ushort spriteId)
+        public OtItemType GetItemBySpriteId(ushort spriteId)
         {
             if (clientItemMap.ContainsKey(spriteId))
                 return clientItemMap[spriteId];

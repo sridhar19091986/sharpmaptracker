@@ -258,7 +258,7 @@ namespace SharpTibiaProxy.Network
             serverInMessage.Size = serverInMessage.ReadInternalHead() + 8;
             serverInMessage.ReadPosition = 8;
 
-            client.ProtocolWorld.ParseMessage(serverInMessage);
+            client.ProtocolWorld.ParseServerMessage(serverInMessage);
 
             SendToClient(clientOutMessage);
         }
@@ -388,9 +388,32 @@ namespace SharpTibiaProxy.Network
                 case Protocol.Login:
                     throw new Exception("Invalid client message.");
                 case Protocol.World:
-                    serverSocket.Send(clientInMessage.Buffer, 0, clientInMessage.Size, SocketFlags.None);
+                    ParseClientWorldMessage();
                     break;
             }
+        }
+
+        private void ParseClientWorldMessage()
+        {
+#if DEBUG_PROXY
+            Trace.WriteLine("[DEBUG] Proxy [ParseClientWorldMessage]");
+#endif
+            serverOutMessage.Reset();
+            Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
+            serverOutMessage.Size = clientInMessage.Size;
+
+            clientInMessage.ReadPosition = 2;
+
+            if (Adler.Generate(clientInMessage) != clientInMessage.ReadChecksum())
+                throw new Exception("Wrong checksum.");
+
+            Xtea.Decrypt(clientInMessage, xteaKey);
+            clientInMessage.Size = clientInMessage.ReadInternalHead() + 8;
+            clientInMessage.ReadPosition = 8;
+
+            client.ProtocolWorld.ParseClientMessage(clientInMessage);
+
+            serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
         }
 
         private void ParseFirstClientMessage()

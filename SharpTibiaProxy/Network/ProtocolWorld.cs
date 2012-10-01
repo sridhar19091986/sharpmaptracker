@@ -16,122 +16,178 @@ namespace SharpTibiaProxy.Network
             this.client = client;
         }
 
-        public void ParseMessage(InMessage message)
+        #region Client
+
+        public void ParseClientMessage(InMessage message)
+        {
+            var packetStart = 0;
+            try
+            {
+                packetStart = message.ReadPosition;
+                byte cmd = message.ReadByte();
+
+                switch (cmd)
+                {
+                    case 0x96:
+                        ParseClientSay(message);
+                        break;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning(ex.Message + "\nPacket Bytes: " + message.Buffer.ToHexString(packetStart, message.ReadPosition - packetStart));
+            }
+
+        }
+
+        private void ParseClientSay(InMessage message)
+        {
+            string receiver = null;
+            ushort channelId = 0;
+
+            MessageClasses type = (MessageClasses)message.ReadByte();
+            switch (type)
+            {
+                case MessageClasses.PRIVATE_TO:
+                case MessageClasses.GAMEMASTER_PRIVATE_TO:
+                    receiver = message.ReadString();
+                    break;
+
+                case MessageClasses.CHANNEL:
+                case MessageClasses.CHANNEL_HIGHLIGHT:
+                case MessageClasses.GAMEMASTER_CHANNEL:
+                    channelId = message.ReadUShort();
+                    break;
+
+                default:
+                    break;
+            }
+
+            string text = message.ReadString();
+
+            client.Chat.OnPlayerSpeak(receiver, channelId, type, text);
+        }
+
+        #endregion
+
+        #region Server
+
+        public void ParseServerMessage(InMessage message)
         {
             var packets = new List<byte>();
             var packetStart = 0;
             try
             {
-
                 while (message.ReadPosition < message.Size)
                 {
+                    packetStart = message.ReadPosition;
                     byte cmd = message.ReadByte();
                     packets.Add(cmd);
-                    packetStart = message.ReadPosition;
 
                     switch (cmd)
                     {
                         case 0x0A:
-                            ParseSelfAppear(message);
+                            ParseServerSelfAppear(message);
                             break;
                         case 0x0B:
-                            ParseGMActions(message);
+                            ParseServerGMActions(message);
                             break;
                         case 0x14:
-                            ParseErrorMessage(message);
+                            ParseServerErrorMessage(message);
                             break;
                         case 0x15:
-                            ParseFYIMessage(message);
+                            ParseServerFYIMessage(message);
                             break;
                         case 0x16:
-                            ParseWaitingList(message);
+                            ParseServerWaitingList(message);
                             break;
                         case 0x1D:
-                            ParsePing(message);
+                            ParseServerPing(message);
                             break;
                         case 0x1E:
-                            ParsePingBack(message);
+                            ParseServerPingBack(message);
                             break;
                         case 0x28:
-                            ParseDeath(message);
+                            ParseServerDeath(message);
                             break;
                         case 0x32:
-                            ParseCanReportBugs(message);
+                            ParseServerCanReportBugs(message);
                             break;
                         case 0x64:
-                            ParseMapDescription(message);
+                            ParseServerMapDescription(message);
                             break;
                         case 0x65:
-                            ParseMoveNorth(message);
+                            ParseServerMoveNorth(message);
                             break;
                         case 0x66:
-                            ParseMoveEast(message);
+                            ParseServerMoveEast(message);
                             break;
                         case 0x67:
-                            ParseMoveSouth(message);
+                            ParseServerMoveSouth(message);
                             break;
                         case 0x68:
-                            ParseMoveWest(message);
+                            ParseServerMoveWest(message);
                             break;
                         case 0x69:
-                            ParseUpdateTile(message);
+                            ParseServerUpdateTile(message);
                             break;
                         case 0x6A:
-                            ParseTileAddThing(message);
+                            ParseServerTileAddThing(message);
                             break;
                         case 0x6B:
-                            ParseTileTransformThing(message);
+                            ParseServerTileTransformThing(message);
                             break;
                         case 0x6C:
-                            ParseTileRemoveThing(message);
+                            ParseServerTileRemoveThing(message);
                             break;
                         case 0x6D:
-                            ParseCreatureMove(message);
+                            ParseServerCreatureMove(message);
                             break;
                         case 0x6E:
-                            ParseOpenContainer(message);
+                            ParseServerOpenContainer(message);
                             break;
                         case 0x6F:
-                            ParseCloseContainer(message);
+                            ParseServerCloseContainer(message);
                             break;
                         case 0x70:
-                            ParseContainerAddItem(message);
+                            ParseServerContainerAddItem(message);
                             break;
                         case 0x71:
-                            ParseContainerUpdateItem(message);
+                            ParseServerContainerUpdateItem(message);
                             break;
                         case 0x72:
-                            ParseContainerRemoveItem(message);
+                            ParseServerContainerRemoveItem(message);
                             break;
                         case 0x78:
-                            ParseInventorySetSlot(message);
+                            ParseServerInventorySetSlot(message);
                             break;
                         case 0x79:
-                            ParseInventoryResetSlot(message);
+                            ParseServerInventoryResetSlot(message);
                             break;
                         case 0x7D:
-                            ParseSafeTradeRequestAck(message);
+                            ParseServerSafeTradeRequestAck(message);
                             break;
                         case 0x7E:
-                            ParseSafeTradeRequestNoAck(message);
+                            ParseServerSafeTradeRequestNoAck(message);
                             break;
                         case 0x7F:
-                            ParseSafeTradeClose(message);
+                            ParseServerSafeTradeClose(message);
                             break;
                         case 0x82:
-                            ParseWorldLight(message);
+                            ParseServerWorldLight(message);
                             break;
                         case 0x83:
-                            ParseMagicEffect(message);
+                            ParseServerMagicEffect(message);
                             break;
                         case 0x84:
-                            ParseAnimatedText(message);
+                            ParseServerAnimatedText(message);
                             break;
                         case 0x85:
-                            ParseDistanceShot(message);
+                            ParseServerDistanceShot(message);
                             break;
                         case 0x86:
-                            ParseCreatureSquare(message);
+                            ParseServerCreatureSquare(message);
                             break;
                         case 0x87:
                             byte b = message.ReadByte();
@@ -139,142 +195,142 @@ namespace SharpTibiaProxy.Network
                                 message.ReadBytes(b * 4);
                             break;
                         case 0x8C:
-                            ParseCreatureHealth(message);
+                            ParseServerCreatureHealth(message);
                             break;
                         case 0x8D:
-                            ParseCreatureLight(message);
+                            ParseServerCreatureLight(message);
                             break;
                         case 0x8E:
-                            ParseCreatureOutfit(message);
+                            ParseServerCreatureOutfit(message);
                             break;
                         case 0x8F:
-                            ParseCreatureSpeed(message);
+                            ParseServerCreatureSpeed(message);
                             break;
                         case 0x90:
-                            ParseCreatureSkulls(message);
+                            ParseServerCreatureSkulls(message);
                             break;
                         case 0x91:
-                            ParseCreatureShields(message);
+                            ParseServerCreatureShields(message);
                             break;
                         case 0x92:
-                            ParseCreaturePassable(message);
+                            ParseServerCreaturePassable(message);
                             break;
                         case 0x96:
-                            ParseItemTextWindow(message);
+                            ParseServerItemTextWindow(message);
                             break;
                         case 0x97:
-                            ParseHouseTextWindow(message);
+                            ParseServerHouseTextWindow(message);
                             break;
                         case 0xA0:
-                            ParsePlayerStats(message);
+                            ParseServerPlayerStats(message);
                             break;
                         case 0xA1:
-                            ParsePlayerSkills(message);
+                            ParseServerPlayerSkills(message);
                             break;
                         case 0xA2:
-                            ParsePlayerIcons(message);
+                            ParseServerPlayerIcons(message);
                             break;
                         case 0xA3:
-                            ParsePlayerCancelAttack(message);
+                            ParseServerPlayerCancelAttack(message);
                             break;
                         case 0xA4:
-                            ParseSpellCooldown(message);
+                            ParseServerSpellCooldown(message);
                             break;
                         case 0xA5:
-                            ParseSpellGroupCooldown(message);
+                            ParseServerSpellGroupCooldown(message);
                             break;
                         case 0xA6: //desconhecido
                             message.ReadUInt();
                             break;
                         case 0xAA:
-                            ParseCreatureSpeak(message);
+                            ParseServerCreatureSpeak(message);
                             break;
                         case 0xAB:
-                            ParseChannelList(message);
+                            ParseServerChannelList(message);
                             break;
                         case 0xAC:
-                            ParseOpenChannel(message);
+                            ParseServerOpenChannel(message);
                             break;
                         case 0xAD:
-                            ParseOpenPrivatePlayerChat(message);
+                            ParseServerOpenPrivatePlayerChat(message);
                             break;
                         case 0xAE:
-                            ParseOpenRuleViolation(message);
+                            ParseServerOpenRuleViolation(message);
                             break;
                         case 0xB2:
-                            ParseCreatePrivateChannel(message);
+                            ParseServerCreatePrivateChannel(message);
                             break;
                         case 0xB3:
-                            ParseClosePrivateChannel(message);
+                            ParseServerClosePrivateChannel(message);
                             break;
                         case 0xB4:
-                            ParseTextMessage(message);
+                            ParseServerTextMessage(message);
                             break;
                         case 0xB5:
-                            ParsePlayerCancelWalk(message);
+                            ParseServerPlayerCancelWalk(message);
                             break;
                         case 0xB6:
                             message.ReadUShort();
                             break;
                         case 0xBE:
-                            ParseFloorChangeUp(message);
+                            ParseServerFloorChangeUp(message);
                             break;
                         case 0xBF:
-                            ParseFloorChangeDown(message);
+                            ParseServerFloorChangeDown(message);
                             break;
                         case 0xC8:
-                            ParseOutfitWindow(message);
+                            ParseServerOutfitWindow(message);
                             break;
                         case 0xD2:
-                            ParseVipState(message);
+                            ParseServerVipState(message);
                             break;
                         case 0xD3:
-                            ParseVipLogin(message);
+                            ParseServerVipLogin(message);
                             break;
                         case 0xD4:
-                            ParseVipLogout(message);
+                            ParseServerVipLogout(message);
                             break;
                         case 0xF0:
-                            ParseQuestList(message);
+                            ParseServerQuestList(message);
                             break;
                         case 0xF1:
-                            ParseQuestPartList(message);
+                            ParseServerQuestPartList(message);
                             break;
                         case 0x7A:
-                            ParseOpenShopWindow(message);
+                            ParseServerOpenShopWindow(message);
                             break;
                         case 0x7B:
-                            ParsePlayerCash(message);
+                            ParseServerPlayerCash(message);
                             break;
                         case 0x7C:
-                            ParseCloseShopWindow(message);
+                            ParseServerCloseShopWindow(message);
                             break;
                         case 0x9F:
-                            ParseBasicData(message);
+                            ParseServerBasicData(message);
                             break;
                         case 0xDC:
-                            ParseShowTutorial(message);
+                            ParseServerShowTutorial(message);
                             break;
                         case 0xDD:
-                            ParseAddMapMarker(message);
+                            ParseServerAddMapMarker(message);
                             break;
                         case 0xF3:
-                            ParseChannelEvent(message);
+                            ParseServerChannelEvent(message);
                             break;
                         case 0xF6:
-                            ParseMarketEnter(message);
+                            ParseServerMarketEnter(message);
                             break;
                         case 0xF7:
-                            ParseMarketLeave(message);
+                            ParseServerMarketLeave(message);
                             break;
                         case 0xF8:
-                            ParseMarketDetail(message);
+                            ParseServerMarketDetail(message);
                             break;
                         case 0xF9:
-                            ParseMarketBrowser(message);
+                            ParseServerMarketBrowser(message);
                             break;
                         default:
-                            throw new Exception("ProtocolWorld [ParseMessage]: Unkonw packet type " + cmd.ToString("X2"));
+                            throw new Exception("ProtocolWorld [ParseServerMessage]: Unkonw packet type " + cmd.ToString("X2"));
                     }
                 }
 
@@ -286,14 +342,14 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseChannelEvent(InMessage message)
+        private void ParseServerChannelEvent(InMessage message)
         {
             var channelId = message.ReadUShort();
             var playerName = message.ReadString();
             var channelEvent = message.ReadByte();
         }
 
-        private void ParseMarketEnter(InMessage message)
+        private void ParseServerMarketEnter(InMessage message)
         {
             message.ReadUInt();
             message.ReadByte();
@@ -302,7 +358,7 @@ namespace SharpTibiaProxy.Network
                 message.ReadUInt();
         }
 
-        private void ParseMarketDetail(InMessage message)
+        private void ParseServerMarketDetail(InMessage message)
         {
             message.ReadUShort();
             for (int i = 0; i < 15; i++)
@@ -316,7 +372,7 @@ namespace SharpTibiaProxy.Network
                 message.ReadBytes(num2 * 16);
         }
 
-        private void ParseMarketBrowser(InMessage message)
+        private void ParseServerMarketBrowser(InMessage message)
         {
             ushort num = message.ReadUShort();
             if (num == 65535)
@@ -386,11 +442,11 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseMarketLeave(InMessage message)
+        private void ParseServerMarketLeave(InMessage message)
         {
         }
 
-        private void ParseBasicData(InMessage message)
+        private void ParseServerBasicData(InMessage message)
         {
             var isPremmium = message.ReadByte();
             var vocation = message.ReadByte();
@@ -400,30 +456,30 @@ namespace SharpTibiaProxy.Network
             message.ReadBytes(knowSpells);
         }
 
-        private void ParseAddMapMarker(InMessage message)
+        private void ParseServerAddMapMarker(InMessage message)
         {
             Location location = message.ReadLocation();
             var icon = message.ReadByte();
             var desc = message.ReadString();
         }
 
-        private void ParseShowTutorial(InMessage message)
+        private void ParseServerShowTutorial(InMessage message)
         {
             var tutorialID = message.ReadByte();
         }
 
-        private void ParseCloseShopWindow(InMessage message)
+        private void ParseServerCloseShopWindow(InMessage message)
         {
         }
 
-        private void ParsePlayerCash(InMessage message)
+        private void ParseServerPlayerCash(InMessage message)
         {
             var cash = message.ReadUInt();
             var num = message.ReadByte();
             message.ReadBytes(num * 3);
         }
 
-        private void ParseOpenShopWindow(InMessage message)
+        private void ParseServerOpenShopWindow(InMessage message)
         {
             message.ReadString();
             var size = message.ReadUShort();
@@ -438,7 +494,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseQuestPartList(InMessage message)
+        private void ParseServerQuestPartList(InMessage message)
         {
             var questsID = message.ReadUShort();
             var nMission = message.ReadByte();
@@ -449,7 +505,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseQuestList(InMessage message)
+        private void ParseServerQuestList(InMessage message)
         {
             var nQuests = message.ReadUShort();
             for (uint i = 0; i < nQuests; ++i)
@@ -460,17 +516,17 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseVipLogout(InMessage message)
+        private void ParseServerVipLogout(InMessage message)
         {
             var creatureID = message.ReadUInt();
         }
 
-        private void ParseVipLogin(InMessage message)
+        private void ParseServerVipLogin(InMessage message)
         {
             var creatureID = message.ReadUInt();
         }
 
-        private void ParseVipState(InMessage message)
+        private void ParseServerVipState(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var name = message.ReadString();
@@ -480,7 +536,7 @@ namespace SharpTibiaProxy.Network
             var unk4 = message.ReadByte();
         }
 
-        private void ParseOutfitWindow(InMessage message)
+        private void ParseServerOutfitWindow(InMessage message)
         {
             message.ReadOutfit();
             var nOutfits = message.ReadByte();
@@ -499,7 +555,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseTextMessage(InMessage message)
+        private void ParseServerTextMessage(InMessage message)
         {
             var mClass = (MessageClasses)message.ReadByte();
 
@@ -537,12 +593,12 @@ namespace SharpTibiaProxy.Network
             var text = message.ReadString();
         }
 
-        private void ParseClosePrivateChannel(InMessage message)
+        private void ParseServerClosePrivateChannel(InMessage message)
         {
             var channelId = message.ReadUShort();
         }
 
-        private void ParseCreatePrivateChannel(InMessage message)
+        private void ParseServerCreatePrivateChannel(InMessage message)
         {
             var channelId = message.ReadUShort();
             var name = message.ReadString();
@@ -552,32 +608,32 @@ namespace SharpTibiaProxy.Network
             message.ReadUShort();
         }
 
-        private void ParseRuleViolationB1(InMessage message)
+        private void ParseServerRuleViolationB1(InMessage message)
         {
             message.ReadUShort();
         }
 
-        private void ParseRuleViolationB0(InMessage message)
+        private void ParseServerRuleViolationB0(InMessage message)
         {
             message.ReadUShort();
         }
 
-        private void ParseRuleViolationAF(InMessage message)
+        private void ParseServerRuleViolationAF(InMessage message)
         {
             message.ReadUShort();
         }
 
-        private void ParseOpenRuleViolation(InMessage message)
+        private void ParseServerOpenRuleViolation(InMessage message)
         {
             message.ReadUShort();
         }
 
-        private void ParseOpenPrivatePlayerChat(InMessage message)
+        private void ParseServerOpenPrivatePlayerChat(InMessage message)
         {
             var name = message.ReadString();
         }
 
-        private void ParseOpenChannel(InMessage message)
+        private void ParseServerOpenChannel(InMessage message)
         {
             var channelId = message.ReadUShort();
             var name = message.ReadString();
@@ -590,7 +646,7 @@ namespace SharpTibiaProxy.Network
                 message.ReadString();
         }
 
-        private void ParseChannelList(InMessage message)
+        private void ParseServerChannelList(InMessage message)
         {
             var count = message.ReadByte();
             for (uint i = 0; i < count; ++i)
@@ -600,13 +656,13 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseCreatureSpeak(InMessage message)
+        private void ParseServerCreatureSpeak(InMessage message)
         {
             var statementId = message.ReadUInt();
             var name = message.ReadString();
             var level = message.ReadUShort();
-
             var type = (MessageClasses)message.ReadByte();
+            Location location = null;
 
             switch (type)
             {
@@ -617,7 +673,7 @@ namespace SharpTibiaProxy.Network
                 case MessageClasses.SPEAK_MONSTER_YELL:
                 case MessageClasses.SPEAK_SPELL:
                 case MessageClasses.NPC_FROM:
-                    Location location = message.ReadLocation();
+                    location = message.ReadLocation();
                     break;
                 case MessageClasses.CHANNEL:
                 case MessageClasses.CHANNEL_HIGHLIGHT:
@@ -629,16 +685,18 @@ namespace SharpTibiaProxy.Network
             }
 
             var text = message.ReadString();
+
+            client.Chat.OnCreatureSpeak(statementId, name, level, type, location, text);
         }
 
-        private void ParseHouseTextWindow(InMessage message)
+        private void ParseServerHouseTextWindow(InMessage message)
         {
             var unk = message.ReadByte();
             var windowId = message.ReadUInt();
             var text = message.ReadString();
         }
 
-        private void ParseItemTextWindow(InMessage message)
+        private void ParseServerItemTextWindow(InMessage message)
         {
             var windowID = message.ReadUInt();
             var itemID = message.ReadUShort();
@@ -648,31 +706,31 @@ namespace SharpTibiaProxy.Network
             var date = message.ReadString();
         }
 
-        private void ParseCreaturePassable(InMessage message)
+        private void ParseServerCreaturePassable(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var impassable = message.ReadByte();
         }
 
-        private void ParseCreatureShields(InMessage message)
+        private void ParseServerCreatureShields(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var shields = message.ReadByte();
         }
 
-        private void ParseCreatureSkulls(InMessage message)
+        private void ParseServerCreatureSkulls(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var skull = message.ReadByte();
         }
 
-        private void ParseCreatureSpeed(InMessage message)
+        private void ParseServerCreatureSpeed(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var speed = message.ReadUShort();
         }
 
-        private void ParseCreatureOutfit(InMessage message)
+        private void ParseServerCreatureOutfit(InMessage message)
         {
             var creatureID = message.ReadUInt();
             Creature creature = client.BattleList.GetCreature(creatureID);
@@ -681,56 +739,56 @@ namespace SharpTibiaProxy.Network
                 creature.Outfit = outfit;
         }
 
-        private void ParseCreatureLight(InMessage message)
+        private void ParseServerCreatureLight(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var level = message.ReadByte();
             var color = message.ReadByte();
         }
 
-        private void ParseCreatureHealth(InMessage message)
+        private void ParseServerCreatureHealth(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var percent = message.ReadByte();
         }
 
-        private void ParseCreatureSquare(InMessage message)
+        private void ParseServerCreatureSquare(InMessage message)
         {
             var creatureID = message.ReadUInt();
             var color = message.ReadByte();
         }
 
-        private void ParseDistanceShot(InMessage message)
+        private void ParseServerDistanceShot(InMessage message)
         {
             Location fromLocation = message.ReadLocation();
             Location toLocation = message.ReadLocation();
             var effect = message.ReadByte();
         }
 
-        private void ParseAnimatedText(InMessage message)
+        private void ParseServerAnimatedText(InMessage message)
         {
             Location location = message.ReadLocation();
             var color = message.ReadByte();
             var text = message.ReadString();
         }
 
-        private void ParseMagicEffect(InMessage message)
+        private void ParseServerMagicEffect(InMessage message)
         {
             Location location = message.ReadLocation();
             var effect = message.ReadByte();
         }
 
-        private void ParseWorldLight(InMessage message)
+        private void ParseServerWorldLight(InMessage message)
         {
             var level = message.ReadByte();
             var color = message.ReadByte();
         }
 
-        private void ParseSafeTradeClose(InMessage message)
+        private void ParseServerSafeTradeClose(InMessage message)
         {
         }
 
-        private void ParseSafeTradeRequest(InMessage message, bool ack)
+        private void ParseServerSafeTradeRequest(InMessage message, bool ack)
         {
             var name = message.ReadString();
             var count = message.ReadByte();
@@ -741,52 +799,52 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseSafeTradeRequestNoAck(InMessage message)
+        private void ParseServerSafeTradeRequestNoAck(InMessage message)
         {
-            ParseSafeTradeRequest(message, false);
+            ParseServerSafeTradeRequest(message, false);
         }
 
-        private void ParseSafeTradeRequestAck(InMessage message)
+        private void ParseServerSafeTradeRequestAck(InMessage message)
         {
-            ParseSafeTradeRequest(message, true);
+            ParseServerSafeTradeRequest(message, true);
         }
 
-        private void ParseInventoryResetSlot(InMessage message)
+        private void ParseServerInventoryResetSlot(InMessage message)
         {
             var slot = message.ReadByte();
         }
 
-        private void ParseInventorySetSlot(InMessage message)
+        private void ParseServerInventorySetSlot(InMessage message)
         {
-            var slot = message.ReadByte();
-            Item item = GetItem(message, ushort.MaxValue);
-        }
-
-        private void ParseContainerRemoveItem(InMessage message)
-        {
-            var cid = message.ReadByte();
-            var slot = message.ReadByte();
-        }
-
-        private void ParseContainerUpdateItem(InMessage message)
-        {
-            var cid = message.ReadByte();
             var slot = message.ReadByte();
             Item item = GetItem(message, ushort.MaxValue);
         }
 
-        private void ParseContainerAddItem(InMessage message)
+        private void ParseServerContainerRemoveItem(InMessage message)
+        {
+            var cid = message.ReadByte();
+            var slot = message.ReadByte();
+        }
+
+        private void ParseServerContainerUpdateItem(InMessage message)
+        {
+            var cid = message.ReadByte();
+            var slot = message.ReadByte();
+            Item item = GetItem(message, ushort.MaxValue);
+        }
+
+        private void ParseServerContainerAddItem(InMessage message)
         {
             var cid = message.ReadByte();
             Item item = GetItem(message, ushort.MaxValue);
         }
 
-        private void ParseCloseContainer(InMessage message)
+        private void ParseServerCloseContainer(InMessage message)
         {
             var cid = message.ReadByte();
         }
 
-        private void ParseOpenContainer(InMessage message)
+        private void ParseServerOpenContainer(InMessage message)
         {
             var containerId = message.ReadByte();
             var containerItem = GetItem(message, ushort.MaxValue);
@@ -803,44 +861,44 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseSpellGroupCooldown(InMessage message)
+        private void ParseServerSpellGroupCooldown(InMessage message)
         {
             message.ReadByte(); //group id
             message.ReadUInt(); //time
         }
 
-        private void ParseSpellCooldown(InMessage message)
+        private void ParseServerSpellCooldown(InMessage message)
         {
             message.ReadByte(); //icon
             message.ReadUInt(); //time
         }
 
-        private void ParseWaitingList(InMessage message)
+        private void ParseServerWaitingList(InMessage message)
         {
             message.ReadString();
             message.ReadByte();
         }
 
-        private void ParseFYIMessage(InMessage message)
+        private void ParseServerFYIMessage(InMessage message)
         {
             message.ReadString();
         }
 
-        private void ParseErrorMessage(InMessage message)
+        private void ParseServerErrorMessage(InMessage message)
         {
             message.ReadString();
         }
 
-        private void ParseGMActions(InMessage message)
+        private void ParseServerGMActions(InMessage message)
         {
         }
 
-        private void ParsePlayerCancelWalk(InMessage message)
+        private void ParseServerPlayerCancelWalk(InMessage message)
         {
             var direction = message.ReadByte();
         }
 
-        private void ParseFloorChangeDown(InMessage message)
+        private void ParseServerFloorChangeDown(InMessage message)
         {
             Location myPos = client.PlayerLocation;
             myPos = new Location(myPos.X, myPos.Y, myPos.Z + 1);
@@ -854,17 +912,17 @@ namespace SharpTibiaProxy.Network
             {
                 int j, i;
                 for (i = myPos.Z, j = -1; i < (int)myPos.Z + 3; ++i, --j)
-                    ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, i, 18, 14, j, ref skipTiles);
+                    ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, i, 18, 14, j, ref skipTiles);
             }
             //going further down
             else if (myPos.Z > 8 && myPos.Z < 14)
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z + 2, 18, 14, -3, ref skipTiles);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z + 2, 18, 14, -3, ref skipTiles);
 
             client.PlayerLocation = new Location(myPos.X - 1, myPos.Y - 1, myPos.Z);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseFloorChangeUp(InMessage message)
+        private void ParseServerFloorChangeUp(InMessage message)
         {
             Location myPos = client.PlayerLocation;
             myPos = new Location(myPos.X, myPos.Y, myPos.Z - 1);
@@ -873,44 +931,44 @@ namespace SharpTibiaProxy.Network
             if (myPos.Z == 7)
             {
                 int skip = 0;
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 5, 18, 14, 3, ref skip); //(floor 7 and 6 already set)
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 4, 18, 14, 4, ref skip);
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 3, 18, 14, 5, ref skip);
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 2, 18, 14, 6, ref skip);
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 1, 18, 14, 7, ref skip);
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 0, 18, 14, 8, ref skip);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 5, 18, 14, 3, ref skip); //(floor 7 and 6 already set)
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 4, 18, 14, 4, ref skip);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 3, 18, 14, 5, ref skip);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 2, 18, 14, 6, ref skip);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 1, 18, 14, 7, ref skip);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 0, 18, 14, 8, ref skip);
 
             }
             else if (myPos.Z > 7)
             {
                 int skip = 0;
-                ParseFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z - 3, 18, 14, 3, ref skip);
+                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z - 3, 18, 14, 3, ref skip);
             }
 
             client.PlayerLocation = new Location(myPos.X + 1, myPos.Y + 1, myPos.Z);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseCanReportBugs(InMessage message)
+        private void ParseServerCanReportBugs(InMessage message)
         {
             client.PlayerCanReportBugs = message.ReadByte() != 0;
         }
 
-        private void ParseDeath(InMessage message)
+        private void ParseServerDeath(InMessage message)
         {
         }
 
-        private void ParsePlayerCancelAttack(InMessage message)
+        private void ParseServerPlayerCancelAttack(InMessage message)
         {
             var creatureId = message.ReadUInt(); //??
         }
 
-        private void ParsePlayerIcons(InMessage message)
+        private void ParseServerPlayerIcons(InMessage message)
         {
             message.ReadUShort();
         }
 
-        private void ParsePlayerSkills(InMessage message)
+        private void ParseServerPlayerSkills(InMessage message)
         {
             for (int i = 0; i <= (int)Skills.LAST; i++)
             {
@@ -920,7 +978,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParsePlayerStats(InMessage message)
+        private void ParseServerPlayerStats(InMessage message)
         {
             var health = message.ReadUShort();
             var healthMax = message.ReadUShort();
@@ -947,7 +1005,7 @@ namespace SharpTibiaProxy.Network
             var offlineTranning = message.ReadUShort();
         }
 
-        private void ParseCreatureMove(InMessage message)
+        private void ParseServerCreatureMove(InMessage message)
         {
             Location oldLocation = message.ReadLocation();
             var oldStack = message.ReadByte();
@@ -960,11 +1018,11 @@ namespace SharpTibiaProxy.Network
                 Creature creature = client.BattleList.GetCreature(creatureId);
 
                 if (creature == null)
-                    throw new Exception("[ParseCreatureMove] Creature not found on battle list.");
+                    throw new Exception("[ParseServerCreatureMove] Creature not found on battle list.");
 
                 var tile = client.Map.GetTile(newLocation);
                 if (tile == null)
-                    throw new Exception("[ParseCreatureMove] New tile not found.");
+                    throw new Exception("[ParseServerCreatureMove] New tile not found.");
 
                 tile.AddThing(creature);
                 client.Map.SetTile(tile);
@@ -973,7 +1031,7 @@ namespace SharpTibiaProxy.Network
             {
                 Tile tile = client.Map.GetTile(oldLocation);
                 if (tile == null)
-                    throw new Exception("[ParseCreatureMove] Old tile not found.");
+                    throw new Exception("[ParseServerCreatureMove] Old tile not found.");
 
                 Thing thing = tile.GetThing(oldStack);
                 Creature creature = thing as Creature;
@@ -985,7 +1043,7 @@ namespace SharpTibiaProxy.Network
 
                 tile = client.Map.GetTile(newLocation);
                 if (tile == null)
-                    throw new Exception("[ParseCreatureMove] New tile not found.");
+                    throw new Exception("[ParseServerCreatureMove] New tile not found.");
 
                 tile.AddThing(creature);
                 client.Map.SetTile(tile);
@@ -1014,7 +1072,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseTileRemoveThing(InMessage message)
+        private void ParseServerTileRemoveThing(InMessage message)
         {
             Location location = message.ReadLocation();
             var stack = message.ReadByte();
@@ -1024,7 +1082,7 @@ namespace SharpTibiaProxy.Network
 
             Tile tile = client.Map.GetTile(location);
             if (tile == null)
-                throw new Exception("[ParseTileRemoveThing] Tile not found.");
+                throw new Exception("[ParseServerTileRemoveThing] Tile not found.");
 
             var thing = tile.GetThing(stack);
             if (thing == null) // The client will send update tile.
@@ -1033,7 +1091,7 @@ namespace SharpTibiaProxy.Network
             tile.RemoveThing(stack);
         }
 
-        private void ParseTileTransformThing(InMessage message)
+        private void ParseServerTileTransformThing(InMessage message)
         {
             Location location = message.ReadLocation();
             var stack = message.ReadByte();
@@ -1044,7 +1102,7 @@ namespace SharpTibiaProxy.Network
                 //get tile
                 Tile tile = client.Map.GetTile(location);
                 if (tile == null)
-                    throw new Exception("[ParseTileTransformThing] Tile not found.");
+                    throw new Exception("[ParseServerTileTransformThing] Tile not found.");
 
                 var oldThing = tile.GetThing(stack);
                 if (oldThing == null)
@@ -1055,7 +1113,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private void ParseTileAddThing(InMessage message)
+        private void ParseServerTileAddThing(InMessage message)
         {
             Location location = message.ReadLocation();
             var stack = message.ReadByte();
@@ -1064,13 +1122,13 @@ namespace SharpTibiaProxy.Network
             Tile tile = client.Map.GetTile(location);
 
             if (tile == null)
-                throw new Exception("[ParseTileAddThing] Tile not found.");
+                throw new Exception("[ParseServerTileAddThing] Tile not found.");
 
             tile.AddThing(stack, thing);
             client.Map.SetTile(tile);
         }
 
-        private void ParseUpdateTile(InMessage message)
+        private void ParseServerUpdateTile(InMessage message)
         {
             Location location = message.ReadLocation();
             var thingId = message.PeekUShort();
@@ -1080,76 +1138,76 @@ namespace SharpTibiaProxy.Network
                 message.ReadUShort();
                 Tile tile = client.Map.GetTile(location);
                 if (tile == null)
-                    throw new Exception("[ParseUpdateTile] Tile not found.");
+                    throw new Exception("[ParseServerUpdateTile] Tile not found.");
 
                 tile.Clear();
             }
             else
             {
-                ParseTileDescription(message, location);
+                ParseServerTileDescription(message, location);
                 message.ReadUShort();
             }
         }
 
-        private void ParseMoveWest(InMessage message)
+        private void ParseServerMoveWest(InMessage message)
         {
             var location = new Location(client.PlayerLocation.X - 1, client.PlayerLocation.Y, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 1, 14);
+            ParseServerMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 1, 14);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseMoveSouth(InMessage message)
+        private void ParseServerMoveSouth(InMessage message)
         {
             var location = new Location(client.PlayerLocation.X, client.PlayerLocation.Y + 1, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseMapDescription(message, tiles, location.X - 8, location.Y + 7, location.Z, 18, 1);
+            ParseServerMapDescription(message, tiles, location.X - 8, location.Y + 7, location.Z, 18, 1);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseMoveEast(InMessage message)
+        private void ParseServerMoveEast(InMessage message)
         {
             var location = new Location(client.PlayerLocation.X + 1, client.PlayerLocation.Y, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseMapDescription(message, tiles, location.X + 9, location.Y - 6, location.Z, 1, 14);
+            ParseServerMapDescription(message, tiles, location.X + 9, location.Y - 6, location.Z, 1, 14);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseMoveNorth(InMessage message)
+        private void ParseServerMoveNorth(InMessage message)
         {
             var location = new Location(client.PlayerLocation.X, client.PlayerLocation.Y - 1, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 1);
+            ParseServerMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 1);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParsePing(InMessage message)
+        private void ParseServerPing(InMessage message)
         {
         }
 
-        private void ParsePingBack(InMessage message)
+        private void ParseServerPingBack(InMessage message)
         {
         }
 
-        private void ParseMapDescription(InMessage message)
+        private void ParseServerMapDescription(InMessage message)
         {
             var location = message.ReadLocation();
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 14);
+            ParseServerMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 14);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseMapDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height)
+        private void ParseServerMapDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height)
         {
             int startz, endz, zstep;
             //calculate map limits
@@ -1168,10 +1226,10 @@ namespace SharpTibiaProxy.Network
 
             int skipTiles = 0;
             for (int nz = startz; nz != endz + zstep; nz += zstep)
-                ParseFloorDescription(message, tiles, x, y, nz, width, height, z - nz, ref skipTiles);
+                ParseServerFloorDescription(message, tiles, x, y, nz, width, height, z - nz, ref skipTiles);
         }
 
-        private void ParseFloorDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height, int offset, ref int skipTiles)
+        private void ParseServerFloorDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height, int offset, ref int skipTiles)
         {
             for (int nx = 0; nx < width; nx++)
             {
@@ -1187,7 +1245,7 @@ namespace SharpTibiaProxy.Network
                         else
                         {
                             //real tile so read tile
-                            tiles.Add(ParseTileDescription(message, new Location(x + nx + offset, y + ny + offset, z)));
+                            tiles.Add(ParseServerTileDescription(message, new Location(x + nx + offset, y + ny + offset, z)));
                             skipTiles = (short)(message.ReadUShort() & 0xFF);
                         }
                     }
@@ -1197,7 +1255,7 @@ namespace SharpTibiaProxy.Network
             }
         }
 
-        private Tile ParseTileDescription(InMessage message, Location location)
+        private Tile ParseServerTileDescription(InMessage message, Location location)
         {
             Tile tile = new Tile(location);
             if (message.PeekUShort() < 0xFF00)
@@ -1296,7 +1354,7 @@ namespace SharpTibiaProxy.Network
             return new Item(type, count, subtype);
         }
 
-        private void ParseSelfAppear(InMessage message)
+        private void ParseServerSelfAppear(InMessage message)
         {
             client.BattleList.Clear();
             client.Map.Clear();
@@ -1305,5 +1363,6 @@ namespace SharpTibiaProxy.Network
             message.ReadUShort();
             client.PlayerCanReportBugs = message.ReadByte() != 0;
         }
+        #endregion
     }
 }
