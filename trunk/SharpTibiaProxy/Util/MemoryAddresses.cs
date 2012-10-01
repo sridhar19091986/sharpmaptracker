@@ -19,7 +19,7 @@ namespace SharpTibiaProxy.Util
         public readonly byte ClientMultiClientJMP = 0xEB;
         public readonly byte ClientMultiClientJNZ = 0x75;
 
-        public readonly int ClientStatus = 0x3BCCC4;
+        public readonly long ClientStatus;
 
         public MemoryAddresses(Client client)
         {
@@ -32,6 +32,8 @@ namespace SharpTibiaProxy.Util
                 ClientServerDistancePort = 100;
                 ClientSelectedCharacter = client.BaseAddress + 0x3BCD10;
                 ClientMultiClient = client.BaseAddress + 0x12E807;
+
+                ClientStatus = client.BaseAddress + 0x3BCCC4;
             }
             else
             {
