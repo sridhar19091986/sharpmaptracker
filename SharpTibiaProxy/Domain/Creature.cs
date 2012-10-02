@@ -64,5 +64,16 @@ namespace SharpTibiaProxy.Domain
         {
             this.id = id;
         }
+
+        public override int GetHashCode()
+        {
+            return (int)Id ^ 31;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Creature;
+            return other != null && other.Id == Id;
+        }
     }
 }

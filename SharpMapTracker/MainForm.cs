@@ -374,6 +374,11 @@ namespace SharpMapTracker
                 try
                 {
                     var directory = folderBrowserDialog.SelectedPath;
+                    var scriptDirectory = Path.Combine(directory, "scripts");
+
+                    if (!Directory.Exists(scriptDirectory))
+                        Directory.CreateDirectory(scriptDirectory);
+
                     foreach (var npcStatement in npcStatements)
                     {
                         var cr = npcStatement.Key;
@@ -383,24 +388,42 @@ namespace SharpMapTracker
                         builder.Append("\t<npc name=\"").Append(cr.Name).Append("\" script=\"data/npc/scripts/").Append(cr.Name).Append(".lua\" walkinterval=\"2000\" floorchange=\"0\">\n");
                         builder.Append("\t<health now=\"100\" max=\"100\"/>\n");
 
-                        if (cr.Outfit.LookItem > 0)
-                        {
-
-                        }
-                        else
-                        {
-                            builder.Append("\t<look type=\"").Append(cr.Outfit.LookType).
-                                Append("\" head=\"").Append(cr.Outfit.Head).
-                                Append("\" body=\"").Append(cr.Outfit.Body).
-                                Append("\" legs=\"").Append(cr.Outfit.Legs).
-                                Append("\" feet=\"").Append(cr.Outfit.Feet).
-                                Append("\" addons=\"").Append(cr.Outfit.Addons).Append("\"/>\n");
-                        }
+                        builder.Append("\t<look type=\"").Append(cr.Outfit.LookType).
+                            Append("\" head=\"").Append(cr.Outfit.Head).
+                            Append("\" body=\"").Append(cr.Outfit.Body).
+                            Append("\" legs=\"").Append(cr.Outfit.Legs).
+                            Append("\" feet=\"").Append(cr.Outfit.Feet).
+                            Append("\" addons=\"").Append(cr.Outfit.Addons).Append("\"/>\n");
 
                         builder.Append("</npc>");
 
                         File.WriteAllText(Path.Combine(directory, cr.Name + ".xml"), builder.ToString());
+
+                        builder.Clear();
+
+                        builder.Append("local keywordHandler = KeywordHandler:new()\n");
+                        builder.Append("local npcHandler = NpcHandler:new(keywordHandler)\n");
+                        builder.Append("NpcSystem.parseParameters(npcHandler)\n");
+                        builder.Append("\n");
+                        builder.Append("function onCreatureAppear(cid)			npcHandler:onCreatureAppear(cid)			end\n");
+                        builder.Append("function onCreatureDisappear(cid)		npcHandler:onCreatureDisappear(cid)			end\n");
+                        builder.Append("function onCreatureSay(cid, type, msg)	npcHandler:onCreatureSay(cid, type, msg)	end\n");
+                        builder.Append("function onThink()						npcHandler:onThink()						end\n");
+                        builder.Append("\n");
+
+                        foreach (var statement in npcStatement.Value)
+                        {
+                            builder.Append("keywordHandler:addKeyword({'").Append(statement.Key.Replace("'", "\\'")).Append("'}, StdModule.say, {npcHandler = npcHandler, onlyFocus = true, text = '")
+                                .Append(statement.Value.Replace("'", "\\'")).Append("'})\n");
+                        }
+
+                        builder.Append("\n");
+                        builder.Append("npcHandler:addModule(FocusModule:new())");
+
+                        File.WriteAllText(Path.Combine(scriptDirectory, cr.Name + ".lua"), builder.ToString());
                     }
+
+                    Trace.WriteLine("NPCs successfully saved.");
                 }
                 catch (Exception ex)
                 {
