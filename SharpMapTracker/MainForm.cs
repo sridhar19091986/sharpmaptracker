@@ -24,7 +24,7 @@ namespace SharpMapTracker
         private OtItems otItems;
 
         private OtMap map;
-        private Dictionary<Creature, Dictionary<string, string>> npcStatements;
+        private Dictionary<string, NpcStatements> npcStatements;
         private string lastPlayerSpeech;
 
         public bool TrackMoveableItems { get; set; }
@@ -42,7 +42,7 @@ namespace SharpMapTracker
             Text = "SharpMapTracker v" + Constants.MAP_TRACKER_VERSION;
 
             map = new OtMap();
-            npcStatements = new Dictionary<Creature, Dictionary<string, string>>();
+            npcStatements = new Dictionary<string, NpcStatements>();
 
             DataBindings.Add("TopMost", alwaysOnTopCheckBox, "Checked");
             DataBindings.Add("TrackMoveableItems", trackMoveableItemsCheckBox, "Checked");
@@ -62,10 +62,10 @@ namespace SharpMapTracker
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (client != null)
-                client.Dispose();
+            if (Client != null)
+                Client.Dispose();
 
-            client = null;
+            Client = null;
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -107,6 +107,32 @@ namespace SharpMapTracker
 
         }
 
+        protected Client Client
+        {
+            get { return client; }
+            set
+            {
+                if (client != null)
+                {
+                    client.Map.Updated -= Map_Updated;
+                    client.BattleList.CreatureAdded -= BattleList_CreatureAdded;
+                    client.Chat.CreatureSpeak -= Chat_CreatureSpeak;
+
+                    client.Dispose();
+                }
+
+                client = value;
+
+                if (client != null)
+                {
+                    client.Map.Updated += Map_Updated;
+                    client.BattleList.CreatureAdded += BattleList_CreatureAdded;
+                    client.Chat.CreatureSpeak += Chat_CreatureSpeak;
+                }
+
+            }
+        }
+
         private void UpdateCounters(int tileCount, int npcCount, int monsterCount)
         {
             if (InvokeRequired)
@@ -146,44 +172,22 @@ namespace SharpMapTracker
             miniMap.EndUpdate();
         }
 
-        private void clearButton_Click(object sender, EventArgs e)
-        {
-            lock (map)
-            {
-                map.Clear();
-                miniMap.Clear();
-                traceTextBox.Text = "";
-                tileCountLabel.Text = "Tiles: 0";
-                npcCountLabel.Text = "NPCs: 0";
-                monsterCountLabel.Text = "Monsters: 0";
-            }
-        }
-
         private void loadClientToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-                if (client != null)
-                {
-                    client.Dispose();
-                    client = null;
-                }
-
                 var chooserOptions = new ClientChooserOptions();
                 chooserOptions.Version = ClientVersion.Version963.FileVersion;
                 chooserOptions.Smart = true;
                 chooserOptions.ShowOTOption = true;
                 chooserOptions.OfflineOnly = true;
 
-                client = ClientChooser.ShowBox(chooserOptions, this);
+                var c = ClientChooser.ShowBox(chooserOptions, this);
 
-                if (client != null)
+                if (c != null)
                 {
-                    client.EnableProxy();
-                    client.Map.Updated += Map_Updated;
-                    client.BattleList.CreatureAdded += BattleList_CreatureAdded;
-                    client.Chat.CreatureSpeak += Chat_CreatureSpeak;
-                    client.Chat.PlayerSpeak += Chat_PlayerSpeak;
+                    c.EnableProxy();
+                    Client = c;
                     Trace.WriteLine("Client successfully loaded.");
                 }
             }
@@ -193,26 +197,23 @@ namespace SharpMapTracker
             }
         }
 
-        void Chat_PlayerSpeak(object sender, PlayerSpeakEventArgs e)
-        {
-            if (!TrackNPCs)
-                return;
-
-            lastPlayerSpeech = e.Text.ToLower();
-        }
-
         private void Chat_CreatureSpeak(object sender, CreatureSpeakEventArgs e)
         {
             if (!TrackNPCs)
                 return;
 
-            if (e.Type == MessageClasses.NPC_FROM && e.Creature.Type == CreatureType.NPC)
+            if (e.Creature.Type == CreatureType.PLAYER && e.Creature.Id == Client.PlayerId)
             {
-                if (!npcStatements.ContainsKey(e.Creature))
-                    npcStatements.Add(e.Creature, new Dictionary<string, string>());
+                lastPlayerSpeech = e.Text.ToLower();
+            }
+            else if (e.Type == MessageClasses.NPC_FROM && e.Creature.Type == CreatureType.NPC)
+            {
+                var key = e.Creature.Name.ToLower().Trim();
+                if (!npcStatements.ContainsKey(key))
+                    npcStatements.Add(key, new NpcStatements(e.Creature));
 
                 if (lastPlayerSpeech != null)
-                    npcStatements[e.Creature][lastPlayerSpeech] = e.Text;
+                    npcStatements[key].AddStatement(lastPlayerSpeech, e.Text);
             }
         }
 
@@ -223,8 +224,9 @@ namespace SharpMapTracker
 
             if (e.Creature.Type == CreatureType.NPC)
             {
-                if (!npcStatements.ContainsKey(e.Creature))
-                    npcStatements[e.Creature] = new Dictionary<string, string>();
+                var key = e.Creature.Name.ToLower().Trim();
+                if (!npcStatements.ContainsKey(key))
+                    npcStatements.Add(key, new NpcStatements(e.Creature));
             }
         }
 
@@ -238,7 +240,7 @@ namespace SharpMapTracker
 
                     foreach (var tile in e.Tiles)
                     {
-                        if (TrackOnlyCurrentFloor && tile.Location.Z != client.PlayerLocation.Z)
+                        if (TrackOnlyCurrentFloor && tile.Location.Z != Client.PlayerLocation.Z)
                             continue;
 
                         var index = tile.Location.ToIndex();
@@ -305,7 +307,7 @@ namespace SharpMapTracker
                         map.SetTile(mapTile);
                     }
 
-                    miniMap.CenterLocation = client.PlayerLocation;
+                    miniMap.CenterLocation = Client.PlayerLocation;
                     miniMap.EndUpdate();
 
                     UpdateCounters(map.TileCount, map.NpcCount, map.MonsterCount);
@@ -340,7 +342,6 @@ namespace SharpMapTracker
                     {
                         Trace.WriteLine("[Error] Unable to save map file. Details: " + ex.Message);
                     }
-
                 }
             }
         }
@@ -355,20 +356,16 @@ namespace SharpMapTracker
             {
                 try
                 {
-                    if (client == null)
+                    if (Client == null)
                     {
-                        client = new Client("Tibia.dat", ClientVersion.Version963);
-                        client.Map.Updated += Map_Updated;
-                        client.BattleList.CreatureAdded += BattleList_CreatureAdded;
-                        client.Chat.CreatureSpeak += Chat_CreatureSpeak;
-                        client.Chat.PlayerSpeak += Chat_PlayerSpeak;
+                        var c = new Client("Tibia.dat", ClientVersion.Version963);
+                        Client = c;
                     }
 
                     miniMap.BeginUpdate();
 
-                    var reader = new TibiaCastReader(client);
+                    var reader = new TibiaCastReader(Client);
                     reader.BeginRead(openFileDialog.FileNames, ReadTibiaCastFilesCallback, null);
-
                 }
                 catch (Exception ex)
                 {
@@ -392,7 +389,7 @@ namespace SharpMapTracker
 
                     foreach (var npcStatement in npcStatements)
                     {
-                        var cr = npcStatement.Key;
+                        var cr = npcStatement.Value.Creature;
 
                         var builder = new StringBuilder();
                         builder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -422,7 +419,7 @@ namespace SharpMapTracker
                         builder.Append("function onThink()						npcHandler:onThink()						end\n");
                         builder.Append("\n");
 
-                        foreach (var statement in npcStatement.Value)
+                        foreach (var statement in npcStatement.Value.Statements)
                         {
                             builder.Append("keywordHandler:addKeyword({'").Append(statement.Key.Replace("'", "\\'")).Append("'}, StdModule.say, {npcHandler = npcHandler, onlyFocus = true, text = '")
                                 .Append(statement.Value.Replace("'", "\\'")).Append("'})\n");
@@ -440,6 +437,20 @@ namespace SharpMapTracker
                 {
                     Trace.WriteLine("Exception while to save npc files. Details: " + ex.Message);
                 }
+            }
+        }
+
+        private void clearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            lock (map)
+            {
+                npcStatements.Clear();
+                map.Clear();
+                miniMap.Clear();
+                traceTextBox.Text = "";
+                tileCountLabel.Text = "Tiles: 0";
+                npcCountLabel.Text = "NPCs: 0";
+                monsterCountLabel.Text = "Monsters: 0";
             }
         }
     }
