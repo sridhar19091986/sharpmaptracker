@@ -50,7 +50,7 @@ namespace SharpMapTracker
         #endregion
 
         #region Write
-        private void WriteHeader(Version version)
+        private void WriteHeader(ClientVersion version)
         {
             // Version, unescaped
             WriteUInt32(0, false);
@@ -60,16 +60,16 @@ namespace SharpMapTracker
 
             // Header information
             // Version
-            WriteUInt32(2);
+            WriteUInt32(version.OtbmVersion);
             // Width
             WriteUInt16(0xFCFC);
             // Height
             WriteUInt16(0xFCFC);
 
             // Major version items
-            WriteUInt32((uint)version.Major);
+            WriteUInt32(version.OtbMajorVersion);
             // Minor version items
-            WriteUInt32((uint)version.Minor);
+            WriteUInt32(version.OtbMinorVersion);
         }
 
         private void WriteMapStart(string houseFileName, string spawnFileName)
@@ -161,7 +161,7 @@ namespace SharpMapTracker
         #endregion
 
         #region Static Methods
-        public static void WriteMapToFile(String filename, OtMap map, Version version)
+        public static void WriteMapToFile(String filename, OtMap map, ClientVersion version)
         {
             var dir = Path.GetDirectoryName(filename);
             var baseFileName = Path.GetFileNameWithoutExtension(filename);
@@ -218,7 +218,7 @@ namespace SharpMapTracker
             }
         }
 
-        private static void WriteOtbm(string otbmFileName, string houseFileName, string spawnFileName, Version version, IEnumerable<OtMapTile> mapTiles)
+        private static void WriteOtbm(string otbmFileName, string houseFileName, string spawnFileName, ClientVersion version, IEnumerable<OtMapTile> mapTiles)
         {
             OtbmWriter mapWriter = new OtbmWriter(otbmFileName);
             mapWriter.WriteHeader(version);

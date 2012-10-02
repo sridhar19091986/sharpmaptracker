@@ -48,13 +48,14 @@
             this.trackOnlyCurrentFloorCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.alwaysOnTopCheckBox = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.tileCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.monsterCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.miniMap = new SharpMapTracker.MiniMap();
-            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
-            this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.npcAutoTalkCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -155,6 +156,7 @@
             this.trackMonstersCheckBox,
             this.trackNpcsCheckBox,
             this.trackOnlyCurrentFloorCheckBox,
+            this.npcAutoTalkCheckBox,
             this.toolStripSeparator3,
             this.alwaysOnTopCheckBox,
             this.toolStripSeparator5,
@@ -219,6 +221,18 @@
             this.alwaysOnTopCheckBox.Size = new System.Drawing.Size(204, 22);
             this.alwaysOnTopCheckBox.Text = "Always On Top";
             // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(201, 6);
+            // 
+            // clearToolStripMenuItem
+            // 
+            this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.clearToolStripMenuItem.Text = "&Clear";
+            this.clearToolStripMenuItem.Click += new System.EventHandler(this.clearToolStripMenuItem_Click);
+            // 
             // statusStrip
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -274,17 +288,12 @@
             this.miniMap.Size = new System.Drawing.Size(373, 258);
             this.miniMap.TabIndex = 15;
             // 
-            // toolStripSeparator5
+            // npcAutoTalkToolStripMenuItem
             // 
-            this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(201, 6);
-            // 
-            // clearToolStripMenuItem
-            // 
-            this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
-            this.clearToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.clearToolStripMenuItem.Text = "&Clear";
-            this.clearToolStripMenuItem.Click += new System.EventHandler(this.clearToolStripMenuItem_Click);
+            this.npcAutoTalkCheckBox.CheckOnClick = true;
+            this.npcAutoTalkCheckBox.Name = "npcAutoTalkToolStripMenuItem";
+            this.npcAutoTalkCheckBox.Size = new System.Drawing.Size(204, 22);
+            this.npcAutoTalkCheckBox.Text = "NPC Auto Talk";
             // 
             // MainForm
             // 
@@ -341,5 +350,6 @@
         private System.Windows.Forms.ToolStripMenuItem saveNPCsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem npcAutoTalkCheckBox;
     }
 }

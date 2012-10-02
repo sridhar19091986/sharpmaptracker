@@ -6,15 +6,15 @@ namespace SharpTibiaProxy.Network
     {
         public OutMessage()
         {
-            m_writePosition = 6;
-            m_size = 6;
+            m_writePosition = 8;
+            m_size = 8;
         }
 
         public override void Reset()
         {
             m_readPosition = 0;
-            m_writePosition = 6;
-            m_size = 6;
+            m_writePosition = 8;
+            m_size = 8;
 
             m_encrypted = false;
         }

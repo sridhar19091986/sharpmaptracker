@@ -5,7 +5,7 @@ namespace SharpMapTracker
 {
     public class Constants
     {
-        public const string MAP_TRACKER_VERSION = "0.4";
+        public const string MAP_TRACKER_VERSION = "0.5";
 
         public enum FluidColors : byte
         {
@@ -61,36 +61,36 @@ namespace SharpMapTracker
 	        (byte)FluidTypes.FLUID_MILK
         };
 
-        public static Version GetMapVersion(ushort tibiaVersion)
-        {
-            if (tibiaVersion >= 961)
-            {
-                return new Version(0x03, 0x29);
-            }
-            else if (tibiaVersion >= 854)
-            {
-                return new Version(0x03, 0x10);
-            }
-            else if (tibiaVersion >= 850)
-            {
-                return new Version(0x03, 0x0F);
-            }
-            else if (tibiaVersion >= 840)
-            {
-                return new Version(0x03, 0x0C);
-            }
-            else if (tibiaVersion >= 820)
-            {
-                return new Version(0x03, 0x0A);
-            }
-            else if (tibiaVersion >= 810)
-            {
-                return new Version(0x02, 0x08);
-            }
-            else // if (tibiaVersion >= 800)
-            {
-                return new Version(0x02, 0x07);
-            }
-        }
+        //public static Version GetMapVersion(ushort tibiaVersion)
+        //{
+        //    if (tibiaVersion >= 961)
+        //    {
+        //        return new Version(0x03, 0x29);
+        //    }
+        //    else if (tibiaVersion >= 854)
+        //    {
+        //        return new Version(0x03, 0x10);
+        //    }
+        //    else if (tibiaVersion >= 850)
+        //    {
+        //        return new Version(0x03, 0x0F);
+        //    }
+        //    else if (tibiaVersion >= 840)
+        //    {
+        //        return new Version(0x03, 0x0C);
+        //    }
+        //    else if (tibiaVersion >= 820)
+        //    {
+        //        return new Version(0x03, 0x0A);
+        //    }
+        //    else if (tibiaVersion >= 810)
+        //    {
+        //        return new Version(0x02, 0x08);
+        //    }
+        //    else // if (tibiaVersion >= 800)
+        //    {
+        //        return new Version(0x02, 0x07);
+        //    }
+        //}
     }
 }

@@ -35,6 +35,22 @@ namespace SharpTibiaProxy.Domain
             this.client = client;
         }
 
+        public void Say(string text)
+        {
+            if (text.Length > 255)
+                throw new Exception("Value can't have more then 255 characters.");
+
+            client.ProtocolWorld.SendServerSay(text, MessageClasses.SPEAK_SAY);
+        }
+
+        public void SayToNpc(string text)
+        {
+            if (text.Length > 255)
+                throw new Exception("Value can't have more then 255 characters.");
+
+            client.ProtocolWorld.SendServerSay(text, MessageClasses.NPC_TO);
+        }
+
         internal void OnCreatureSpeak(uint statementId, string name, ushort level, MessageClasses type, Location location, string text)
         {
             var creature = client.BattleList.GetCreature(name);

@@ -42,6 +42,14 @@ namespace SharpTibiaProxy.Domain
             return creatures.FirstOrDefault(x => x.Value.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase)).Value;
         }
 
+        public Creature GetPlayer()
+        {
+            if (creatures.ContainsKey(client.PlayerId))
+                return creatures[client.PlayerId];
+
+            return null;
+        }
+
         public void AddCreature(Creature creature)
         {
             creatures[creature.Id] = creature;

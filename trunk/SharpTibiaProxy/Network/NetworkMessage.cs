@@ -115,6 +115,12 @@ namespace SharpTibiaProxy.Network
             Write(BitConverter.GetBytes(value));
         }
 
+        public void WriteString(string value)
+        {
+            WriteUShort((ushort)value.Length);
+            Write(DefaultEnconding.GetBytes(value));
+        }
+
         #endregion
 
         #region Read

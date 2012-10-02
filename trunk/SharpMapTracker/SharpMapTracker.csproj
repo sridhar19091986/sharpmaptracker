@@ -67,7 +67,7 @@
     <Compile Include="MiniMap.Designer.cs">
       <DependentUpon>MiniMap.cs</DependentUpon>
     </Compile>
-    <Compile Include="NpcStatements.cs" />
+    <Compile Include="NpcInfo.cs" />
     <Compile Include="OtbItem.cs" />
     <Compile Include="OtbReader.cs" />
     <Compile Include="OtbmWriter.cs" />
