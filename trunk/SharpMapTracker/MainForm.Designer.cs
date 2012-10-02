@@ -53,6 +53,8 @@
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.monsterCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.miniMap = new SharpMapTracker.MiniMap();
+            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -154,7 +156,9 @@
             this.trackNpcsCheckBox,
             this.trackOnlyCurrentFloorCheckBox,
             this.toolStripSeparator3,
-            this.alwaysOnTopCheckBox});
+            this.alwaysOnTopCheckBox,
+            this.toolStripSeparator5,
+            this.clearToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.optionsToolStripMenuItem.Text = "&Options";
@@ -270,6 +274,18 @@
             this.miniMap.Size = new System.Drawing.Size(373, 258);
             this.miniMap.TabIndex = 15;
             // 
+            // toolStripSeparator5
+            // 
+            this.toolStripSeparator5.Name = "toolStripSeparator5";
+            this.toolStripSeparator5.Size = new System.Drawing.Size(201, 6);
+            // 
+            // clearToolStripMenuItem
+            // 
+            this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
+            this.clearToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.clearToolStripMenuItem.Text = "&Clear";
+            this.clearToolStripMenuItem.Click += new System.EventHandler(this.clearToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -323,5 +339,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem trackTibiaCastFilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveNPCsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
     }
 }

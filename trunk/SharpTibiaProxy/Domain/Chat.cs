@@ -40,10 +40,7 @@ namespace SharpTibiaProxy.Domain
             var creature = client.BattleList.GetCreature(name);
 
             if (creature == null)
-            {
-                Trace.WriteLine("Chat [OnCreatureSpeak]: Creature not found.");
                 return;
-            }
 
             creature.Level = level;
             CreatureSpeak.Raise(this, new CreatureSpeakEventArgs { Id = statementId, Creature = creature, Text = text, Type = type, Location = location });
