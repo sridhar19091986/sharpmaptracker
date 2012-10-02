@@ -195,11 +195,17 @@ namespace SharpMapTracker
 
         void Chat_PlayerSpeak(object sender, PlayerSpeakEventArgs e)
         {
-            lastPlayerSpeech = e.Text;
+            if (!TrackNPCs)
+                return;
+
+            lastPlayerSpeech = e.Text.ToLower();
         }
 
         private void Chat_CreatureSpeak(object sender, CreatureSpeakEventArgs e)
         {
+            if (!TrackNPCs)
+                return;
+
             if (e.Type == MessageClasses.NPC_FROM && e.Creature.Type == CreatureType.NPC)
             {
                 if (!npcStatements.ContainsKey(e.Creature))
@@ -212,6 +218,9 @@ namespace SharpMapTracker
 
         private void BattleList_CreatureAdded(object sender, CreatureAddedEventArgs e)
         {
+            if (!TrackNPCs)
+                return;
+
             if (e.Creature.Type == CreatureType.NPC)
             {
                 if (!npcStatements.ContainsKey(e.Creature))
@@ -351,6 +360,8 @@ namespace SharpMapTracker
                         client = new Client("Tibia.dat", ClientVersion.Version963);
                         client.Map.Updated += Map_Updated;
                         client.BattleList.CreatureAdded += BattleList_CreatureAdded;
+                        client.Chat.CreatureSpeak += Chat_CreatureSpeak;
+                        client.Chat.PlayerSpeak += Chat_PlayerSpeak;
                     }
 
                     miniMap.BeginUpdate();
