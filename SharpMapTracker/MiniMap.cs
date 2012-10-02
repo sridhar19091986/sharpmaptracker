@@ -25,8 +25,7 @@ namespace SharpMapTracker
             set
             {
                 mapLocation = value;
-                if (updateOngoing == 0)
-                    Invalidate();
+                Invalidate();
             }
         }
 
@@ -44,8 +43,7 @@ namespace SharpMapTracker
 
                 mapLocation = new Location(mapLocation.X, mapLocation.Y, value);
 
-                if (updateOngoing == 0)
-                    Invalidate();
+                Invalidate();
             }
         }
 
@@ -66,8 +64,7 @@ namespace SharpMapTracker
             var pos = LocalToGlobal(e.X, e.Y);
             CenterLocation = new SharpTibiaProxy.Domain.Location(pos.X, pos.Y, CenterLocation.Z);
 
-            if (updateOngoing == 0)
-                Invalidate();
+            Invalidate();
         }
 
         void MiniMap_MouseMove(object sender, MouseEventArgs e)
@@ -89,34 +86,35 @@ namespace SharpMapTracker
 
         public void BeginUpdate()
         {
-            updateOngoing++;
+            updateOngoing = updateOngoing + 1;
         }
 
         public void EndUpdate()
         {
-            updateOngoing--;
-            if (updateOngoing == 0)
-                Invalidate();
+            if (updateOngoing > 0)
+            {
+                updateOngoing = updateOngoing - 1;
+                if (updateOngoing == 0)
+                    Invalidate();
+            }
         }
 
         public void SetColor(Location location, Color color)
         {
             colors[location.ToIndex()] = color;
 
-            if (updateOngoing == 0)
-                Invalidate();
+            Invalidate();
         }
 
         public void Clear()
         {
             colors.Clear();
-            if (updateOngoing == 0)
-                Invalidate();
+            Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (CenterLocation != null)
+            if (CenterLocation != null && updateOngoing == 0)
             {
                 Bitmap bitmap = new Bitmap(miniMapSize * PIXEL_FACTOR, miniMapSize * PIXEL_FACTOR);
                 FastBitmap processor = new FastBitmap(bitmap);

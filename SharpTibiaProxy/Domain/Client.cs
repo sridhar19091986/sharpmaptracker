@@ -9,6 +9,11 @@ using SharpTibiaProxy.Util;
 
 namespace SharpTibiaProxy.Domain
 {
+    public class OpenShopWindowEventArgs : EventArgs
+    {
+        public Shop Shop { get; set; }
+    }
+
     public class Client : IDisposable
     {
         public static readonly LoginServer[] DefaultServers = 
@@ -25,7 +30,10 @@ namespace SharpTibiaProxy.Domain
             new LoginServer("tibia05.cipsoft.com")
         };
 
-        private Proxy proxy;
+        public event EventHandler<OpenShopWindowEventArgs> OpenShopWindow;
+        public event EventHandler Exited;
+
+        internal Proxy Proxy { get; private set; }
         private MemoryAddresses memoryAddresses;
 
         public long BaseAddress { get; private set; }
@@ -52,8 +60,6 @@ namespace SharpTibiaProxy.Domain
 
         public ClientVersion Version { get; private set; }
 
-        
-
         public MemoryAddresses MemoryAddresses
         {
             get
@@ -76,7 +82,7 @@ namespace SharpTibiaProxy.Domain
 
             this.Process = process;
             this.Process.EnableRaisingEvents = true;
-            this.Process.Exited += new EventHandler(Process_Exited);
+            this.Process.Exited += Process_Exited;
 
             //this.Process.WaitForInputIdle();
 
@@ -118,7 +124,8 @@ namespace SharpTibiaProxy.Domain
         {
             try
             {
-                DisableProxy();
+                Dispose();
+                Exited.Raise(this, new EventArgs());
             }
             catch (Exception ex)
             {
@@ -176,7 +183,9 @@ namespace SharpTibiaProxy.Domain
             set { Memory.WriteInt32(processHandle, MemoryAddresses.ClientSelectedCharacter, value); }
         }
 
-        public bool ProxyEnabled { get { return proxy != null; } }
+        public bool ProxyEnabled { get { return Proxy != null; } }
+
+        public bool IsClinentless { get { return Process == null; } }
 
         public bool HasExited { get { return Process != null && Process.HasExited; } }
 
@@ -189,20 +198,20 @@ namespace SharpTibiaProxy.Domain
             if (Process == null)
                 throw new Exception("Can not enable proxy on a clientless instance.");
 
-            if (proxy != null)
+            if (Proxy != null)
                 return;
 
-            proxy = new Proxy(this);
-            proxy.Enable();
+            Proxy = new Proxy(this);
+            Proxy.Enable();
         }
 
         public void DisableProxy()
         {
-            if (proxy == null)
+            if (Proxy == null)
                 return;
 
-            proxy.Disable();
-            proxy = null;
+            Proxy.Disable();
+            Proxy = null;
         }
 
         #region Open Client
@@ -359,6 +368,11 @@ namespace SharpTibiaProxy.Domain
                 s += "Logged in.";
 
             return s;
+        }
+
+        internal void OnOpenShopWindow(Shop shop)
+        {
+            OpenShopWindow.Raise(this, new OpenShopWindowEventArgs { Shop = shop });
         }
     }
 }

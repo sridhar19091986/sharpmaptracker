@@ -11,620 +11,652 @@ using System.Threading;
 
 namespace SharpTibiaProxy.Network
 {
-    public enum Protocol
-    {
-        None, Login, World
-    }
+	public enum Protocol
+	{
+		None, Login, World
+	}
 
-    public class Proxy
-    {
-        private Client client;
+	public class Proxy
+	{
+		private Client client;
 
-        private int loginClientPort;
-        private int worldClientPort;
+		private int loginClientPort;
+		private int worldClientPort;
 
-        private Socket loginClientSocket;
-        private Socket worldClientSocket;
+		private Socket loginClientSocket;
+		private Socket worldClientSocket;
 
-        private Socket clientSocket;
-        private Socket serverSocket;
+		private Socket clientSocket;
+		private Socket serverSocket;
 
-        private InMessage clientInMessage;
-        private OutMessage clientOutMessage;
+		private InMessage clientInMessage;
+		private OutMessage clientOutMessage;
 
-        private InMessage serverInMessage;
-        private OutMessage serverOutMessage;
+		private InMessage serverInMessage;
+		private OutMessage serverOutMessage;
 
-        private bool accepting;
+		private bool accepting;
 
-        private LoginServer[] loginServers;
+		private LoginServer[] loginServers;
 
-        private Protocol protocol = Protocol.None;
+		private Protocol protocol = Protocol.None;
 
-        private uint[] xteaKey;
-        private CharacterLoginInfo[] charList;
+		private uint[] xteaKey;
+		private CharacterLoginInfo[] charList;
 
-        private int pendingSend;
+		private int pendingSend;
 
-        public Proxy(Client client)
-        {
-            this.client = client;
-        }
+		public Proxy(Client client)
+		{
+			this.client = client;
+		}
 
-        public void Enable()
-        {
-            client.Rsa = Constants.RSAKey.OpenTibiaM;
+		public void Enable()
+		{
+			client.Rsa = Constants.RSAKey.OpenTibiaM;
 
-            loginClientPort = GetFreePort();
-            worldClientPort = GetFreePort(loginClientPort + 1);
+			loginClientPort = GetFreePort();
+			worldClientPort = GetFreePort(loginClientPort + 1);
 
-            if (client.LoginServers[0].Server == "localhost")
-                loginServers = Client.DefaultServers;
-            else
-                loginServers = client.LoginServers;
+			if (!client.IsOpenTibiaServer && client.LoginServers[0].Server == "localhost")
+				loginServers = Client.DefaultServers;
+			else
+				loginServers = client.LoginServers;
 
 
-            client.LoginServers = new LoginServer[] { new LoginServer("localhost", loginClientPort) };
+			client.LoginServers = new LoginServer[] { new LoginServer("localhost", loginClientPort) };
 
-            clientInMessage = new InMessage();
-            clientOutMessage = new OutMessage();
+			clientInMessage = new InMessage();
+			clientOutMessage = new OutMessage();
 
-            serverInMessage = new InMessage();
-            serverOutMessage = new OutMessage();
+			serverInMessage = new InMessage();
+			serverOutMessage = new OutMessage();
 
-            StartListen();
-        }
+			StartListen();
+		}
 
-        public void Disable()
-        {
-            Close();
+		public void Disable()
+		{
+			Close();
 
-            if (!client.HasExited)
-                client.LoginServers = loginServers;
-        }
+			if (!client.HasExited)
+				client.LoginServers = loginServers;
+		}
 
-        private void StartListen()
-        {
-            try
-            {
-                lock (this)
-                {
-                    if (accepting)
-                        return;
-
-#if DEBUG_PROXY
-                    Trace.WriteLine("[DEBUG] Proxy [StartListen]");
-#endif
-
-                    protocol = Protocol.None;
-
-                    loginClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    loginClientSocket.Bind(new IPEndPoint(IPAddress.Any, loginClientPort));
-                    loginClientSocket.Listen(1);
-                    loginClientSocket.BeginAccept(ClientBeginAcceptCallback, Protocol.Login);
-
-                    worldClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    worldClientSocket.Bind(new IPEndPoint(IPAddress.Any, worldClientPort));
-                    worldClientSocket.Listen(1);
-                    worldClientSocket.BeginAccept(ClientBeginAcceptCallback, Protocol.World);
-
-                    accepting = true;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine("[Error] Proxy [StartListen]: " + ex.Message);
-            }
-        }
-
-        private void ClientBeginAcceptCallback(IAsyncResult ar)
-        {
-            try
-            {
-                lock (this)
-                {
-                    if (!accepting)
-                        return;
+		private void StartListen()
+		{
+			try
+			{
+				lock (this)
+				{
+					if (accepting)
+						return;
 
 #if DEBUG_PROXY
-                    Trace.WriteLine("[DEBUG] Proxy [ClientBeginAcceptCallback]");
+					Trace.WriteLine("[DEBUG] Proxy [StartListen]");
 #endif
 
-                    if (loginClientSocket == null || worldClientSocket == null)
-                        return;
+					protocol = Protocol.None;
 
-                    accepting = false;
+					loginClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+					loginClientSocket.Bind(new IPEndPoint(IPAddress.Any, loginClientPort));
+					loginClientSocket.Listen(1);
+					loginClientSocket.BeginAccept(ClientBeginAcceptCallback, Protocol.Login);
 
-                    Protocol protocol = (Protocol)ar.AsyncState;
-                    clientSocket = null;
+					worldClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+					worldClientSocket.Bind(new IPEndPoint(IPAddress.Any, worldClientPort));
+					worldClientSocket.Listen(1);
+					worldClientSocket.BeginAccept(ClientBeginAcceptCallback, Protocol.World);
 
-                    if (protocol == Protocol.Login)
-                        clientSocket = loginClientSocket.EndAccept(ar);
-                    else
-                    {
-                        clientSocket = worldClientSocket.EndAccept(ar);
+					accepting = true;
+				}
 
-                        serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        CharacterLoginInfo selectedChar = charList[client.SelectedChar];
-                        serverSocket.Connect(new IPEndPoint(selectedChar.WorldIP, selectedChar.WorldPort));
+			}
+			catch (Exception ex)
+			{
+				Trace.WriteLine("[Error] Proxy [StartListen]: " + ex.Message);
+			}
+		}
 
-                        serverInMessage.Reset();
-                        serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
-                    }
-
-                    clientSocket.LingerState = new LingerOption(true, 2);
-
-                    loginClientSocket.Close();
-                    worldClientSocket.Close();
-
-                    loginClientSocket = null;
-                    worldClientSocket = null;
-
-                    clientInMessage.Reset();
-                    clientSocket.BeginReceive(clientInMessage.Buffer, 0, 2, SocketFlags.None, ClientReceiveCallback, null);
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine("[Error] Proxy [ClientBeginAcceptCallback]: " + ex.Message);
-            }
-        }
-
-        private void ServerReceiveCallback(IAsyncResult ar)
-        {
-            try
-            {
-                if (serverSocket == null)
-                    return;
+		private void ClientBeginAcceptCallback(IAsyncResult ar)
+		{
+			try
+			{
+				lock (this)
+				{
+					if (!accepting)
+						return;
 
 #if DEBUG_PROXY
-                Trace.WriteLine("[DEBUG] Proxy [ServerReceiveCallback]");
+					Trace.WriteLine("[DEBUG] Proxy [ClientBeginAcceptCallback]");
 #endif
 
-                int count = serverSocket.EndReceive(ar);
+					if (loginClientSocket == null || worldClientSocket == null)
+						return;
 
-                if (count <= 0)
-                    throw new Exception("Connection lost.");
+					accepting = false;
 
-                serverInMessage.Size = serverInMessage.ReadHead() + 2;
-                int read = 2;
+					Protocol protocol = (Protocol)ar.AsyncState;
+					clientSocket = null;
 
-                while (read < serverInMessage.Size)
-                {
-                    count = serverSocket.Receive(serverInMessage.Buffer, read, serverInMessage.Size - read, SocketFlags.None);
+					if (protocol == Protocol.Login)
+						clientSocket = loginClientSocket.EndAccept(ar);
+					else
+					{
+						clientSocket = worldClientSocket.EndAccept(ar);
 
-                    if (count <= 0)
-                        throw new Exception("Connection lost.");
+						serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+						CharacterLoginInfo selectedChar = charList[client.SelectedChar];
+						serverSocket.Connect(new IPEndPoint(selectedChar.WorldIP, selectedChar.WorldPort));
 
-                    read += count;
-                }
+						serverInMessage.Reset();
+						serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
+					}
 
-                ParseServerMessage();
+					clientSocket.LingerState = new LingerOption(true, 2);
 
-                serverInMessage.Reset();
-                serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
-            }
-            catch (Exception ex)
-            {
-#if DEBUG_PROXY
-                Trace.WriteLine("[DEBUG] Proxy [ServerReceiveCallback] " + ex.Message);
-#endif
-                Restart();
-            }
-        }
+					loginClientSocket.Close();
+					worldClientSocket.Close();
 
-        private void SendToClient(NetworkMessage message)
-        {
-            pendingSend++;
-            clientSocket.Send(message.Buffer, 0, message.Size, SocketFlags.None);
-            pendingSend--;
-        }
+					loginClientSocket = null;
+					worldClientSocket = null;
 
-        private void ParseServerMessage()
-        {
-#if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseServerMessage]");
-#endif
-            switch (protocol)
-            {
-                case Protocol.None:
-                    SendToClient(serverInMessage);
-                    break;
-                case Protocol.Login:
-                    ParseServerLoginMessage();
-                    break;
-                case Protocol.World:
-                    ParseServerWorldMessage();
-                    break;
-            }
-        }
+					clientInMessage.Reset();
+					clientSocket.BeginReceive(clientInMessage.Buffer, 0, 2, SocketFlags.None, ClientReceiveCallback, null);
+				}
+			}
+			catch (Exception ex)
+			{
+				Trace.WriteLine("[Error] Proxy [ClientBeginAcceptCallback]: " + ex.Message);
+			}
+		}
 
-        private void ParseServerWorldMessage()
-        {
-#if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseServerWorldMessage]");
-#endif
-            clientOutMessage.Reset();
-            Array.Copy(serverInMessage.Buffer, clientOutMessage.Buffer, serverInMessage.Size);
-            clientOutMessage.Size = serverInMessage.Size;
-
-            serverInMessage.ReadPosition = 2;
-
-            if (Adler.Generate(serverInMessage) != serverInMessage.ReadChecksum())
-                throw new Exception("Wrong checksum.");
-
-            Xtea.Decrypt(serverInMessage, xteaKey);
-            serverInMessage.Size = serverInMessage.ReadInternalHead() + 8;
-            serverInMessage.ReadPosition = 8;
-
-            client.ProtocolWorld.ParseServerMessage(serverInMessage);
-
-            SendToClient(clientOutMessage);
-        }
-
-        private void ParseServerLoginMessage()
-        {
-#if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseServerLoginMessage]");
-#endif
-            serverInMessage.ReadPosition = 2;
-
-            if (Adler.Generate(serverInMessage) != serverInMessage.ReadChecksum())
-                throw new Exception("Wrong checksum.");
-
-            Xtea.Decrypt(serverInMessage, xteaKey);
-            serverInMessage.Size = serverInMessage.ReadInternalHead() + 8;
-            serverInMessage.ReadPosition = 8;
-
-            clientOutMessage.Reset();
-            Array.Copy(serverInMessage.Buffer, clientOutMessage.Buffer, serverInMessage.Size);
-            clientOutMessage.Size = serverInMessage.Size;
-
-            while (serverInMessage.ReadPosition < serverInMessage.Size)
-            {
-                byte cmd = serverInMessage.ReadByte();
-
-                switch (cmd)
-                {
-                    case 0x0A: //Error message
-                        var msg = serverInMessage.ReadString();
-                        break;
-                    case 0x0B: //For your information
-                        serverInMessage.ReadString();
-                        break;
-                    case 0x14: //MOTD
-                        serverInMessage.ReadString();
-                        break;
-                    case 0x1E: //Patching exe/dat/spr messages
-                    case 0x1F:
-                    case 0x20:
-                        //DisconnectClient(0x0A, "A new client is avalible, please download it first!");
-                        break;
-                    case 0x28: //Select other login server
-                        //selectedLoginServer = random.Next(0, loginServers.Length - 1);
-                        break;
-                    case 0x64: //character list
-                        int nChar = (int)serverInMessage.ReadByte();
-                        charList = new CharacterLoginInfo[nChar];
-
-                        for (int i = 0; i < nChar; i++)
-                        {
-                            charList[i].CharName = serverInMessage.ReadString();
-                            charList[i].WorldName = serverInMessage.ReadString();
-                            clientOutMessage.WriteAt(new byte[] { 127, 0, 0, 1 }, serverInMessage.ReadPosition);
-                            charList[i].WorldIP = serverInMessage.ReadUInt();
-                            clientOutMessage.WriteAt(BitConverter.GetBytes((ushort)worldClientPort), serverInMessage.ReadPosition);
-                            charList[i].WorldPort = serverInMessage.ReadUShort();
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            clientOutMessage.WriteInternalHead();
-            Xtea.Encrypt(clientOutMessage, xteaKey);
-            Adler.Generate(clientOutMessage, true);
-            clientOutMessage.WriteHead();
-
-            SendToClient(clientOutMessage);
-        }
-
-        private void ClientReceiveCallback(IAsyncResult ar)
-        {
-            try
-            {
-                if (clientSocket == null)
-                    return;
+		private void ServerReceiveCallback(IAsyncResult ar)
+		{
+			try
+			{
+				if (serverSocket == null)
+					return;
 
 #if DEBUG_PROXY
-                Trace.WriteLine("[DEBUG] Proxy [ClientReceiveCallback]");
+				Trace.WriteLine("[DEBUG] Proxy [ServerReceiveCallback]");
 #endif
 
-                int count = clientSocket.EndReceive(ar);
+				int count = serverSocket.EndReceive(ar);
 
-                if (count <= 0)
-                    throw new Exception("Connection lost.");
+				if (count <= 0)
+					throw new Exception("Connection lost.");
 
-                clientInMessage.Size = clientInMessage.ReadHead() + 2;
-                int read = 2;
+				serverInMessage.Size = serverInMessage.ReadHead() + 2;
+				int read = 2;
 
-                while (read < clientInMessage.Size)
-                {
-                    count = clientSocket.Receive(clientInMessage.Buffer, read, clientInMessage.Size - read, SocketFlags.None);
+				while (read < serverInMessage.Size)
+				{
+					count = serverSocket.Receive(serverInMessage.Buffer, read, serverInMessage.Size - read, SocketFlags.None);
 
-                    if (count <= 0)
-                        throw new Exception("Connection lost.");
+					if (count <= 0)
+						throw new Exception("Connection lost.");
 
-                    read += count;
-                }
+					read += count;
+				}
 
-                ParseClientMessage();
+				ParseServerMessage();
 
-                clientInMessage.Reset();
-                clientSocket.BeginReceive(clientInMessage.Buffer, 0, 2, SocketFlags.None, ClientReceiveCallback, null);
-            }
-            catch (Exception ex)
-            {
+				serverInMessage.Reset();
+				serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
+			}
+			catch (Exception ex)
+			{
 #if DEBUG_PROXY
-                Trace.WriteLine("[DEBUG] Proxy [ClientReceiveCallback] " + ex.Message);
+				Trace.WriteLine("[DEBUG] Proxy [ServerReceiveCallback] " + ex.Message);
 #endif
-                Restart();
-            }
-        }
+				Restart();
+			}
+		}
 
-        private void ParseClientMessage()
-        {
+		public void SendToClient(OutMessage message)
+		{
+			if (message != clientOutMessage)
+			{
+				message.WriteInternalHead();
+				Xtea.Encrypt(message, xteaKey);
+				Adler.Generate(message, true);
+				message.WriteHead();
+			}
+
+			lock (clientSocket)
+			{
+				pendingSend++;
+				clientSocket.Send(message.Buffer, 0, message.Size, SocketFlags.None);
+				pendingSend--;
+			}
+		}
+
+		private void ParseServerMessage()
+		{
 #if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseClientMessage]");
+			Trace.WriteLine("[DEBUG] Proxy [ParseServerMessage]");
 #endif
+			switch (protocol)
+			{
+				case Protocol.None:
+					
+					clientOutMessage.Reset();
+					Array.Copy(serverInMessage.Buffer, clientOutMessage.Buffer, serverInMessage.Size);
+					clientOutMessage.Size = serverInMessage.Size;
+					SendToClient(clientOutMessage);
 
-            switch (protocol)
-            {
-                case Protocol.None:
-                    ParseFirstClientMessage();
-                    break;
-                case Protocol.Login:
-                    throw new Exception("Invalid client message.");
-                case Protocol.World:
-                    ParseClientWorldMessage();
-                    break;
-            }
-        }
+					break;
+				case Protocol.Login:
+					ParseServerLoginMessage();
+					break;
+				case Protocol.World:
+					ParseServerWorldMessage();
+					break;
+			}
+		}
 
-        private void ParseClientWorldMessage()
-        {
+		private void ParseServerWorldMessage()
+		{
 #if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseClientWorldMessage]");
+			Trace.WriteLine("[DEBUG] Proxy [ParseServerWorldMessage]");
 #endif
-            serverOutMessage.Reset();
-            Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
-            serverOutMessage.Size = clientInMessage.Size;
+			clientOutMessage.Reset();
+			Array.Copy(serverInMessage.Buffer, clientOutMessage.Buffer, serverInMessage.Size);
+			clientOutMessage.Size = serverInMessage.Size;
 
-            clientInMessage.ReadPosition = 2;
+			serverInMessage.ReadPosition = 2;
 
-            if (Adler.Generate(clientInMessage) != clientInMessage.ReadChecksum())
-                throw new Exception("Wrong checksum.");
+			if (Adler.Generate(serverInMessage) != serverInMessage.ReadChecksum())
+				throw new Exception("Wrong checksum.");
 
-            Xtea.Decrypt(clientInMessage, xteaKey);
-            clientInMessage.Size = clientInMessage.ReadInternalHead() + 8;
-            clientInMessage.ReadPosition = 8;
+			Xtea.Decrypt(serverInMessage, xteaKey);
+			serverInMessage.Size = serverInMessage.ReadInternalHead() + 8;
+			serverInMessage.ReadPosition = 8;
 
-            client.ProtocolWorld.ParseClientMessage(clientInMessage);
+			client.ProtocolWorld.ParseServerMessage(serverInMessage);
 
-            serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
-        }
+			SendToClient(clientOutMessage);
+		}
 
-        private void ParseFirstClientMessage()
-        {
+		private void ParseServerLoginMessage()
+		{
 #if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [ParseFirstClientMessage]");
+			Trace.WriteLine("[DEBUG] Proxy [ParseServerLoginMessage]");
 #endif
+			serverInMessage.ReadPosition = 2;
 
-            clientInMessage.ReadPosition = 2;
-            clientInMessage.Encrypted = false;
+			if (Adler.Generate(serverInMessage) != serverInMessage.ReadChecksum())
+				throw new Exception("Wrong checksum.");
 
-            if (Adler.Generate(clientInMessage) != clientInMessage.ReadUInt())
-                throw new Exception("Wrong checksum.");
+			Xtea.Decrypt(serverInMessage, xteaKey);
+			serverInMessage.Size = serverInMessage.ReadInternalHead() + 8;
+			serverInMessage.ReadPosition = 8;
 
-            byte protocolId = clientInMessage.ReadByte();
+			clientOutMessage.Reset();
+			Array.Copy(serverInMessage.Buffer, clientOutMessage.Buffer, serverInMessage.Size);
+			clientOutMessage.Size = serverInMessage.Size;
 
-            if (protocolId == 0x01) //Login
-            {
-                protocol = Protocol.Login;
-                clientInMessage.ReadUShort();
-                ushort clientVersion = clientInMessage.ReadUShort();
+			while (serverInMessage.ReadPosition < serverInMessage.Size)
+			{
+				byte cmd = serverInMessage.ReadByte();
 
-                clientInMessage.ReadUInt();
-                clientInMessage.ReadUInt();
-                clientInMessage.ReadUInt();
+				switch (cmd)
+				{
+					case 0x0A: //Error message
+						var msg = serverInMessage.ReadString();
+						break;
+					case 0x0B: //For your information
+						serverInMessage.ReadString();
+						break;
+					case 0x14: //MOTD
+						serverInMessage.ReadString();
+						break;
+					case 0x1E: //Patching exe/dat/spr messages
+					case 0x1F:
+					case 0x20:
+						//DisconnectClient(0x0A, "A new client is avalible, please download it first!");
+						break;
+					case 0x28: //Select other login server
+						//selectedLoginServer = random.Next(0, loginServers.Length - 1);
+						break;
+					case 0x64: //character list
+						int nChar = (int)serverInMessage.ReadByte();
+						charList = new CharacterLoginInfo[nChar];
 
-                Rsa.OpenTibiaDecrypt(clientInMessage);
+						for (int i = 0; i < nChar; i++)
+						{
+							charList[i].CharName = serverInMessage.ReadString();
+							charList[i].WorldName = serverInMessage.ReadString();
+							clientOutMessage.WriteAt(new byte[] { 127, 0, 0, 1 }, serverInMessage.ReadPosition);
+							charList[i].WorldIP = serverInMessage.ReadUInt();
+							clientOutMessage.WriteAt(BitConverter.GetBytes((ushort)worldClientPort), serverInMessage.ReadPosition);
+							charList[i].WorldPort = serverInMessage.ReadUShort();
+						}
+						break;
+					default:
+						break;
+				}
+			}
 
-                Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
-                serverOutMessage.Size = clientInMessage.Size;
-                serverOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
+			clientOutMessage.WriteInternalHead();
+			Xtea.Encrypt(clientOutMessage, xteaKey);
+			Adler.Generate(clientOutMessage, true);
+			clientOutMessage.WriteHead();
 
-                xteaKey = new uint[4];
-                xteaKey[0] = clientInMessage.ReadUInt();
-                xteaKey[1] = clientInMessage.ReadUInt();
-                xteaKey[2] = clientInMessage.ReadUInt();
-                xteaKey[3] = clientInMessage.ReadUInt();
+			SendToClient(clientOutMessage);
+		}
 
-                var acc = clientInMessage.ReadString(); //account name
-                var pass = clientInMessage.ReadString(); //password
-
-                if (client.IsOpenTibiaServer)
-                    Rsa.OpenTibiaEncrypt(serverOutMessage);
-                else
-                    Rsa.RealTibiaEncrypt(serverOutMessage);
-
-                Adler.Generate(serverOutMessage, true);
-                serverOutMessage.WriteHead();
-
-                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                serverSocket.Connect(loginServers[0].Server, loginServers[0].Port);
-
-                serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
-
-                serverInMessage.Reset();
-                serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
-            }
-            else if (protocolId == 0x0A) //Game
-            {
-                protocol = Protocol.World;
-
-                clientInMessage.ReadUShort();
-                ushort clientVersion = clientInMessage.ReadUShort();
-
-                Rsa.OpenTibiaDecrypt(clientInMessage);
-
-                Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
-                serverOutMessage.Size = clientInMessage.Size;
-                serverOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
-
-                xteaKey = new uint[4];
-                xteaKey[0] = clientInMessage.ReadUInt();
-                xteaKey[1] = clientInMessage.ReadUInt();
-                xteaKey[2] = clientInMessage.ReadUInt();
-                xteaKey[3] = clientInMessage.ReadUInt();
-
-                clientInMessage.ReadByte();
-
-                var accountName = clientInMessage.ReadString();
-                var characterName = clientInMessage.ReadString();
-                var password = clientInMessage.ReadString();
-
-                if (client.IsOpenTibiaServer)
-                    Rsa.OpenTibiaEncrypt(serverOutMessage);
-                else
-                    Rsa.RealTibiaEncrypt(serverOutMessage);
-
-                Adler.Generate(serverOutMessage, true);
-                serverOutMessage.WriteHead();
-
-                serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
-            }
-            else
-            {
-                throw new Exception("Invalid protocol " + protocolId.ToString("X2"));
-            }
-        }
-
-
-        private void Close()
-        {
-#if DEBUG_PROXY
-            Trace.WriteLine("[DEBUG] Proxy [Close]");
-#endif
-
-            if (loginClientSocket != null)
-            {
-                try
-                {
-                    loginClientSocket.Close();
-                    loginClientSocket = null;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
-                }
-            }
-
-            if (worldClientSocket != null)
-            {
-                try
-                {
-                    worldClientSocket.Close();
-                    worldClientSocket = null;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
-                }
-            }
-            if (clientSocket != null && clientSocket.Connected)
-            {
-                try
-                {
-                    clientSocket.Close();
-                    clientSocket = null;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
-                }
-            }
-
-            if (serverSocket != null && serverSocket.Connected)
-            {
-                try
-                {
-                    serverSocket.Close();
-                    serverSocket = null;
-                }
-                catch (Exception ex)
-                {
-                    Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
-                }
-            }
-        }
-
-        private void Restart()
-        {
-            lock (this)
-            {
-                if (accepting)
-                    return;
+		private void ClientReceiveCallback(IAsyncResult ar)
+		{
+			try
+			{
+				if (clientSocket == null)
+					return;
 
 #if DEBUG_PROXY
-                Trace.WriteLine("[DEBUG] Proxy [Restart]");
+				Trace.WriteLine("[DEBUG] Proxy [ClientReceiveCallback]");
 #endif
 
-                if (pendingSend > 0)
-                {
-                    client.Scheduler.Add(new Util.Schedule(500, Restart));
-                    return;
-                }
+				int count = clientSocket.EndReceive(ar);
 
-                Close();
+				if (count <= 0)
+					throw new Exception("Connection lost.");
 
-                clientInMessage.Reset();
-                clientOutMessage.Reset();
-                serverInMessage.Reset();
-                serverOutMessage.Reset();
+				clientInMessage.Size = clientInMessage.ReadHead() + 2;
+				int read = 2;
 
-                StartListen();
-            }
-        }
+				while (read < clientInMessage.Size)
+				{
+					count = clientSocket.Receive(clientInMessage.Buffer, read, clientInMessage.Size - read, SocketFlags.None);
 
-        private static int GetFreePort()
-        {
-            return GetFreePort(7979);
-        }
+					if (count <= 0)
+						throw new Exception("Connection lost.");
 
-        private static int GetFreePort(int start)
-        {
-            while (!CheckPort(start))
-                start++;
-            return start;
-        }
+					read += count;
+				}
 
-        private static bool CheckPort(int port)
-        {
-            try
-            {
-                TcpListener tcpScan = new TcpListener(IPAddress.Any, port);
-                tcpScan.Start();
-                tcpScan.Stop();
+				ParseClientMessage();
 
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-    }
+				clientInMessage.Reset();
+				clientSocket.BeginReceive(clientInMessage.Buffer, 0, 2, SocketFlags.None, ClientReceiveCallback, null);
+			}
+			catch (Exception ex)
+			{
+#if DEBUG_PROXY
+				Trace.WriteLine("[DEBUG] Proxy [ClientReceiveCallback] " + ex.Message);
+#endif
+				Restart();
+			}
+		}
+
+		private void ParseClientMessage()
+		{
+#if DEBUG_PROXY
+			Trace.WriteLine("[DEBUG] Proxy [ParseClientMessage]");
+#endif
+
+			switch (protocol)
+			{
+				case Protocol.None:
+					ParseFirstClientMessage();
+					break;
+				case Protocol.Login:
+					throw new Exception("Invalid client message.");
+				case Protocol.World:
+					ParseClientWorldMessage();
+					break;
+			}
+		}
+
+		private void ParseClientWorldMessage()
+		{
+#if DEBUG_PROXY
+			Trace.WriteLine("[DEBUG] Proxy [ParseClientWorldMessage]");
+#endif
+			serverOutMessage.Reset();
+			Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
+			serverOutMessage.Size = clientInMessage.Size;
+
+			clientInMessage.ReadPosition = 2;
+
+			if (Adler.Generate(clientInMessage) != clientInMessage.ReadChecksum())
+				throw new Exception("Wrong checksum.");
+
+			Xtea.Decrypt(clientInMessage, xteaKey);
+			clientInMessage.Size = clientInMessage.ReadInternalHead() + 8;
+			clientInMessage.ReadPosition = 8;
+
+			client.ProtocolWorld.ParseClientMessage(clientInMessage);
+
+			SendToServer(serverOutMessage);
+		}
+
+		public void SendToServer(OutMessage message)
+		{
+			if (message != serverOutMessage)
+			{
+				message.WriteInternalHead();
+				Xtea.Encrypt(message, xteaKey);
+				Adler.Generate(message, true);
+				message.WriteHead();
+			}
+
+			lock (serverSocket)
+			{
+				serverSocket.Send(message.Buffer, 0, message.Size, SocketFlags.None);
+			}
+		}
+
+		private void ParseFirstClientMessage()
+		{
+#if DEBUG_PROXY
+			Trace.WriteLine("[DEBUG] Proxy [ParseFirstClientMessage]");
+#endif
+
+			clientInMessage.ReadPosition = 2;
+			clientInMessage.Encrypted = false;
+
+			if (Adler.Generate(clientInMessage) != clientInMessage.ReadUInt())
+				throw new Exception("Wrong checksum.");
+
+			byte protocolId = clientInMessage.ReadByte();
+
+			if (protocolId == 0x01) //Login
+			{
+				protocol = Protocol.Login;
+				clientInMessage.ReadUShort();
+				ushort clientVersion = clientInMessage.ReadUShort();
+
+				clientInMessage.ReadUInt();
+				clientInMessage.ReadUInt();
+				clientInMessage.ReadUInt();
+
+				Rsa.OpenTibiaDecrypt(clientInMessage);
+
+				Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
+				serverOutMessage.Size = clientInMessage.Size;
+				serverOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
+
+				xteaKey = new uint[4];
+				xteaKey[0] = clientInMessage.ReadUInt();
+				xteaKey[1] = clientInMessage.ReadUInt();
+				xteaKey[2] = clientInMessage.ReadUInt();
+				xteaKey[3] = clientInMessage.ReadUInt();
+
+				var acc = clientInMessage.ReadString(); //account name
+				var pass = clientInMessage.ReadString(); //password
+
+				if (client.IsOpenTibiaServer)
+					Rsa.OpenTibiaEncrypt(serverOutMessage);
+				else
+					Rsa.RealTibiaEncrypt(serverOutMessage);
+
+				Adler.Generate(serverOutMessage, true);
+				serverOutMessage.WriteHead();
+
+				serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				serverSocket.Connect(loginServers[0].Server, loginServers[0].Port);
+
+				serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
+
+				serverInMessage.Reset();
+				serverSocket.BeginReceive(serverInMessage.Buffer, 0, 2, SocketFlags.None, ServerReceiveCallback, null);
+			}
+			else if (protocolId == 0x0A) //Game
+			{
+				protocol = Protocol.World;
+
+				clientInMessage.ReadUShort();
+				ushort clientVersion = clientInMessage.ReadUShort();
+
+				Rsa.OpenTibiaDecrypt(clientInMessage);
+
+				Array.Copy(clientInMessage.Buffer, serverOutMessage.Buffer, clientInMessage.Size);
+				serverOutMessage.Size = clientInMessage.Size;
+				serverOutMessage.WritePosition = clientInMessage.ReadPosition - 1; //the first byte is zero
+
+				xteaKey = new uint[4];
+				xteaKey[0] = clientInMessage.ReadUInt();
+				xteaKey[1] = clientInMessage.ReadUInt();
+				xteaKey[2] = clientInMessage.ReadUInt();
+				xteaKey[3] = clientInMessage.ReadUInt();
+
+				clientInMessage.ReadByte();
+
+				var accountName = clientInMessage.ReadString();
+				var characterName = clientInMessage.ReadString();
+				var password = clientInMessage.ReadString();
+
+				if (client.IsOpenTibiaServer)
+					Rsa.OpenTibiaEncrypt(serverOutMessage);
+				else
+					Rsa.RealTibiaEncrypt(serverOutMessage);
+
+				Adler.Generate(serverOutMessage, true);
+				serverOutMessage.WriteHead();
+
+				serverSocket.Send(serverOutMessage.Buffer, 0, serverOutMessage.Size, SocketFlags.None);
+			}
+			else
+			{
+				throw new Exception("Invalid protocol " + protocolId.ToString("X2"));
+			}
+		}
+
+
+		private void Close()
+		{
+#if DEBUG_PROXY
+			Trace.WriteLine("[DEBUG] Proxy [Close]");
+#endif
+
+			if (loginClientSocket != null)
+			{
+				try
+				{
+					loginClientSocket.Close();
+					loginClientSocket = null;
+				}
+				catch (Exception ex)
+				{
+					Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+				}
+			}
+
+			if (worldClientSocket != null)
+			{
+				try
+				{
+					worldClientSocket.Close();
+					worldClientSocket = null;
+				}
+				catch (Exception ex)
+				{
+					Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+				}
+			}
+			if (clientSocket != null && clientSocket.Connected)
+			{
+				try
+				{
+					clientSocket.Close();
+					clientSocket = null;
+				}
+				catch (Exception ex)
+				{
+					Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+				}
+			}
+
+			if (serverSocket != null && serverSocket.Connected)
+			{
+				try
+				{
+					serverSocket.Close();
+					serverSocket = null;
+				}
+				catch (Exception ex)
+				{
+					Trace.TraceWarning("Proxy [Restart]: " + ex.Message);
+				}
+			}
+		}
+
+		private void Restart()
+		{
+			lock (this)
+			{
+				if (accepting)
+					return;
+
+#if DEBUG_PROXY
+				Trace.WriteLine("[DEBUG] Proxy [Restart]");
+#endif
+
+				if (pendingSend > 0)
+				{
+					client.Scheduler.Add(new Util.Schedule(500, Restart));
+					return;
+				}
+
+				Close();
+
+				clientInMessage.Reset();
+				clientOutMessage.Reset();
+				serverInMessage.Reset();
+				serverOutMessage.Reset();
+
+				StartListen();
+			}
+		}
+
+		private static int GetFreePort()
+		{
+			return GetFreePort(7979);
+		}
+
+		private static int GetFreePort(int start)
+		{
+			while (!CheckPort(start))
+				start++;
+			return start;
+		}
+
+		private static bool CheckPort(int port)
+		{
+			try
+			{
+				TcpListener tcpScan = new TcpListener(IPAddress.Any, port);
+				tcpScan.Start();
+				tcpScan.Stop();
+
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+	}
 }

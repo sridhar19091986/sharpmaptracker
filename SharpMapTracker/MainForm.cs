@@ -24,14 +24,17 @@ namespace SharpMapTracker
         private OtItems otItems;
 
         private OtMap map;
-        private Dictionary<string, NpcStatements> npcStatements;
+        private Dictionary<string, NpcInfo> npcs;
         private string lastPlayerSpeech;
+        private DateTime lastPlayerSpeechTime;
+        private uint sendNpcWordScheduleId;
 
         public bool TrackMoveableItems { get; set; }
         public bool TrackSplashes { get; set; }
         public bool TrackMonsters { get; set; }
         public bool TrackNPCs { get; set; }
         public bool TrackOnlyCurrentFloor { get; set; }
+        public bool NPCAutoTalk { get; set; }
 
         public MainForm()
         {
@@ -42,7 +45,7 @@ namespace SharpMapTracker
             Text = "SharpMapTracker v" + Constants.MAP_TRACKER_VERSION;
 
             map = new OtMap();
-            npcStatements = new Dictionary<string, NpcStatements>();
+            npcs = new Dictionary<string, NpcInfo>();
 
             DataBindings.Add("TopMost", alwaysOnTopCheckBox, "Checked");
             DataBindings.Add("TrackMoveableItems", trackMoveableItemsCheckBox, "Checked");
@@ -50,6 +53,7 @@ namespace SharpMapTracker
             DataBindings.Add("TrackMonsters", trackMonstersCheckBox, "Checked");
             DataBindings.Add("TrackNPCs", trackNpcsCheckBox, "Checked");
             DataBindings.Add("TrackOnlyCurrentFloor", trackOnlyCurrentFloorCheckBox, "Checked");
+            DataBindings.Add("NPCAutoTalk", npcAutoTalkCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
             Trace.Listeners.Add(new TextWriterTraceListener("log.txt"));
@@ -117,6 +121,9 @@ namespace SharpMapTracker
                     client.Map.Updated -= Map_Updated;
                     client.BattleList.CreatureAdded -= BattleList_CreatureAdded;
                     client.Chat.CreatureSpeak -= Chat_CreatureSpeak;
+                    client.Chat.PlayerSpeak -= Chat_PlayerSpeak;
+                    client.OpenShopWindow -= Client_OpenShopWindow;
+                    client.Exited -= client_Exited;
 
                     client.Dispose();
                 }
@@ -128,9 +135,18 @@ namespace SharpMapTracker
                     client.Map.Updated += Map_Updated;
                     client.BattleList.CreatureAdded += BattleList_CreatureAdded;
                     client.Chat.CreatureSpeak += Chat_CreatureSpeak;
+                    client.Chat.PlayerSpeak += Chat_PlayerSpeak;
+                    client.OpenShopWindow += Client_OpenShopWindow;
+                    client.Exited += client_Exited;
                 }
 
             }
+        }
+
+        void client_Exited(object sender, EventArgs e)
+        {
+            client = null;
+            Trace.WriteLine("Client unloaded.");
         }
 
         private void UpdateCounters(int tileCount, int npcCount, int monsterCount)
@@ -177,7 +193,6 @@ namespace SharpMapTracker
             try
             {
                 var chooserOptions = new ClientChooserOptions();
-                chooserOptions.Version = ClientVersion.Version963.FileVersion;
                 chooserOptions.Smart = true;
                 chooserOptions.ShowOTOption = true;
                 chooserOptions.OfflineOnly = true;
@@ -186,9 +201,16 @@ namespace SharpMapTracker
 
                 if (c != null)
                 {
-                    c.EnableProxy();
-                    Client = c;
-                    Trace.WriteLine("Client successfully loaded.");
+                    if (c.Version.OtbMajorVersion != otItems.MajorVersion || c.Version.OtbMinorVersion != otItems.MinorVersion)
+                    {
+                        Trace.WriteLine("Can't load this client, the version " + c.Version.OtbMajorVersion + "." + c.Version.OtbMinorVersion + " of items.otb is required.");
+                    }
+                    else
+                    {
+                        c.EnableProxy();
+                        Client = c;
+                        Trace.WriteLine("Client successfully loaded.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -197,23 +219,81 @@ namespace SharpMapTracker
             }
         }
 
+        private void Client_OpenShopWindow(object sender, OpenShopWindowEventArgs e)
+        {
+            if (!TrackNPCs)
+                return;
+
+            var creature = client.BattleList.GetCreature(e.Shop.Name);
+            if (creature == null)
+                return;
+
+            var key = creature.Name.ToLower().Trim();
+            if (!npcs.ContainsKey(key))
+                npcs.Add(key, new NpcInfo(creature));
+
+            npcs[key].Shop = e.Shop;
+        }
+
+        private void Chat_PlayerSpeak(object sender, PlayerSpeakEventArgs e)
+        {
+            if (!TrackNPCs)
+                return;
+
+            lastPlayerSpeech = e.Text.ToLower();
+            lastPlayerSpeechTime = DateTime.Now;
+        }
+
+
         private void Chat_CreatureSpeak(object sender, CreatureSpeakEventArgs e)
         {
             if (!TrackNPCs)
                 return;
 
-            if (e.Creature.Type == CreatureType.PLAYER && e.Creature.Id == Client.PlayerId)
-            {
-                lastPlayerSpeech = e.Text.ToLower();
-            }
-            else if (e.Type == MessageClasses.NPC_FROM && e.Creature.Type == CreatureType.NPC)
+            if (e.Type == MessageClasses.NPC_FROM && e.Creature.Type == CreatureType.NPC)
             {
                 var key = e.Creature.Name.ToLower().Trim();
-                if (!npcStatements.ContainsKey(key))
-                    npcStatements.Add(key, new NpcStatements(e.Creature));
+                if (!npcs.ContainsKey(key))
+                    npcs.Add(key, new NpcInfo(e.Creature));
 
-                if (lastPlayerSpeech != null)
-                    npcStatements[key].AddStatement(lastPlayerSpeech, e.Text);
+                var npcInfo = npcs[key];
+
+                if (lastPlayerSpeech != null && lastPlayerSpeechTime.AddSeconds(2) > DateTime.Now)
+                    npcInfo.AddStatement(lastPlayerSpeech, e.Text);
+
+                if (NPCAutoTalk && !client.IsClinentless && client.LoggedIn)
+                {
+                    CancelSendNextNPCWordSchedule();
+                    sendNpcWordScheduleId = client.Scheduler.Add(new Schedule(200, () => { SendNextNPCWord(npcInfo); }));
+                }
+
+            }
+        }
+
+        private void CancelSendNextNPCWordSchedule()
+        {
+            if (sendNpcWordScheduleId > 0)
+            {
+                client.Scheduler.Remove(sendNpcWordScheduleId);
+                sendNpcWordScheduleId = 0;
+            }
+        }
+
+        private void SendNextNPCWord(NpcInfo npcInfo)
+        {
+            CancelSendNextNPCWordSchedule();
+            var word = npcInfo.NotTriedWords.FirstOrDefault();
+            if (word == null)
+                Trace.WriteLine("No more words to say to " + npcInfo.Name + ".");
+            else
+            {
+                lastPlayerSpeech = word;
+                lastPlayerSpeechTime = DateTime.Now;
+
+                client.Chat.SayToNpc(word);
+                npcInfo.TriedWords.Add(word);
+
+                sendNpcWordScheduleId = client.Scheduler.Add(new Schedule(2000, () => { SendNextNPCWord(npcInfo); }));
             }
         }
 
@@ -225,8 +305,8 @@ namespace SharpMapTracker
             if (e.Creature.Type == CreatureType.NPC)
             {
                 var key = e.Creature.Name.ToLower().Trim();
-                if (!npcStatements.ContainsKey(key))
-                    npcStatements.Add(key, new NpcStatements(e.Creature));
+                if (!npcs.ContainsKey(key))
+                    npcs.Add(key, new NpcInfo(e.Creature));
             }
         }
 
@@ -335,7 +415,7 @@ namespace SharpMapTracker
                 {
                     try
                     {
-                        OtbmWriter.WriteMapToFile(saveFileDialog.FileName, map, Constants.GetMapVersion(963));
+                        OtbmWriter.WriteMapToFile(saveFileDialog.FileName, map, client.Version);
                         Trace.WriteLine("Map successfully saved.");
                     }
                     catch (Exception ex)
@@ -387,25 +467,25 @@ namespace SharpMapTracker
                     if (!Directory.Exists(scriptDirectory))
                         Directory.CreateDirectory(scriptDirectory);
 
-                    foreach (var npcStatement in npcStatements)
+                    foreach (var npcEntry in npcs)
                     {
-                        var cr = npcStatement.Value.Creature;
+                        var npcInfo = npcEntry.Value;
 
                         var builder = new StringBuilder();
                         builder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-                        builder.Append("\t<npc name=\"").Append(cr.Name).Append("\" script=\"data/npc/scripts/").Append(cr.Name).Append(".lua\" walkinterval=\"2000\" floorchange=\"0\">\n");
+                        builder.Append("\t<npc name=\"").Append(npcInfo.Name).Append("\" script=\"data/npc/scripts/").Append(npcInfo.Name).Append(".lua\" walkinterval=\"2000\" floorchange=\"0\">\n");
                         builder.Append("\t<health now=\"100\" max=\"100\"/>\n");
 
-                        builder.Append("\t<look type=\"").Append(cr.Outfit.LookType).
-                            Append("\" head=\"").Append(cr.Outfit.Head).
-                            Append("\" body=\"").Append(cr.Outfit.Body).
-                            Append("\" legs=\"").Append(cr.Outfit.Legs).
-                            Append("\" feet=\"").Append(cr.Outfit.Feet).
-                            Append("\" addons=\"").Append(cr.Outfit.Addons).Append("\"/>\n");
+                        builder.Append("\t<look type=\"").Append(npcInfo.Outfit.LookType).
+                            Append("\" head=\"").Append(npcInfo.Outfit.Head).
+                            Append("\" body=\"").Append(npcInfo.Outfit.Body).
+                            Append("\" legs=\"").Append(npcInfo.Outfit.Legs).
+                            Append("\" feet=\"").Append(npcInfo.Outfit.Feet).
+                            Append("\" addons=\"").Append(npcInfo.Outfit.Addons).Append("\"/>\n");
 
                         builder.Append("</npc>");
 
-                        File.WriteAllText(Path.Combine(directory, cr.Name + ".xml"), builder.ToString());
+                        File.WriteAllText(Path.Combine(directory, npcInfo.Name + ".xml"), builder.ToString());
 
                         builder.Clear();
 
@@ -419,16 +499,94 @@ namespace SharpMapTracker
                         builder.Append("function onThink()						npcHandler:onThink()						end\n");
                         builder.Append("\n");
 
-                        foreach (var statement in npcStatement.Value.Statements)
+                        var playerName = client.BattleList.GetPlayer().Name;
+
+                        if (npcInfo.Statements.ContainsKey("hi"))
                         {
-                            builder.Append("keywordHandler:addKeyword({'").Append(statement.Key.Replace("'", "\\'")).Append("'}, StdModule.say, {npcHandler = npcHandler, onlyFocus = true, text = '")
-                                .Append(statement.Value.Replace("'", "\\'")).Append("'})\n");
+                            builder.Append("npcHandler:setMessage(MESSAGE_GREET, '")
+                                .Append(npcInfo.Statements["hi"].Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|"))
+                                .Append("')\n");
                         }
+
+                        if (npcInfo.Statements.ContainsKey("bye"))
+                        {
+                            builder.Append("npcHandler:setMessage(MESSAGE_FAREWELL, '")
+                                .Append(npcInfo.Statements["bye"].Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|"))
+                                .Append("')\n");
+                        }
+
+                        if (npcInfo.Statements.ContainsKey("trade"))
+                        {
+                            builder.Append("npcHandler:setMessage(MESSAGE_SENDTRADE, '")
+                                .Append(npcInfo.Statements["trade"].Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|"))
+                                .Append("')\n");
+                        }
+
+                        builder.Append("\n");
+
+                        foreach (var statement in npcInfo.Statements)
+                        {
+                            if (statement.Key.Equals("hi") || statement.Key.Equals("bye"))
+                                continue;
+
+                            builder.Append("keywordHandler:addKeyword({'").Append(statement.Key.Replace("'", "\\'"))
+                                .Append("'}, StdModule.say, {npcHandler = npcHandler, onlyFocus = true, text = '")
+                                .Append(statement.Value.Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|")).Append("'})\n");
+                        }
+
+                        if (npcInfo.Shop != null)
+                        {
+                            builder.Append("\n");
+                            builder.Append("local shopModule = ShopModule:new()\n");
+                            builder.Append("npcHandler:addModule(shopModule)\n");
+                            builder.Append("\n");
+
+                            foreach (var item in npcInfo.Shop.Items.Where(x => x.IsBuyable))
+                            {
+                                var otItem = otItems.GetItemBySpriteId(item.Id);
+
+                                if (otItem == null)
+                                    continue;
+
+                                var subType = 0;
+
+                                if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
+                                {
+                                    subType = Constants.ReverseFluidMap[item.SubType];
+                                }
+
+                                builder.Append("shopModule:addBuyableItem({'").Append(item.Name.ToLower()).
+                                    Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
+                                    Append(", ").Append(subType).Append(", '").Append(item.Name.ToLower()).Append("')\n");
+                            }
+
+                            builder.Append("\n");
+
+                            foreach (var item in npcInfo.Shop.Items.Where(x => x.IsSellable))
+                            {
+                                var otItem = otItems.GetItemBySpriteId(item.Id);
+
+                                if (otItem == null)
+                                    continue;
+
+                                var subType = 0;
+
+                                if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
+                                {
+                                    subType = Constants.ReverseFluidMap[item.SubType];
+                                }
+
+                                builder.Append("shopModule:addSellableItem({'").Append(item.Name.ToLower()).
+                                    Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
+                                    Append(", ").Append(subType).Append(", '").Append(item.Name.ToLower()).Append("')\n");
+                            }
+                        }
+
 
                         builder.Append("\n");
                         builder.Append("npcHandler:addModule(FocusModule:new())");
 
-                        File.WriteAllText(Path.Combine(scriptDirectory, cr.Name + ".lua"), builder.ToString());
+                        File.WriteAllText(Path.Combine(scriptDirectory, npcInfo.Name + ".lua"), builder.ToString());
                     }
 
                     Trace.WriteLine("NPCs successfully saved.");
@@ -444,7 +602,7 @@ namespace SharpMapTracker
         {
             lock (map)
             {
-                npcStatements.Clear();
+                npcs.Clear();
                 map.Clear();
                 miniMap.Clear();
                 traceTextBox.Text = "";

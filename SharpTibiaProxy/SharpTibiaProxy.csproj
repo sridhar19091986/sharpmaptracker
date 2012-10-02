@@ -67,6 +67,8 @@
     <Compile Include="Domain\Map.cs" />
     <Compile Include="Domain\Outfit.cs" />
     <Compile Include="Domain\MessageClasses.cs" />
+    <Compile Include="Domain\Shop.cs" />
+    <Compile Include="Domain\ShopItem.cs" />
     <Compile Include="Domain\Skills.cs" />
     <Compile Include="Domain\Thing.cs" />
     <Compile Include="Domain\Tile.cs" />

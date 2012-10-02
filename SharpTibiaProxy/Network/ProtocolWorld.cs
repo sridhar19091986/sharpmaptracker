@@ -71,7 +71,7 @@ namespace SharpTibiaProxy.Network
 
         #endregion
 
-        #region Server
+        #region ParseServer
 
         public void ParseServerMessage(InMessage message)
         {
@@ -481,17 +481,22 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerOpenShopWindow(InMessage message)
         {
-            message.ReadString();
+            var shop = new Shop(message.ReadString());
             var size = message.ReadUShort();
             for (uint i = 0; i < size; ++i)
             {
-                var itemid = message.ReadUShort();
-                var subtype = message.ReadByte();
-                var itemname = message.ReadString();
-                message.ReadUInt();
-                message.ReadUInt();
-                message.ReadUInt();
+                var shopItem = new ShopItem();
+                shopItem.Id = message.ReadUShort();
+                shopItem.SubType = message.ReadByte();
+                shopItem.Name = message.ReadString();
+                shopItem.Weight = message.ReadUInt();
+                shopItem.BuyPrice = message.ReadUInt();
+                shopItem.SellPrice = message.ReadUInt();
+
+                shop.Items.Add(shopItem);
             }
+
+            client.OnOpenShopWindow(shop);
         }
 
         private void ParseServerQuestPartList(InMessage message)
@@ -608,20 +613,20 @@ namespace SharpTibiaProxy.Network
             message.ReadUShort();
         }
 
-        private void ParseServerRuleViolationB1(InMessage message)
-        {
-            message.ReadUShort();
-        }
+        //private void ParseServerRuleViolationB1(InMessage message)
+        //{
+        //    message.ReadUShort();
+        //}
 
-        private void ParseServerRuleViolationB0(InMessage message)
-        {
-            message.ReadUShort();
-        }
+        //private void ParseServerRuleViolationB0(InMessage message)
+        //{
+        //    message.ReadUShort();
+        //}
 
-        private void ParseServerRuleViolationAF(InMessage message)
-        {
-            message.ReadUShort();
-        }
+        //private void ParseServerRuleViolationAF(InMessage message)
+        //{
+        //    message.ReadUShort();
+        //}
 
         private void ParseServerOpenRuleViolation(InMessage message)
         {
@@ -1362,6 +1367,21 @@ namespace SharpTibiaProxy.Network
             client.PlayerId = message.ReadUInt();
             message.ReadUShort();
             client.PlayerCanReportBugs = message.ReadByte() != 0;
+        }
+        #endregion
+
+        #region SendServer
+        internal void SendServerSay(string text, MessageClasses type)
+        {
+            if (!client.LoggedIn)
+                throw new Exception("Invalid client state.");
+
+            var message = new OutMessage();
+            message.WriteByte(0x96);
+            message.WriteByte((byte)type);
+            message.WriteString(text);
+
+            client.Proxy.SendToServer(message);
         }
         #endregion
     }
