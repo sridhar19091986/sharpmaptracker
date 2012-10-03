@@ -8,11 +8,11 @@ using System.Diagnostics;
 
 namespace SharpMapTracker
 {
-    public class DefaultNPCWords
+    public class NpcWordList
     {
         public static HashSet<string> Words { get; private set; }
 
-        static DefaultNPCWords()
+        static NpcWordList()
         {
             Words = new HashSet<string>();
         }
@@ -25,6 +25,11 @@ namespace SharpMapTracker
             word = word.ToLower().Trim();
             if (word.Equals("bye"))
                 return;
+
+            if (word.EndsWith("'s"))
+                word = word.Substring(0, word.Length - 2);
+            else if(word.EndsWith("'"))
+                word = word.Substring(0, word.Length - 1);
 
             if (word.EndsWith("s"))
                 Words.Add(word.Substring(0, word.Length - 1));
