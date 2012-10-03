@@ -1374,7 +1374,7 @@ namespace SharpTibiaProxy.Network
         internal void SendServerSay(string text, MessageClasses type)
         {
             if (!client.LoggedIn)
-                throw new Exception("Invalid client state.");
+                return;
 
             var message = new OutMessage();
             message.WriteByte(0x96);

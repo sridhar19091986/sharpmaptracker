@@ -64,13 +64,13 @@ namespace SharpMapTracker
             KeyDown += new KeyEventHandler(MainForm_KeyDown);
             FormClosed += new FormClosedEventHandler(MainForm_FormClosed);
 
-            DefaultNPCWords.Load();
+            NpcWordList.Load();
         }
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Client = null;
-            DefaultNPCWords.Save();
+            NpcWordList.Save();
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -566,16 +566,14 @@ namespace SharpMapTracker
                                 if (otItem == null)
                                     continue;
 
-                                var subType = 0;
-
-                                if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
-                                {
-                                    subType = Constants.ReverseFluidMap[item.SubType];
-                                }
-
                                 builder.Append("shopModule:addBuyableItem({'").Append(item.Name.ToLower()).
                                     Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
-                                    Append(", ").Append(subType).Append(", '").Append(item.Name.ToLower()).Append("')\n");
+                                    Append(", ");
+
+                                if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
+                                     builder.Append(Constants.ReverseFluidMap[item.SubType]).Append(", ");
+
+                                builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
                             }
 
                             builder.Append("\n");
@@ -587,16 +585,14 @@ namespace SharpMapTracker
                                 if (otItem == null)
                                     continue;
 
-                                var subType = 0;
+                                builder.Append("shopModule:addSellableItem({'").Append(item.Name.ToLower()).
+                                    Append("'}, ").Append(otItem.Id).Append(", ").Append(item.SellPrice).
+                                    Append(", ");
 
                                 if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
-                                {
-                                    subType = Constants.ReverseFluidMap[item.SubType];
-                                }
+                                    builder.Append(Constants.ReverseFluidMap[item.SubType]).Append(", ");
 
-                                builder.Append("shopModule:addSellableItem({'").Append(item.Name.ToLower()).
-                                    Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
-                                    Append(", ").Append(subType).Append(", '").Append(item.Name.ToLower()).Append("')\n");
+                                builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
                             }
                         }
 

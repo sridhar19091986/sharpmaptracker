@@ -50,7 +50,7 @@ namespace SharpMapTracker
             this.triedWords = new HashSet<string>();
             this.voices = new HashSet<NpcVoice>();
 
-            DefaultNPCWords.Words.Add(creature.Name.ToLower());
+            NpcWordList.Words.Add(creature.Name.ToLower());
         }
 
         public void AddVoice(string value, bool yell)
@@ -68,7 +68,7 @@ namespace SharpMapTracker
         public void AddStatement(string key, string value)
         {
             key = key.ToLower().Trim();
-            DefaultNPCWords.AddWord(key);
+            NpcWordList.AddWord(key);
             if (!statements.ContainsKey(key))
             {
                 if (key.EndsWith("s"))
@@ -93,7 +93,7 @@ namespace SharpMapTracker
                 var matches = Regex.Matches(value, @"{([\w'\s]+)}");
 
                 foreach (Match match in matches)
-                    DefaultNPCWords.AddWord(match.Groups[1].Value);
+                    NpcWordList.AddWord(match.Groups[1].Value);
             }
         }
 
@@ -102,7 +102,7 @@ namespace SharpMapTracker
         public Shop Shop { get { return shop; } set { this.shop = value; } }
         public Dictionary<string, string> Statements { get { return statements; } }
         public HashSet<string> TriedWords { get { return triedWords; } }
-        public List<string> NotTriedWords { get { return DefaultNPCWords.Words.Where(x => !triedWords.Contains(x)).ToList(); } }
+        public List<string> NotTriedWords { get { return NpcWordList.Words.Where(x => !triedWords.Contains(x)).ToList(); } }
         public HashSet<NpcVoice> Voices { get { return voices; } }
     }
 }
