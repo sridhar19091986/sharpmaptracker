@@ -9,6 +9,7 @@ namespace SharpTibiaProxy.Domain
     {
         public static readonly ClientVersion Version961 = new ClientVersion { Id = 961, FileVersion = "9.6.1.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 41 };
         public static readonly ClientVersion Version963 = new ClientVersion { Id = 963, FileVersion = "9.6.3.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 42 };
+        public static readonly ClientVersion Current = Version963;
 
         public int Id { get; private set; }
         public string FileVersion { get; private set; }
@@ -26,6 +27,17 @@ namespace SharpTibiaProxy.Domain
                 case "9.6.3.0": return Version963;
                 default: return null;
             }
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as ClientVersion;
+            return other != null && other.Id == Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return Id ^ 31;
         }
     }
 }
