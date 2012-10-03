@@ -49,48 +49,24 @@ namespace SharpMapTracker
 
         public static readonly byte[] ReverseFluidMap =
         {
-	        (byte)FluidColors.FLUID_EMPTY,
-	        (byte)FluidTypes.FLUID_WATER,
-	        (byte)FluidTypes.FLUID_MANA,
-	        (byte)FluidTypes.FLUID_BEER,
-	        (byte)FluidColors.FLUID_EMPTY,
-	        (byte)FluidTypes.FLUID_BLOOD,
-	        (byte)FluidTypes.FLUID_SLIME,
-	        (byte)FluidColors.FLUID_EMPTY,
-	        (byte)FluidTypes.FLUID_LEMONADE,
-	        (byte)FluidTypes.FLUID_MILK
+            (byte)FluidColors.FLUID_EMPTY,
+            (byte)FluidTypes.FLUID_WATER,
+            (byte)FluidTypes.FLUID_MANA,
+            (byte)FluidTypes.FLUID_BEER,
+            (byte)FluidColors.FLUID_EMPTY,
+            (byte)FluidTypes.FLUID_BLOOD,
+            (byte)FluidTypes.FLUID_SLIME,
+            (byte)FluidColors.FLUID_EMPTY,
+            (byte)FluidTypes.FLUID_LEMONADE,
+            (byte)FluidTypes.FLUID_MILK
         };
 
-        //public static Version GetMapVersion(ushort tibiaVersion)
-        //{
-        //    if (tibiaVersion >= 961)
-        //    {
-        //        return new Version(0x03, 0x29);
-        //    }
-        //    else if (tibiaVersion >= 854)
-        //    {
-        //        return new Version(0x03, 0x10);
-        //    }
-        //    else if (tibiaVersion >= 850)
-        //    {
-        //        return new Version(0x03, 0x0F);
-        //    }
-        //    else if (tibiaVersion >= 840)
-        //    {
-        //        return new Version(0x03, 0x0C);
-        //    }
-        //    else if (tibiaVersion >= 820)
-        //    {
-        //        return new Version(0x03, 0x0A);
-        //    }
-        //    else if (tibiaVersion >= 810)
-        //    {
-        //        return new Version(0x02, 0x08);
-        //    }
-        //    else // if (tibiaVersion >= 800)
-        //    {
-        //        return new Version(0x02, 0x07);
-        //    }
-        //}
+        public static readonly string[] DEFAULT_NPC_WORDS = {           
+            "name","job","time","offer","trade","tibia","king",
+            "thais","rookgaard","gods","quest","help","hints",
+            "citizens","merchants","monsters", "sell", "magic",
+            "spell", "dungeon"
+        };
+
     }
 }

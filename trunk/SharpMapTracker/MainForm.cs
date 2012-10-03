@@ -13,6 +13,7 @@ using SharpTibiaProxy;
 using SharpTibiaProxy.Network;
 using System.Threading;
 using SharpTibiaProxy.Util;
+using System.Xml.Linq;
 
 namespace SharpMapTracker
 {
@@ -62,14 +63,14 @@ namespace SharpMapTracker
 
             KeyDown += new KeyEventHandler(MainForm_KeyDown);
             FormClosed += new FormClosedEventHandler(MainForm_FormClosed);
+
+            DefaultNPCWords.Load();
         }
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (Client != null)
-                Client.Dispose();
-
             Client = null;
+            DefaultNPCWords.Save();
         }
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
@@ -202,15 +203,11 @@ namespace SharpMapTracker
                 if (c != null)
                 {
                     if (c.Version.OtbMajorVersion != otItems.MajorVersion || c.Version.OtbMinorVersion != otItems.MinorVersion)
-                    {
-                        Trace.WriteLine("Can't load this client, the version " + c.Version.OtbMajorVersion + "." + c.Version.OtbMinorVersion + " of items.otb is required.");
-                    }
-                    else
-                    {
-                        c.EnableProxy();
-                        Client = c;
-                        Trace.WriteLine("Client successfully loaded.");
-                    }
+                        Trace.WriteLine("[Warning] This client requires the version " + c.Version.OtbMajorVersion + "." + c.Version.OtbMinorVersion + " of items.otb.");
+
+                    c.EnableProxy();
+                    Client = c;
+                    Trace.WriteLine("Client successfully loaded.");
                 }
             }
             catch (Exception ex)
@@ -250,7 +247,7 @@ namespace SharpMapTracker
             if (!TrackNPCs)
                 return;
 
-            if (e.Type == MessageClasses.NPC_FROM && e.Creature.Type == CreatureType.NPC)
+            if (e.Creature.Type == CreatureType.NPC)
             {
                 var key = e.Creature.Name.ToLower().Trim();
                 if (!npcs.ContainsKey(key))
@@ -258,15 +255,26 @@ namespace SharpMapTracker
 
                 var npcInfo = npcs[key];
 
-                if (lastPlayerSpeech != null && lastPlayerSpeechTime.AddSeconds(2) > DateTime.Now)
-                    npcInfo.AddStatement(lastPlayerSpeech, e.Text);
-
-                if (NPCAutoTalk && !client.IsClinentless && client.LoggedIn)
+                if (e.Type == MessageClasses.NPC_FROM)
                 {
-                    CancelSendNextNPCWordSchedule();
-                    sendNpcWordScheduleId = client.Scheduler.Add(new Schedule(200, () => { SendNextNPCWord(npcInfo); }));
-                }
 
+                    if (lastPlayerSpeech != null && lastPlayerSpeechTime.AddSeconds(2) > DateTime.Now)
+                        npcInfo.AddStatement(lastPlayerSpeech, e.Text);
+
+                    if (NPCAutoTalk && !client.IsClinentless && client.LoggedIn)
+                    {
+                        CancelSendNextNPCWordSchedule();
+                        sendNpcWordScheduleId = client.Scheduler.Add(new Schedule(200, () => { SendNextNPCWord(npcInfo); }));
+                    }
+                }
+                else if (e.Type == MessageClasses.SPEAK_SAY)
+                {
+                    npcInfo.AddVoice(e.Text, false);
+                }
+                else if (e.Type == MessageClasses.SPEAK_YELL)
+                {
+                    npcInfo.AddVoice(e.Text, true);
+                }
             }
         }
 
@@ -438,7 +446,7 @@ namespace SharpMapTracker
                 {
                     if (Client == null)
                     {
-                        var c = new Client("Tibia.dat", ClientVersion.Version963);
+                        var c = new Client("Tibia.dat", ClientVersion.Current);
                         Client = c;
                     }
 
@@ -471,23 +479,33 @@ namespace SharpMapTracker
                     {
                         var npcInfo = npcEntry.Value;
 
+                        var npc = new XElement("npc");
+                        npc.Add(new XAttribute("name", npcInfo.Name));
+                        npc.Add(new XAttribute("script", "data/npc/scripts/" + npcInfo.Name + ".lua"));
+                        npc.Add(new XAttribute("walkinterval", "2000"));
+                        npc.Add(new XAttribute("floorchange", "0"));
+
+                        npc.Add(new XElement("health", new XAttribute("now", "100"), new XAttribute("max", "100")));
+                        npc.Add(new XElement("look", new XAttribute("type", npcInfo.Outfit.LookType),
+                            new XAttribute("head", npcInfo.Outfit.Head), new XAttribute("body", npcInfo.Outfit.Body),
+                            new XAttribute("legs", npcInfo.Outfit.Legs), new XAttribute("feet", npcInfo.Outfit.Feet),
+                            new XAttribute("addons", npcInfo.Outfit.Addons)));
+
+                        if (npcInfo.Voices.Count > 0)
+                        {
+                            var voices = new XElement("voices");
+                            foreach (var voice in npcInfo.Voices)
+                            {
+                                voices.Add(new XElement("voice", new XAttribute("text", voice.Text), new XAttribute("interval2", voice.Interval),
+                                    new XAttribute("margin", "1"), new XAttribute("yell", voice.IsYell ? "yes" : "no")));
+                            }
+
+                            npc.Add(voices);
+                        }
+
+                        npc.Save(Path.Combine(directory, npcInfo.Name + ".xml"));
+
                         var builder = new StringBuilder();
-                        builder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-                        builder.Append("\t<npc name=\"").Append(npcInfo.Name).Append("\" script=\"data/npc/scripts/").Append(npcInfo.Name).Append(".lua\" walkinterval=\"2000\" floorchange=\"0\">\n");
-                        builder.Append("\t<health now=\"100\" max=\"100\"/>\n");
-
-                        builder.Append("\t<look type=\"").Append(npcInfo.Outfit.LookType).
-                            Append("\" head=\"").Append(npcInfo.Outfit.Head).
-                            Append("\" body=\"").Append(npcInfo.Outfit.Body).
-                            Append("\" legs=\"").Append(npcInfo.Outfit.Legs).
-                            Append("\" feet=\"").Append(npcInfo.Outfit.Feet).
-                            Append("\" addons=\"").Append(npcInfo.Outfit.Addons).Append("\"/>\n");
-
-                        builder.Append("</npc>");
-
-                        File.WriteAllText(Path.Combine(directory, npcInfo.Name + ".xml"), builder.ToString());
-
-                        builder.Clear();
 
                         builder.Append("local keywordHandler = KeywordHandler:new()\n");
                         builder.Append("local npcHandler = NpcHandler:new(keywordHandler)\n");
@@ -526,7 +544,7 @@ namespace SharpMapTracker
 
                         foreach (var statement in npcInfo.Statements)
                         {
-                            if (statement.Key.Equals("hi") || statement.Key.Equals("bye"))
+                            if (statement.Key.Equals("hi") || statement.Key.Equals("bye") || statement.Key.Equals("trade"))
                                 continue;
 
                             builder.Append("keywordHandler:addKeyword({'").Append(statement.Key.Replace("'", "\\'"))
