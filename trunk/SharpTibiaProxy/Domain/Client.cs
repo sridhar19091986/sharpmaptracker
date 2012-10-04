@@ -361,7 +361,7 @@ namespace SharpTibiaProxy.Domain
 
         public override string ToString()
         {
-            string s = "[" + Version.Id + "] ";
+            string s = "[" + Version.Number + "] ";
             if (!LoggedIn)
                 s += "Not logged in.";
             else

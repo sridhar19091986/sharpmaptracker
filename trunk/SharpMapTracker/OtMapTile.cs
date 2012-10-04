@@ -52,7 +52,7 @@ namespace SharpMapTracker
                         Items.Add(item);
                     }
                 }
-                else if (item.Info.IsMoveable || item.Info.Type == OtbItemType.Splash)
+                else if (item.Info.IsMoveable)
                 {
                     bool inserted = false;
 

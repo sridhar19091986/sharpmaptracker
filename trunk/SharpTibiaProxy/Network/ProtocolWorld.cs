@@ -535,10 +535,15 @@ namespace SharpTibiaProxy.Network
         {
             var creatureID = message.ReadUInt();
             var name = message.ReadString();
-            var unk1 = message.ReadString();
-            var unk2 = message.ReadUInt();
-            var unk3 = message.ReadByte();
-            var unk4 = message.ReadByte();
+
+            if (client.Version.Number > ClientVersion.Version961.Number)
+            {
+                var unk1 = message.ReadString();
+                var unk2 = message.ReadUInt();
+                var unk3 = message.ReadByte();
+            }
+
+            var unk4 = message.ReadByte(); //status?
         }
 
         private void ParseServerOutfitWindow(InMessage message)
