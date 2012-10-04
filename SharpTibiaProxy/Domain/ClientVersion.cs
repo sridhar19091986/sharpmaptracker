@@ -7,11 +7,11 @@ namespace SharpTibiaProxy.Domain
 {
     public class ClientVersion
     {
-        public static readonly ClientVersion Version961 = new ClientVersion { Id = 961, FileVersion = "9.6.1.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 41 };
-        public static readonly ClientVersion Version963 = new ClientVersion { Id = 963, FileVersion = "9.6.3.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 42 };
+        public static readonly ClientVersion Version961 = new ClientVersion { Number = 961, FileVersion = "9.6.1.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 41 };
+        public static readonly ClientVersion Version963 = new ClientVersion { Number = 963, FileVersion = "9.6.3.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 42 };
         public static readonly ClientVersion Current = Version963;
 
-        public int Id { get; private set; }
+        public int Number { get; private set; }
         public string FileVersion { get; private set; }
         public uint OtbmVersion { get; private set; }
         public uint OtbMajorVersion { get; private set; }
@@ -32,12 +32,12 @@ namespace SharpTibiaProxy.Domain
         public override bool Equals(object obj)
         {
             var other = obj as ClientVersion;
-            return other != null && other.Id == Id;
+            return other != null && other.Number == Number;
         }
 
         public override int GetHashCode()
         {
-            return Id ^ 31;
+            return Number ^ 31;
         }
     }
 }

@@ -39,8 +39,6 @@ namespace SharpMapTracker
 
         public MainForm()
         {
-            LoadItems();
-
             InitializeComponent();
 
             Text = "SharpMapTracker v" + Constants.MAP_TRACKER_VERSION;
@@ -62,8 +60,13 @@ namespace SharpMapTracker
             Trace.AutoFlush = true;
 
             KeyDown += new KeyEventHandler(MainForm_KeyDown);
+            Load += MainForm_Load;
             FormClosed += new FormClosedEventHandler(MainForm_FormClosed);
+        }
 
+        void MainForm_Load(object sender, EventArgs e)
+        {
+            LoadItems();
             NpcWordList.Load();
         }
 
