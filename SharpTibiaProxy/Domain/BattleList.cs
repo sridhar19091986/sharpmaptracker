@@ -15,8 +15,6 @@ namespace SharpTibiaProxy.Domain
 
     public class BattleList
     {
-        private const int CREATURES_ARRAY = 250;
-
         private Client client;
         private Dictionary<uint, Creature> creatures;
 
@@ -39,7 +37,7 @@ namespace SharpTibiaProxy.Domain
 
         public Creature GetCreature(string name)
         {
-            return creatures.FirstOrDefault(x => x.Value.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase)).Value;
+            return creatures.FirstOrDefault(x => x.Value.Name.Equals(name)).Value;
         }
 
         public Creature GetPlayer()

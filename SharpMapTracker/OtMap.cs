@@ -8,6 +8,9 @@ namespace SharpMapTracker
 {
     public class OtMap
     {
+        private const int SPAWN_RADIUS = 3;
+        private const int SPAWN_SIZE = SPAWN_RADIUS * 2 + 1;
+
         #region Enums
 
         public enum OtMapNodeTypes
@@ -77,14 +80,13 @@ namespace SharpMapTracker
 
         private Dictionary<ulong, OtMapTile> tiles;
         private Dictionary<uint, OtCreature> creatures;
-        private List<OtSpawn> spawns;
-
+        private Dictionary<ulong, OtSpawn> spawns;
 
         public OtMap()
         {
             tiles = new Dictionary<ulong, OtMapTile>();
             creatures = new Dictionary<uint, OtCreature>();
-            spawns = new List<OtSpawn>();
+            spawns = new Dictionary<ulong, OtSpawn>();
 
             Descriptions = new List<string>();
         }
@@ -107,23 +109,21 @@ namespace SharpMapTracker
         {
             if (!creatures.ContainsKey(creature.Id))
             {
-                var spwan = spawns.FirstOrDefault(x => x.IsInside(creature.Location));
-                if (spwan == null)
-                {
-                    spwan = new OtSpawn(new Location(creature.Location.X, creature.Location.Y - 1, creature.Location.Z), 3);
-                    spawns.Add(spwan);
-                }
+                var spawnLocation = new Location(creature.Location.X - (creature.Location.X % SPAWN_SIZE) + SPAWN_RADIUS,
+                    creature.Location.Y - (creature.Location.Y % SPAWN_SIZE) + SPAWN_RADIUS, creature.Location.Z);
+                var spawnIndex = spawnLocation.ToIndex();
 
-                if (spwan.IsFree(creature.Location))
-                {
-                    spwan.AddCreature(creature);
-                    creatures.Add(creature.Id, creature);
-                }
+                if (!spawns.ContainsKey(spawnIndex))
+                    spawns.Add(spawnIndex, new OtSpawn(spawnLocation, SPAWN_RADIUS));
+
+                var spwan = spawns[spawnIndex];
+                spwan.AddCreature(creature);
+                creatures.Add(creature.Id, creature);
             }
         }
 
         public IEnumerable<OtMapTile> Tiles { get { return tiles.Values; } }
-        public IEnumerable<OtSpawn> Spawns { get { return spawns; } }
+        public IEnumerable<OtSpawn> Spawns { get { return spawns.Values; } }
 
         public int TileCount { get { return tiles.Count; } }
         public int NpcCount { get { return creatures.Count(x => x.Value.Type == CreatureType.NPC); } }
