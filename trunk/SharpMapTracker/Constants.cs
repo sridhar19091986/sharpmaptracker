@@ -5,7 +5,7 @@ namespace SharpMapTracker
 {
     public class Constants
     {
-        public const string MAP_TRACKER_VERSION = "0.5";
+        public const string MAP_TRACKER_VERSION = "0.6";
 
         public enum FluidColors : byte
         {

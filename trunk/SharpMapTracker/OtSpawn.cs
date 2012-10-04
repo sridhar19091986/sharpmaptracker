@@ -24,40 +24,18 @@ namespace SharpMapTracker
 
         public void AddCreature(OtCreature creature)
         {
-            if (!IsInside(creature.Location))
+            var relativeLocation = GetRelativeLocation(creature.Location);
+
+            if (!(Math.Abs(relativeLocation.X) <= Radius && Math.Abs(relativeLocation.Y) <= Radius))
                 throw new Exception("Can't add this creature to this spawn. Spawn Location: " + Location + ", Creature Location: " + creature.Location);
 
-            var relativeLocation = GetRelativeLocation(creature.Location);
             creature.Location = relativeLocation;
             creatures[relativeLocation.X + Radius, relativeLocation.Y + Radius] = creature;
         }
 
-        public Location GetGlobalLocation(Location loc)
-        {
-            return new Location(Location.X + loc.X, Location.Y + loc.Y, Location.Z);
-        }
-
-        public Location GetRelativeLocation(Location loc)
+        private Location GetRelativeLocation(Location loc)
         {
             return new Location(loc.X - Location.X, loc.Y - Location.Y, loc.Z);
-        }
-
-        public bool IsFree(Location loc)
-        {
-            if (!IsInside(loc))
-                throw new Exception("Invalid location");
-
-            var relativeLocation = GetRelativeLocation(loc);
-            return creatures[relativeLocation.X + Radius, relativeLocation.Y + Radius] == null;
-        }
-
-        public bool IsInside(Location loc)
-        {
-            if (loc == null || loc.Z != Location.Z)
-                return false;
-
-            var relativeLocation = GetRelativeLocation(loc);
-            return Math.Abs(relativeLocation.X) <= Radius && Math.Abs(relativeLocation.Y) <= Radius;
         }
 
         public IEnumerable<OtCreature> GetCreatures()
