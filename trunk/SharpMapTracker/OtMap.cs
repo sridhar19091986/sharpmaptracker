@@ -76,12 +76,16 @@ namespace SharpMapTracker
         public List<string> Descriptions { get; private set; }
 
         private Dictionary<ulong, OtMapTile> tiles;
-        private int npcCount;
-        private int monsterCount;
+        private Dictionary<uint, OtCreature> creatures;
+        private List<OtSpawn> spawns;
+
 
         public OtMap()
         {
             tiles = new Dictionary<ulong, OtMapTile>();
+            creatures = new Dictionary<uint, OtCreature>();
+            spawns = new List<OtSpawn>();
+
             Descriptions = new List<string>();
         }
 
@@ -96,45 +100,42 @@ namespace SharpMapTracker
 
         public void SetTile(OtMapTile tile)
         {
-            var index = tile.Location.ToIndex();
-
-            if (tiles.ContainsKey(index))
-            {
-                var oldTile = tiles[index];
-                if (oldTile.Creature != null)
-                {
-                    if (oldTile.Creature.Type == CreatureType.NPC)
-                        npcCount--;
-                    else if (oldTile.Creature.Type == CreatureType.MONSTER)
-                        monsterCount--;
-                }
-            }
-
             tiles[tile.Location.ToIndex()] = tile;
+        }
 
-            if (tile.Creature != null)
+        public void AddCreature(OtCreature creature)
+        {
+            if (!creatures.ContainsKey(creature.Id))
             {
-                if (tile.Creature.Type == CreatureType.NPC)
-                    npcCount++;
-                else if (tile.Creature.Type == CreatureType.MONSTER)
-                    monsterCount++;
+                var spwan = spawns.FirstOrDefault(x => x.IsInside(creature.Location));
+                if (spwan == null)
+                {
+                    spwan = new OtSpawn(new Location(creature.Location.X, creature.Location.Y - 1, creature.Location.Z), 3);
+                    spawns.Add(spwan);
+                }
+
+                if (spwan.IsFree(creature.Location))
+                {
+                    spwan.AddCreature(creature);
+                    creatures.Add(creature.Id, creature);
+                }
             }
         }
 
         public IEnumerable<OtMapTile> Tiles { get { return tiles.Values; } }
-        public IEnumerable<Creature> Creatures { get { return Tiles.Where(x => x.Creature != null).Select(x => x.Creature); } }
+        public IEnumerable<OtSpawn> Spawns { get { return spawns; } }
 
         public int TileCount { get { return tiles.Count; } }
-        public int NpcCount { get { return npcCount; } }
-        public int MonsterCount { get { return monsterCount; } }
+        public int NpcCount { get { return creatures.Count(x => x.Value.Type == CreatureType.NPC); } }
+        public int MonsterCount { get { return creatures.Count(x => x.Value.Type == CreatureType.MONSTER); } }
 
         public void Clear()
         {
             lock (this)
             {
                 tiles.Clear();
-                npcCount = 0;
-                monsterCount = 0;
+                spawns.Clear();
+                creatures.Clear();
             }
         }
     }

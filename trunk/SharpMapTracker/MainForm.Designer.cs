@@ -46,6 +46,7 @@
             this.trackMonstersCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.trackNpcsCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.trackOnlyCurrentFloorCheckBox = new System.Windows.Forms.ToolStripMenuItem();
+            this.npcAutoTalkCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.alwaysOnTopCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
@@ -55,7 +56,6 @@
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.monsterCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.miniMap = new SharpMapTracker.MiniMap();
-            this.npcAutoTalkCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -64,12 +64,12 @@
             // 
             this.traceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.traceTextBox.Location = new System.Drawing.Point(13, 291);
+            this.traceTextBox.Location = new System.Drawing.Point(13, 351);
             this.traceTextBox.Multiline = true;
             this.traceTextBox.Name = "traceTextBox";
             this.traceTextBox.ReadOnly = true;
             this.traceTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.traceTextBox.Size = new System.Drawing.Size(373, 114);
+            this.traceTextBox.Size = new System.Drawing.Size(318, 114);
             this.traceTextBox.TabIndex = 0;
             this.traceTextBox.TabStop = false;
             // 
@@ -80,7 +80,7 @@
             this.optionsToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(398, 24);
+            this.menuStrip.Size = new System.Drawing.Size(343, 24);
             this.menuStrip.TabIndex = 20;
             // 
             // fileToolStripMenuItem
@@ -207,6 +207,13 @@
             this.trackOnlyCurrentFloorCheckBox.Size = new System.Drawing.Size(204, 22);
             this.trackOnlyCurrentFloorCheckBox.Text = "Track Only Current Floor";
             // 
+            // npcAutoTalkCheckBox
+            // 
+            this.npcAutoTalkCheckBox.CheckOnClick = true;
+            this.npcAutoTalkCheckBox.Name = "npcAutoTalkCheckBox";
+            this.npcAutoTalkCheckBox.Size = new System.Drawing.Size(204, 22);
+            this.npcAutoTalkCheckBox.Text = "NPC Auto Talk";
+            // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
@@ -239,9 +246,9 @@
             this.tileCountLabel,
             this.npcCountLabel,
             this.monsterCountLabel});
-            this.statusStrip.Location = new System.Drawing.Point(0, 409);
+            this.statusStrip.Location = new System.Drawing.Point(0, 469);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(398, 24);
+            this.statusStrip.Size = new System.Drawing.Size(343, 24);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 21;
             // 
@@ -285,21 +292,14 @@
             this.miniMap.Floor = 0;
             this.miniMap.Location = new System.Drawing.Point(13, 27);
             this.miniMap.Name = "miniMap";
-            this.miniMap.Size = new System.Drawing.Size(373, 258);
+            this.miniMap.Size = new System.Drawing.Size(318, 318);
             this.miniMap.TabIndex = 15;
-            // 
-            // npcAutoTalkToolStripMenuItem
-            // 
-            this.npcAutoTalkCheckBox.CheckOnClick = true;
-            this.npcAutoTalkCheckBox.Name = "npcAutoTalkToolStripMenuItem";
-            this.npcAutoTalkCheckBox.Size = new System.Drawing.Size(204, 22);
-            this.npcAutoTalkCheckBox.Text = "NPC Auto Talk";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(398, 433);
+            this.ClientSize = new System.Drawing.Size(343, 493);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.miniMap);
             this.Controls.Add(this.traceTextBox);
