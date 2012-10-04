@@ -62,9 +62,16 @@ namespace SharpMapTracker
                 return;
 
             var pos = LocalToGlobal(e.X, e.Y);
-            CenterLocation = new SharpTibiaProxy.Domain.Location(pos.X, pos.Y, CenterLocation.Z);
 
-            Invalidate();
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                CenterLocation = new SharpTibiaProxy.Domain.Location(pos.X, pos.Y, CenterLocation.Z);
+                Invalidate();
+            }
+            else if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                Clipboard.SetText(pos.ToString());
+            }
         }
 
         void MiniMap_MouseMove(object sender, MouseEventArgs e)
