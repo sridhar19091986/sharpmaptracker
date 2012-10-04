@@ -350,13 +350,10 @@ namespace SharpMapTracker
                             {
                                 var creature = thing as Creature;
 
-                                if (creature.Type == CreatureType.PLAYER || (!TrackMonsters && creature.Type == CreatureType.MONSTER) ||
-                                    (!TrackNPCs && creature.Type == CreatureType.NPC) || mapTile.Creature != null)
-                                {
+                                if (creature.Type == CreatureType.PLAYER || (!TrackMonsters && creature.Type == CreatureType.MONSTER) || (!TrackNPCs && creature.Type == CreatureType.NPC))
                                     continue;
-                                }
 
-                                mapTile.Creature = creature;
+                                map.AddCreature(new OtCreature { Id = creature.Id, Location = creature.Location, Name = creature.Name, Type = creature.Type });
                             }
                             else if (thing is Item)
                             {

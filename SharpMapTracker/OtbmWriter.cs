@@ -168,31 +168,35 @@ namespace SharpMapTracker
             string otbmFileName = baseFileName + ".otbm";
             string houseFileName = baseFileName + "-house.xml";
             string spawnFileName = baseFileName + "-spawn.xml";
-            WriteOtbm(Path.Combine(dir, otbmFileName), houseFileName, spawnFileName, version, map.Tiles);
+            WriteOtbm(Path.Combine(dir, otbmFileName), houseFileName, spawnFileName, version, map);
             WriteHouses(Path.Combine(dir, baseFileName + "-house.xml"));
-            WriteCreatures(Path.Combine(dir, baseFileName + "-spawn.xml"), map.Tiles);
+            WriteCreatures(Path.Combine(dir, baseFileName + "-spawn.xml"), map);
         }
 
-        private static void WriteCreatures(string spawnFileName, IEnumerable<OtMapTile> mapTiles)
+        private static void WriteCreatures(string spawnFileName, OtMap map)
         {
             XElement spawns = new XElement("spawns");
 
-            foreach (var tile in mapTiles.Where(x => x.Creature != null))
+            foreach (var s in map.Spawns)
             {
                 XElement spawn = new XElement("spawn");
-                spawn.Add(new XAttribute("centerx", (tile.Location.X - 1).ToString()));
-                spawn.Add(new XAttribute("centery", tile.Location.Y.ToString()));
-                spawn.Add(new XAttribute("centerz", tile.Location.Z.ToString()));
-                spawn.Add(new XAttribute("radius", "1"));
+                spawn.Add(new XAttribute("centerx", s.Location.X));
+                spawn.Add(new XAttribute("centery", s.Location.Y));
+                spawn.Add(new XAttribute("centerz", s.Location.Z));
+                spawn.Add(new XAttribute("radius", s.Radius));
 
-                XElement creatureSpawn = new XElement(tile.Creature.Type == CreatureType.NPC ? "npc" : "monster");
-                creatureSpawn.Add(new XAttribute("name", tile.Creature.Name));
-                creatureSpawn.Add(new XAttribute("x", "1"));
-                creatureSpawn.Add(new XAttribute("y", "0"));
-                creatureSpawn.Add(new XAttribute("z", tile.Location.Z.ToString()));
-                creatureSpawn.Add(new XAttribute("spawntime", "60"));
+                foreach (var creature in s.GetCreatures())
+                {
+                    XElement creatureSpawn = new XElement(creature.Type == CreatureType.NPC ? "npc" : "monster");
+                    creatureSpawn.Add(new XAttribute("name", creature.Name));
+                    creatureSpawn.Add(new XAttribute("x", creature.Location.X));
+                    creatureSpawn.Add(new XAttribute("y", creature.Location.Y));
+                    creatureSpawn.Add(new XAttribute("z", creature.Location.Z));
+                    creatureSpawn.Add(new XAttribute("spawntime", "60"));
 
-                spawn.Add(creatureSpawn);
+                    spawn.Add(creatureSpawn);
+                }
+
                 spawns.Add(spawn);
             }
 
@@ -218,12 +222,12 @@ namespace SharpMapTracker
             }
         }
 
-        private static void WriteOtbm(string otbmFileName, string houseFileName, string spawnFileName, ClientVersion version, IEnumerable<OtMapTile> mapTiles)
+        private static void WriteOtbm(string otbmFileName, string houseFileName, string spawnFileName, ClientVersion version, OtMap map)
         {
             OtbmWriter mapWriter = new OtbmWriter(otbmFileName);
             mapWriter.WriteHeader(version);
             mapWriter.WriteMapStart(houseFileName, spawnFileName);
-            foreach (OtMapTile tile in mapTiles)
+            foreach (OtMapTile tile in map.Tiles)
             {
                 mapWriter.WriteNodeStart(OtMap.OtMapNodeTypes.TILE_AREA);
                 mapWriter.WriteTileAreaCoords(tile.Location);

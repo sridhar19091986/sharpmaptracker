@@ -72,9 +72,11 @@
     <Compile Include="OtbItem.cs" />
     <Compile Include="OtbReader.cs" />
     <Compile Include="OtbmWriter.cs" />
+    <Compile Include="OtCreature.cs" />
     <Compile Include="OtMap.cs" />
     <Compile Include="OtMapItem.cs" />
     <Compile Include="OtMapTile.cs" />
+    <Compile Include="OtSpawn.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyReader.cs" />
