@@ -8,13 +8,13 @@ namespace SharpMapTracker
 {
     public class OtSpawn
     {
-        public Location Location { get; private set; }
+        public Position Location { get; private set; }
         public int Radius { get; private set; }
 
         private readonly OtCreature[,] creatures;
         private readonly int size;
 
-        public OtSpawn(Location location, int radius)
+        public OtSpawn(Position location, int radius)
         {
             this.Location = location;
             this.Radius = radius;
@@ -33,9 +33,9 @@ namespace SharpMapTracker
             creatures[relativeLocation.X + Radius, relativeLocation.Y + Radius] = creature;
         }
 
-        private Location GetRelativeLocation(Location loc)
+        private Position GetRelativeLocation(Position loc)
         {
-            return new Location(loc.X - Location.X, loc.Y - Location.Y, loc.Z);
+            return new Position(loc.X - Location.X, loc.Y - Location.Y, loc.Z);
         }
 
         public IEnumerable<OtCreature> GetCreatures()

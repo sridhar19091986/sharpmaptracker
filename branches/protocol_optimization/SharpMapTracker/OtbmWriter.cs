@@ -146,14 +146,14 @@ namespace SharpMapTracker
             WriteBytes(Encoding.ASCII.GetBytes(text));
         }
 
-        private void WriteTileAreaCoords(Location loc)
+        private void WriteTileAreaCoords(Position loc)
         {
             WriteUInt16((UInt16)(loc.X & 0xFF00));
             WriteUInt16((UInt16)(loc.Y & 0xFF00));
             WriteByte((byte)loc.Z);
         }
 
-        private void WriteTileCoords(Location loc)
+        private void WriteTileCoords(Position loc)
         {
             WriteByte((byte)loc.X);
             WriteByte((byte)loc.Y);

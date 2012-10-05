@@ -11,7 +11,7 @@ namespace SharpMapTracker
         public uint Id { get; set; }
         public string Name { get; set; }
         public CreatureType Type { get; set; }
-        public Location Location { get; set; }
+        public Position Location { get; set; }
 
         public override bool Equals(object obj)
         {

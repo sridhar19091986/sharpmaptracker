@@ -235,9 +235,9 @@ namespace SharpTibiaProxy.Network
             return DefaultEnconding.GetString(this.ReadBytes((int)this.ReadUShort()));
         }
 
-        public Location ReadLocation()
+        public Position ReadLocation()
         {
-            return new Location(ReadUShort(), ReadUShort(), ReadByte());
+            return new Position(ReadUShort(), ReadUShort(), ReadByte());
         }
 
         public bool ReadBool()

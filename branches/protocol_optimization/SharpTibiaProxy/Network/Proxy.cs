@@ -274,7 +274,7 @@ namespace SharpTibiaProxy.Network
 			serverInMessage.Size = serverInMessage.ReadInternalHead() + 8;
 			serverInMessage.ReadPosition = 8;
 
-			client.ProtocolWorld.ParseServerMessage(serverInMessage);
+			client.GameProtocol.ParseMessage(serverInMessage);
 
 			SendToClient(clientOutMessage);
 		}
@@ -427,7 +427,7 @@ namespace SharpTibiaProxy.Network
 			clientInMessage.Size = clientInMessage.ReadInternalHead() + 8;
 			clientInMessage.ReadPosition = 8;
 
-			client.ProtocolWorld.ParseClientMessage(clientInMessage);
+			client.GameProtocol.ParseClientMessage(clientInMessage);
 
 			SendToServer(serverOutMessage);
 		}

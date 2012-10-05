@@ -36,6 +36,8 @@ namespace SharpTibiaProxy.Domain
         private Tile[,,] tiles;
         private Dictionary<ulong, bool> knowMap;
 
+        public Position CentralPosition { get; set; }
+
         public event EventHandler<TileAddedEventArgs> TileAdded;
         public event EventHandler<TileUpdatedEventArgs> TileUpdated;
         public event EventHandler<MapUpdatedEventArgs> Updated;
@@ -76,7 +78,7 @@ namespace SharpTibiaProxy.Domain
                 OnTileAdded(tile);
         }
 
-        public Tile GetTile(Location location)
+        public Tile GetTile(Position location)
         {
             return tiles[location.X % 18, location.Y % 14, location.Z % 8];
         }

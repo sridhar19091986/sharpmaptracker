@@ -45,14 +45,14 @@ namespace SharpTibiaProxy.Domain
         public bool IsOpenTibiaServer { get; set; }
 
         public uint PlayerId { get; set; }
-        public Location PlayerLocation { get; set; }
+        public Position PlayerLocation { get; set; }
         public bool PlayerCanReportBugs { get; set; }
 
         public Process Process { get; private set; }
         public Items Items { get; private set; }
         public Map Map { get; private set; }
         public BattleList BattleList { get; private set; }
-        public ProtocolWorld ProtocolWorld { get; private set; }
+        public GameProtocol GameProtocol { get; private set; }
         public Chat Chat { get; private set; }
 
         public Dispatcher Dispatcher { get; private set; }
@@ -117,7 +117,7 @@ namespace SharpTibiaProxy.Domain
             Map = new Map(this);
             BattleList = new BattleList(this);
             Chat = new Chat(this);
-            ProtocolWorld = new ProtocolWorld(this);
+            GameProtocol = new GameProtocol(this);
         }
 
         private void Process_Exited(object sender, EventArgs e)
