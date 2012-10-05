@@ -62,7 +62,7 @@
     <Compile Include="Domain\Item.cs" />
     <Compile Include="Domain\Items.cs" />
     <Compile Include="Domain\ItemType.cs" />
-    <Compile Include="Domain\Location.cs" />
+    <Compile Include="Domain\Position.cs" />
     <Compile Include="Domain\LoginServer.cs" />
     <Compile Include="Domain\Map.cs" />
     <Compile Include="Domain\Outfit.cs" />
