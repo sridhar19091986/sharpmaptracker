@@ -92,25 +92,25 @@ namespace SharpMapTracker
             {
                 e.SuppressKeyPress = true;
                 if (miniMap.CenterLocation != null)
-                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X, miniMap.CenterLocation.Y - MAP_SCROLL_SPEED, miniMap.CenterLocation.Z);
+                    miniMap.CenterLocation = new Position(miniMap.CenterLocation.X, miniMap.CenterLocation.Y - MAP_SCROLL_SPEED, miniMap.CenterLocation.Z);
             }
             else if (e.KeyCode == Keys.Down)
             {
                 e.SuppressKeyPress = true;
                 if (miniMap.CenterLocation != null)
-                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X, miniMap.CenterLocation.Y + MAP_SCROLL_SPEED, miniMap.CenterLocation.Z);
+                    miniMap.CenterLocation = new Position(miniMap.CenterLocation.X, miniMap.CenterLocation.Y + MAP_SCROLL_SPEED, miniMap.CenterLocation.Z);
             }
             else if (e.KeyCode == Keys.Left)
             {
                 e.SuppressKeyPress = true;
                 if (miniMap.CenterLocation != null)
-                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X - MAP_SCROLL_SPEED, miniMap.CenterLocation.Y, miniMap.CenterLocation.Z);
+                    miniMap.CenterLocation = new Position(miniMap.CenterLocation.X - MAP_SCROLL_SPEED, miniMap.CenterLocation.Y, miniMap.CenterLocation.Z);
             }
             else if (e.KeyCode == Keys.Right)
             {
                 e.SuppressKeyPress = true;
                 if (miniMap.CenterLocation != null)
-                    miniMap.CenterLocation = new Location(miniMap.CenterLocation.X + MAP_SCROLL_SPEED, miniMap.CenterLocation.Y, miniMap.CenterLocation.Z);
+                    miniMap.CenterLocation = new Position(miniMap.CenterLocation.X + MAP_SCROLL_SPEED, miniMap.CenterLocation.Y, miniMap.CenterLocation.Z);
             }
 
         }

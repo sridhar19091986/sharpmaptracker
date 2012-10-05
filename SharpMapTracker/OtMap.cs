@@ -91,7 +91,7 @@ namespace SharpMapTracker
             Descriptions = new List<string>();
         }
 
-        public OtMapTile GetTile(Location location)
+        public OtMapTile GetTile(Position location)
         {
             var index = location.ToIndex();
             if (tiles.ContainsKey(index))
@@ -109,7 +109,7 @@ namespace SharpMapTracker
         {
             if (!creatures.ContainsKey(creature.Id))
             {
-                var spawnLocation = new Location(creature.Location.X - (creature.Location.X % SPAWN_SIZE) + SPAWN_RADIUS,
+                var spawnLocation = new Position(creature.Location.X - (creature.Location.X % SPAWN_SIZE) + SPAWN_RADIUS,
                     creature.Location.Y - (creature.Location.Y % SPAWN_SIZE) + SPAWN_RADIUS, creature.Location.Z);
                 var spawnIndex = spawnLocation.ToIndex();
 

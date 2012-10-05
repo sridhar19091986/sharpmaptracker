@@ -73,6 +73,8 @@
     <Compile Include="Domain\Thing.cs" />
     <Compile Include="Domain\Tile.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Network\ClientOpcodes.cs" />
+    <Compile Include="Network\GameServerOpcodes.cs" />
     <Compile Include="Util\Dispatcher.cs" />
     <Compile Include="Util\DispatcherState.cs" />
     <Compile Include="Util\MemoryAddresses.cs" />
@@ -97,7 +99,7 @@
     <Compile Include="Network\NetworkException.cs" />
     <Compile Include="Network\NetworkMessage.cs" />
     <Compile Include="Network\OutMessage.cs" />
-    <Compile Include="Network\ProtocolWorld.cs" />
+    <Compile Include="Network\GameProtocol.cs" />
     <Compile Include="Network\Rsa.cs" />
     <Compile Include="Network\Xtea.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -12,7 +12,7 @@ namespace SharpTibiaProxy.Domain
         public Creature Creature { get; set; }
         public string Text { get; set; }
         public MessageClasses Type { get; set; }
-        public Location Location { get; set; }
+        public Position Location { get; set; }
     }
 
     public class PlayerSpeakEventArgs : EventArgs
@@ -40,7 +40,7 @@ namespace SharpTibiaProxy.Domain
             if (text.Length > 255)
                 throw new Exception("Value can't have more then 255 characters.");
 
-            client.ProtocolWorld.SendServerSay(text, MessageClasses.SPEAK_SAY);
+            client.GameProtocol.SendServerSay(text, MessageClasses.SPEAK_SAY);
         }
 
         public void SayToNpc(string text)
@@ -48,10 +48,10 @@ namespace SharpTibiaProxy.Domain
             if (text.Length > 255)
                 throw new Exception("Value can't have more then 255 characters.");
 
-            client.ProtocolWorld.SendServerSay(text, MessageClasses.NPC_TO);
+            client.GameProtocol.SendServerSay(text, MessageClasses.NPC_TO);
         }
 
-        internal void OnCreatureSpeak(uint statementId, string name, ushort level, MessageClasses type, Location location, string text)
+        internal void OnCreatureSpeak(uint statementId, string name, ushort level, MessageClasses type, Position location, string text)
         {
             var creature = client.BattleList.GetCreature(name);
 

@@ -5,13 +5,13 @@ using System.Text;
 
 namespace SharpTibiaProxy.Domain
 {
-    public class Location
+    public class Position
     {
-        public static readonly Location Invalid = new Location(-1, -1, -1);
+        public static readonly Position Invalid = new Position(-1, -1, -1);
 
         private int x, y, z;
 
-        public Location(int x, int y, int z)
+        public Position(int x, int y, int z)
         {
             this.x = x;
             this.y = y;
@@ -50,14 +50,14 @@ namespace SharpTibiaProxy.Domain
             return (ulong)((uint)x & 0xFFFF) << 24 | ((uint)y & 0xFFFF) << 8 | ((uint)z & 0xFF);
         }
 
-        public static Location FromIndex(ulong index)
+        public static Position FromIndex(ulong index)
         {
-            return new Location((int)((index >> 24) & 0xFFFF), (int)((index >> 8) & 0xFFFF), (int)(index & 0xFF));
+            return new Position((int)((index >> 24) & 0xFFFF), (int)((index >> 8) & 0xFFFF), (int)(index & 0xFF));
         }
 
         public override bool Equals(object obj)
         {
-            var other = obj as Location;
+            var other = obj as Position;
             return other != null && other.x == x && other.y == y && other.z == z;
         }
 

@@ -17,9 +17,9 @@ namespace SharpMapTracker
         private Dictionary<ulong, Color> colors;
 
         private int updateOngoing;
-        private Location mapLocation;
+        private Position mapLocation;
 
-        public Location CenterLocation
+        public Position CenterLocation
         {
             get { return mapLocation; }
             set
@@ -41,7 +41,7 @@ namespace SharpMapTracker
                 else if (value < 0)
                     value = 0;
 
-                mapLocation = new Location(mapLocation.X, mapLocation.Y, value);
+                mapLocation = new Position(mapLocation.X, mapLocation.Y, value);
 
                 Invalidate();
             }
@@ -65,7 +65,7 @@ namespace SharpMapTracker
 
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                CenterLocation = new SharpTibiaProxy.Domain.Location(pos.X, pos.Y, CenterLocation.Z);
+                CenterLocation = new SharpTibiaProxy.Domain.Position(pos.X, pos.Y, CenterLocation.Z);
                 Invalidate();
             }
             else if (e.Button == System.Windows.Forms.MouseButtons.Left)
@@ -106,7 +106,7 @@ namespace SharpMapTracker
             }
         }
 
-        public void SetColor(Location location, Color color)
+        public void SetColor(Position location, Color color)
         {
             colors[location.ToIndex()] = color;
 
@@ -137,7 +137,7 @@ namespace SharpMapTracker
                     {
                         var color = Color.Black;
 
-                        var index = SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z);
+                        var index = SharpTibiaProxy.Domain.Position.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z);
                         if (colors.ContainsKey(index))
                             color = colors[index];
 

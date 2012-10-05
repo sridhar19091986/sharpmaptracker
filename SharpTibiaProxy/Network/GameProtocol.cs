@@ -7,11 +7,11 @@ using System.Diagnostics;
 
 namespace SharpTibiaProxy.Network
 {
-    public class ProtocolWorld
+    public class GameProtocol
     {
         private Client client;
 
-        public ProtocolWorld(Client client)
+        public GameProtocol(Client client)
         {
             this.client = client;
         }
@@ -73,7 +73,7 @@ namespace SharpTibiaProxy.Network
 
         #region ParseServer
 
-        public void ParseServerMessage(InMessage message)
+        public void ParseMessage(InMessage message)
         {
             var packets = new List<byte>();
             var packetStart = 0;
@@ -82,40 +82,43 @@ namespace SharpTibiaProxy.Network
                 while (message.ReadPosition < message.Size)
                 {
                     packetStart = message.ReadPosition;
-                    byte cmd = message.ReadByte();
-                    packets.Add(cmd);
+                    var opcode = (GameServerOpcodes)message.ReadByte();
+                    packets.Add((byte)opcode);
 
-                    switch (cmd)
+                    switch (opcode)
                     {
-                        case 0x0A:
-                            ParseServerSelfAppear(message);
+                        case GameServerOpcodes.InitGame:
+                            ParseInitGame(message);
                             break;
-                        case 0x0B:
-                            ParseServerGMActions(message);
+                        case GameServerOpcodes.GMActions:
+                            ParseGMActions(message);
                             break;
-                        case 0x14:
-                            ParseServerErrorMessage(message);
+                        case GameServerOpcodes.LoginError:
+                            ParseLoginError(message);
                             break;
-                        case 0x15:
-                            ParseServerFYIMessage(message);
+                        case GameServerOpcodes.LoginAdvice:
+                            ParseLoginAdvice(message);
                             break;
-                        case 0x16:
-                            ParseServerWaitingList(message);
+                        case GameServerOpcodes.LoginWait:
+                            ParseLoginWait(message);
                             break;
-                        case 0x1D:
-                            ParseServerPing(message);
+                        case GameServerOpcodes.Ping:
+                            ParsePing(message);
                             break;
-                        case 0x1E:
-                            ParseServerPingBack(message);
+                        case GameServerOpcodes.PingBack:
+                            ParsePingBack(message);
                             break;
-                        case 0x28:
-                            ParseServerDeath(message);
+                        case GameServerOpcodes.Challange:
+                            ParseChallange(message);
+                            break;
+                        case GameServerOpcodes.Death:
+                            ParseDeath(message);
+                            break;
+                        case GameServerOpcodes.FullMap:
+                            ParseMapDescription(message);
                             break;
                         case 0x32:
                             ParseServerCanReportBugs(message);
-                            break;
-                        case 0x64:
-                            ParseServerMapDescription(message);
                             break;
                         case 0x65:
                             ParseServerMoveNorth(message);
@@ -330,7 +333,7 @@ namespace SharpTibiaProxy.Network
                             ParseServerMarketBrowser(message);
                             break;
                         default:
-                            throw new Exception("ProtocolWorld [ParseServerMessage]: Unkonw packet type " + cmd.ToString("X2"));
+                            throw new Exception("ProtocolWorld [ParseServerMessage]: Unkonw packet type " + opcode.ToString("X2"));
                     }
                 }
 
@@ -340,6 +343,72 @@ namespace SharpTibiaProxy.Network
                 Trace.TraceWarning(ex.Message + "\nLast Packets: " + packets.ToArray().ToHexString() +
                     "\nPacket Bytes: " + message.Buffer.ToHexString(packetStart, message.ReadPosition - packetStart));
             }
+        }
+
+        private void ParseInitGame(InMessage message)
+        {
+            client.BattleList.Clear();
+            client.Map.Clear();
+
+            client.PlayerId = message.ReadUInt();
+            var serverBeat = message.ReadUShort();
+            client.PlayerCanReportBugs = message.ReadBool();
+        }
+
+        private void ParseGMActions(InMessage message)
+        {
+            int numViolationReasons;
+
+            if (client.Version.Number >= ClientVersion.Version860.Number)
+                numViolationReasons = 20;
+            else if (client.Version.Number >= ClientVersion.Version854.Number)
+                numViolationReasons = 19;
+            else
+                numViolationReasons = 32;
+
+            var actions = new List<byte>();
+            for (int i = 0; i < numViolationReasons; i++)
+                actions.Add(message.ReadByte());
+        }
+
+        private void ParseLoginError(InMessage message)
+        {
+            var error = message.ReadString();
+        }
+
+        private void ParseLoginAdvice(InMessage message)
+        {
+            var text = message.ReadString();
+        }
+
+        private void ParseLoginWait(InMessage message)
+        {
+            var text = message.ReadString();
+            var time = message.ReadByte();
+        }
+
+        private void ParsePing(InMessage message)
+        {
+        }
+
+        private void ParsePingBack(InMessage message)
+        {
+        }
+
+        private void ParseChallange(InMessage message)
+        {
+            var timestamp = message.ReadUInt();
+            var random = message.ReadByte();
+        }
+
+        private void ParseDeath(InMessage message)
+        {
+            /*
+             *     int penality = 100;
+    if(g_game.getFeature(Otc::GamePenalityOnDeath))
+        penality = msg->getU8();
+    g_game.processDeath(penality);*/
+
         }
 
         private void ParseServerChannelEvent(InMessage message)
@@ -458,7 +527,7 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerAddMapMarker(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var icon = message.ReadByte();
             var desc = message.ReadString();
         }
@@ -575,7 +644,7 @@ namespace SharpTibiaProxy.Network
                 case MessageClasses.DAMAGE_RECEIVED:
                 case MessageClasses.DAMAGE_OTHERS:
                     {
-                        Location location = message.ReadLocation();
+                        Position location = message.ReadLocation();
 
                         var detailsValue = message.ReadUInt();
                         var detailsColor = message.ReadByte();
@@ -590,7 +659,7 @@ namespace SharpTibiaProxy.Network
                 case MessageClasses.HEALED:
                 case MessageClasses.HEALED_OTHERS:
                     {
-                        Location location = message.ReadLocation();
+                        Position location = message.ReadLocation();
                         var detailsValue = message.ReadUInt();
                         var detailsColor = message.ReadByte();
                         break;
@@ -672,7 +741,7 @@ namespace SharpTibiaProxy.Network
             var name = message.ReadString();
             var level = message.ReadUShort();
             var type = (MessageClasses)message.ReadByte();
-            Location location = null;
+            Position location = null;
 
             switch (type)
             {
@@ -770,21 +839,21 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerDistanceShot(InMessage message)
         {
-            Location fromLocation = message.ReadLocation();
-            Location toLocation = message.ReadLocation();
+            Position fromLocation = message.ReadLocation();
+            Position toLocation = message.ReadLocation();
             var effect = message.ReadByte();
         }
 
         private void ParseServerAnimatedText(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var color = message.ReadByte();
             var text = message.ReadString();
         }
 
         private void ParseServerMagicEffect(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var effect = message.ReadByte();
         }
 
@@ -883,26 +952,6 @@ namespace SharpTibiaProxy.Network
             message.ReadUInt(); //time
         }
 
-        private void ParseServerWaitingList(InMessage message)
-        {
-            message.ReadString();
-            message.ReadByte();
-        }
-
-        private void ParseServerFYIMessage(InMessage message)
-        {
-            message.ReadString();
-        }
-
-        private void ParseServerErrorMessage(InMessage message)
-        {
-            message.ReadString();
-        }
-
-        private void ParseServerGMActions(InMessage message)
-        {
-        }
-
         private void ParseServerPlayerCancelWalk(InMessage message)
         {
             var direction = message.ReadByte();
@@ -910,8 +959,8 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerFloorChangeDown(InMessage message)
         {
-            Location myPos = client.PlayerLocation;
-            myPos = new Location(myPos.X, myPos.Y, myPos.Z + 1);
+            Position myPos = client.PlayerLocation;
+            myPos = new Position(myPos.X, myPos.Y, myPos.Z + 1);
 
             //going from surface to underground
 
@@ -922,50 +971,46 @@ namespace SharpTibiaProxy.Network
             {
                 int j, i;
                 for (i = myPos.Z, j = -1; i < (int)myPos.Z + 3; ++i, --j)
-                    ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, i, 18, 14, j, ref skipTiles);
+                    SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, i, 18, 14, j, ref skipTiles);
             }
             //going further down
             else if (myPos.Z > 8 && myPos.Z < 14)
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z + 2, 18, 14, -3, ref skipTiles);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z + 2, 18, 14, -3, ref skipTiles);
 
-            client.PlayerLocation = new Location(myPos.X - 1, myPos.Y - 1, myPos.Z);
+            client.PlayerLocation = new Position(myPos.X - 1, myPos.Y - 1, myPos.Z);
             client.Map.OnMapUpdated(tiles);
         }
 
         private void ParseServerFloorChangeUp(InMessage message)
         {
-            Location myPos = client.PlayerLocation;
-            myPos = new Location(myPos.X, myPos.Y, myPos.Z - 1);
+            Position myPos = client.PlayerLocation;
+            myPos = new Position(myPos.X, myPos.Y, myPos.Z - 1);
 
             var tiles = new List<Tile>();
             if (myPos.Z == 7)
             {
                 int skip = 0;
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 5, 18, 14, 3, ref skip); //(floor 7 and 6 already set)
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 4, 18, 14, 4, ref skip);
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 3, 18, 14, 5, ref skip);
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 2, 18, 14, 6, ref skip);
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 1, 18, 14, 7, ref skip);
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 0, 18, 14, 8, ref skip);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 5, 18, 14, 3, ref skip); //(floor 7 and 6 already set)
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 4, 18, 14, 4, ref skip);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 3, 18, 14, 5, ref skip);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 2, 18, 14, 6, ref skip);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 1, 18, 14, 7, ref skip);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, 0, 18, 14, 8, ref skip);
 
             }
             else if (myPos.Z > 7)
             {
                 int skip = 0;
-                ParseServerFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z - 3, 18, 14, 3, ref skip);
+                SetFloorDescription(message, tiles, myPos.X - 8, myPos.Y - 6, myPos.Z - 3, 18, 14, 3, ref skip);
             }
 
-            client.PlayerLocation = new Location(myPos.X + 1, myPos.Y + 1, myPos.Z);
+            client.PlayerLocation = new Position(myPos.X + 1, myPos.Y + 1, myPos.Z);
             client.Map.OnMapUpdated(tiles);
         }
 
         private void ParseServerCanReportBugs(InMessage message)
         {
             client.PlayerCanReportBugs = message.ReadByte() != 0;
-        }
-
-        private void ParseServerDeath(InMessage message)
-        {
         }
 
         private void ParseServerPlayerCancelAttack(InMessage message)
@@ -1017,10 +1062,10 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerCreatureMove(InMessage message)
         {
-            Location oldLocation = message.ReadLocation();
+            Position oldLocation = message.ReadLocation();
             var oldStack = message.ReadByte();
 
-            Location newLocation = message.ReadLocation();
+            Position newLocation = message.ReadLocation();
 
             if (oldLocation.IsCreature)
             {
@@ -1084,7 +1129,7 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerTileRemoveThing(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var stack = message.ReadByte();
 
             if (location.IsCreature) //TODO: Veirificar o porque disso.
@@ -1103,7 +1148,7 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerTileTransformThing(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var stack = message.ReadByte();
             var thing = GetThing(message);
 
@@ -1125,7 +1170,7 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerTileAddThing(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var stack = message.ReadByte();
 
             Thing thing = GetThing(message);
@@ -1140,7 +1185,7 @@ namespace SharpTibiaProxy.Network
 
         private void ParseServerUpdateTile(InMessage message)
         {
-            Location location = message.ReadLocation();
+            Position location = message.ReadLocation();
             var thingId = message.PeekUShort();
 
             if (thingId == 0xFF01)
@@ -1154,92 +1199,84 @@ namespace SharpTibiaProxy.Network
             }
             else
             {
-                ParseServerTileDescription(message, location);
+                SetTileDescription(message, location);
                 message.ReadUShort();
             }
         }
 
         private void ParseServerMoveWest(InMessage message)
         {
-            var location = new Location(client.PlayerLocation.X - 1, client.PlayerLocation.Y, client.PlayerLocation.Z);
+            var location = new Position(client.PlayerLocation.X - 1, client.PlayerLocation.Y, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseServerMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 1, 14);
+            SetMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 1, 14);
             client.Map.OnMapUpdated(tiles);
         }
 
         private void ParseServerMoveSouth(InMessage message)
         {
-            var location = new Location(client.PlayerLocation.X, client.PlayerLocation.Y + 1, client.PlayerLocation.Z);
+            var location = new Position(client.PlayerLocation.X, client.PlayerLocation.Y + 1, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseServerMapDescription(message, tiles, location.X - 8, location.Y + 7, location.Z, 18, 1);
+            SetMapDescription(message, tiles, location.X - 8, location.Y + 7, location.Z, 18, 1);
             client.Map.OnMapUpdated(tiles);
         }
 
         private void ParseServerMoveEast(InMessage message)
         {
-            var location = new Location(client.PlayerLocation.X + 1, client.PlayerLocation.Y, client.PlayerLocation.Z);
+            var location = new Position(client.PlayerLocation.X + 1, client.PlayerLocation.Y, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseServerMapDescription(message, tiles, location.X + 9, location.Y - 6, location.Z, 1, 14);
+            SetMapDescription(message, tiles, location.X + 9, location.Y - 6, location.Z, 1, 14);
             client.Map.OnMapUpdated(tiles);
         }
 
         private void ParseServerMoveNorth(InMessage message)
         {
-            var location = new Location(client.PlayerLocation.X, client.PlayerLocation.Y - 1, client.PlayerLocation.Z);
+            var location = new Position(client.PlayerLocation.X, client.PlayerLocation.Y - 1, client.PlayerLocation.Z);
             client.PlayerLocation = location;
 
             var tiles = new List<Tile>();
-            ParseServerMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 1);
+            SetMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 1);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseServerPing(InMessage message)
+        private void ParseMapDescription(InMessage message)
         {
-        }
-
-        private void ParseServerPingBack(InMessage message)
-        {
-        }
-
-        private void ParseServerMapDescription(InMessage message)
-        {
-            var location = message.ReadLocation();
-            client.PlayerLocation = location;
+            var position = message.ReadLocation();
+            client.Map.CentralPosition = position;
 
             var tiles = new List<Tile>();
-            ParseServerMapDescription(message, tiles, location.X - 8, location.Y - 6, location.Z, 18, 14);
+            SetMapDescription(message, tiles, position.X - 8, position.Y - 6, position.Z, 18, 14);
             client.Map.OnMapUpdated(tiles);
         }
 
-        private void ParseServerMapDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height)
+        private void SetMapDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height)
         {
             int startz, endz, zstep;
             //calculate map limits
-            if (z > 7)
+            if (z > Constants.SEA_FLOOR)
             {
-                startz = z - 2;
-                endz = Math.Min(16 - 1, z + 2);
+                startz = z - Constants.AWARE_UNDEGROUND_FLOOR_RANGE;
+                endz = Math.Min(z + Constants.AWARE_UNDEGROUND_FLOOR_RANGE, (int)Constants.MAX_Z);
                 zstep = 1;
             }
             else
             {
-                startz = 7;
+                startz = Constants.SEA_FLOOR;
                 endz = 0;
                 zstep = -1;
             }
 
             int skipTiles = 0;
             for (int nz = startz; nz != endz + zstep; nz += zstep)
-                ParseServerFloorDescription(message, tiles, x, y, nz, width, height, z - nz, ref skipTiles);
+                skipTiles = SetFloorDescription(message, tiles, x, y, nz, width, height, z - nz, skipTiles);
         }
 
-        private void ParseServerFloorDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height, int offset, ref int skipTiles)
+        private int SetFloorDescription(InMessage message, List<Tile> tiles, int x, int y, int z, int width, int height, int offset, int skipTiles)
         {
             for (int nx = 0; nx < width; nx++)
             {
@@ -1255,7 +1292,7 @@ namespace SharpTibiaProxy.Network
                         else
                         {
                             //real tile so read tile
-                            tiles.Add(ParseServerTileDescription(message, new Location(x + nx + offset, y + ny + offset, z)));
+                            tiles.Add(SetTileDescription(message, new Position(x + nx + offset, y + ny + offset, z)));
                             skipTiles = (short)(message.ReadUShort() & 0xFF);
                         }
                     }
@@ -1263,9 +1300,11 @@ namespace SharpTibiaProxy.Network
                         skipTiles--;
                 }
             }
+
+            return skipTiles;
         }
 
-        private Tile ParseServerTileDescription(InMessage message, Location location)
+        private Tile SetTileDescription(InMessage message, Position location)
         {
             Tile tile = new Tile(location);
             if (message.PeekUShort() < 0xFF00)
@@ -1364,15 +1403,7 @@ namespace SharpTibiaProxy.Network
             return new Item(type, count, subtype);
         }
 
-        private void ParseServerSelfAppear(InMessage message)
-        {
-            client.BattleList.Clear();
-            client.Map.Clear();
 
-            client.PlayerId = message.ReadUInt();
-            message.ReadUShort();
-            client.PlayerCanReportBugs = message.ReadByte() != 0;
-        }
         #endregion
 
         #region SendServer

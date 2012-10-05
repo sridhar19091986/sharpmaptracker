@@ -205,7 +205,7 @@ namespace SharpMapTracker
             }
 
             message.ReadPosition = 0;
-            client.ProtocolWorld.ParseServerMessage(message);
+            client.GameProtocol.ParseMessage(message);
         }
     }
 }

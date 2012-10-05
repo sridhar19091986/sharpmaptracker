@@ -8,7 +8,7 @@ namespace SharpMapTracker
 {
     public class OtMapTile
     {
-        public Location Location { get; private set; }
+        public Position Location { get; private set; }
         public ushort TileId { get; private set; }
         
         public List<OtMapItem> Items { get; private set; }
@@ -17,7 +17,7 @@ namespace SharpMapTracker
 
         private int downItemCount;
 
-        public OtMapTile(Location location)
+        public OtMapTile(Position location)
         {
             Location = location;
             Items = new List<OtMapItem>();

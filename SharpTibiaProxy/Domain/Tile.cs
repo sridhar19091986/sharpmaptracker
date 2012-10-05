@@ -13,12 +13,12 @@ namespace SharpTibiaProxy.Domain
         private bool debugEnable;
 #endif
 
-        public Location Location { get; private set; }
+        public Position Location { get; private set; }
         public int ThingCount { get { return things.Count; } }
 
         private List<Thing> things;
 
-        public Tile(Location location)
+        public Tile(Position location)
         {
             Location = location;
             things = new List<Thing>();

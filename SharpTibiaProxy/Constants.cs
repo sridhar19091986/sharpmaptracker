@@ -18,6 +18,29 @@ namespace SharpTibiaProxy
             LoggedIn = 8
         }
 
+        //TILE_PIXELS = 32,
+        //MAX_ELEVATION = 24,
+
+        public const int SEA_FLOOR = 7;
+        public const int MAX_Z = 15;
+        public const int UNDERGROUND_FLOOR = SEA_FLOOR + 1;
+        public const int VISIBLE_X_TILES = 15;
+        public const int VISIBLE_Y_TILES = 11;
+        public const int AWARE_UNDEGROUND_FLOOR_RANGE = 2;
+        public const int AWARE_X_TILES = VISIBLE_X_TILES + 3;
+        public const int AWARE_Y_TILES = VISIBLE_Y_TILES + 3;
+        public const int AWARE_X_LEFT_TILES = AWARE_X_TILES / 2 - 1;
+        public const int AWARE_X_RIGHT_TILES = AWARE_X_TILES / 2;
+        public const int AWARE_Y_TOP_TILES = AWARE_Y_TILES / 2 - 1;
+        public const int AWARE_Y_BOTTOM_TILES = AWARE_Y_TILES / 2;
+
+        //INVISIBLE_TICKS_PER_FRAME = 500,
+        //ITEM_TICKS_PER_FRAME = 500,
+        //ANIMATED_TEXT_DURATION = 1000,
+        //STATIC_DURATION_PER_CHARACTER = 60,
+        //MIN_STATIC_TEXT_DURATION = 3000,
+        //MAX_STATIC_TEXT_WIDTH = 200
+
         public static class RSAKey
         {
             public static string OpenTibiaP = "14299623962416399520070177382898895550795403345466153217470516082934737582776038882967213386204600674145392845853859217990626450972452084065728686565928113";

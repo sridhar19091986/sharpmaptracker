@@ -7,6 +7,8 @@ namespace SharpTibiaProxy.Domain
 {
     public class ClientVersion
     {
+        public static readonly ClientVersion Version854 = new ClientVersion { Number = 854, FileVersion = "8.5.4.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 0 };
+        public static readonly ClientVersion Version860 = new ClientVersion { Number = 860, FileVersion = "8.6.0.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 0 };
         public static readonly ClientVersion Version961 = new ClientVersion { Number = 961, FileVersion = "9.6.1.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 41 };
         public static readonly ClientVersion Version963 = new ClientVersion { Number = 963, FileVersion = "9.6.3.0", OtbmVersion = 3, OtbMajorVersion = 3, OtbMinorVersion = 42 };
         public static readonly ClientVersion Current = Version963;
