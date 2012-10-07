@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using SharpTibiaProxy.Domain;
 
-namespace SharpMapTracker
+namespace SharpMapTracker.Domain
 {
     public class OtSpawn
     {

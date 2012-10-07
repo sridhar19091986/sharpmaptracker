@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using SharpTibiaProxy.Domain;
+using SharpMapTracker.Domain;
 
 namespace SharpMapTracker
 {
@@ -14,34 +15,35 @@ namespace SharpMapTracker
     {
         private const int PIXEL_FACTOR = 2;
         private int miniMapSize = 192;
-        private Dictionary<ulong, Color> colors;
 
         private int updateOngoing;
-        private Location mapLocation;
+        private Location centerLocation;
+
+        public OtMap Map { get; set; }
 
         public Location CenterLocation
         {
-            get { return mapLocation; }
+            get { return centerLocation; }
             set
             {
-                mapLocation = value;
+                centerLocation = value;
                 Invalidate();
             }
         }
 
         public int Floor
         {
-            get { return mapLocation != null ? mapLocation.Z : 0; }
+            get { return centerLocation != null ? centerLocation.Z : 0; }
             set
             {
-                if (mapLocation == null)
+                if (centerLocation == null)
                     return;
                 if (value > 15)
                     value = 15;
                 else if (value < 0)
                     value = 0;
 
-                mapLocation = new Location(mapLocation.X, mapLocation.Y, value);
+                centerLocation = new Location(centerLocation.X, centerLocation.Y, value);
 
                 Invalidate();
             }
@@ -50,7 +52,7 @@ namespace SharpMapTracker
         public MiniMap()
         {
             InitializeComponent();
-            colors = new Dictionary<ulong, Color>();
+            //colors = new Dictionary<ulong, Color>();
 
             MouseMove += new MouseEventHandler(MiniMap_MouseMove);
             MouseClick += new MouseEventHandler(MiniMap_MouseClick);
@@ -85,8 +87,8 @@ namespace SharpMapTracker
 
         protected Point LocalToGlobal(int x, int y)
         {
-            int xoffset = mapLocation.X - miniMapSize / 2;
-            int yoffset = mapLocation.Y - miniMapSize / 2;
+            int xoffset = centerLocation.X - miniMapSize / 2;
+            int yoffset = centerLocation.Y - miniMapSize / 2;
 
             return new Point(((x * miniMapSize) / Width) + xoffset, ((y * miniMapSize) / Height) + yoffset);
         }
@@ -106,22 +108,9 @@ namespace SharpMapTracker
             }
         }
 
-        public void SetColor(Location location, Color color)
-        {
-            colors[location.ToIndex()] = color;
-
-            Invalidate();
-        }
-
-        public void Clear()
-        {
-            colors.Clear();
-            Invalidate();
-        }
-
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (CenterLocation != null && updateOngoing == 0)
+            if (CenterLocation != null && Map != null && updateOngoing == 0)
             {
                 Bitmap bitmap = new Bitmap(miniMapSize * PIXEL_FACTOR, miniMapSize * PIXEL_FACTOR);
                 FastBitmap processor = new FastBitmap(bitmap);
@@ -137,9 +126,9 @@ namespace SharpMapTracker
                     {
                         var color = Color.Black;
 
-                        var index = SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z);
-                        if (colors.ContainsKey(index))
-                            color = colors[index];
+                        var tile = Map.GetTile(SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z));
+                        if (tile != null)
+                            color = tile.MapColor;
 
                         for (int px = 0; px < PIXEL_FACTOR; px++)
                         {

@@ -53,8 +53,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="Domain\OtTown.cs" />
     <Compile Include="FastBitmap.cs" />
     <Compile Include="FileLoader.cs" />
+    <Compile Include="IO\OtFileReader.cs" />
+    <Compile Include="IO\OtFileNode.cs" />
+    <Compile Include="IO\OtFileWriter.cs" />
+    <Compile Include="IO\OtPropertyReader.cs" />
+    <Compile Include="IO\OtPropertyWriter.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -69,17 +75,15 @@
     </Compile>
     <Compile Include="NpcInfo.cs" />
     <Compile Include="NpcWordList.cs" />
-    <Compile Include="OtbItem.cs" />
+    <Compile Include="Domain\OtItemType.cs" />
     <Compile Include="OtbReader.cs" />
-    <Compile Include="OtbmWriter.cs" />
-    <Compile Include="OtCreature.cs" />
-    <Compile Include="OtMap.cs" />
-    <Compile Include="OtMapItem.cs" />
-    <Compile Include="OtMapTile.cs" />
-    <Compile Include="OtSpawn.cs" />
+    <Compile Include="Domain\OtCreature.cs" />
+    <Compile Include="Domain\OtMap.cs" />
+    <Compile Include="Domain\OtItem.cs" />
+    <Compile Include="Domain\OtTile.cs" />
+    <Compile Include="Domain\OtSpawn.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PropertyReader.cs" />
     <Compile Include="TextBoxTraceListener.cs" />
     <Compile Include="TibiaCastReader.cs" />
   </ItemGroup>

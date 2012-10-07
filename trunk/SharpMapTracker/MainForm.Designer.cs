@@ -55,15 +55,17 @@
             this.tileCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.monsterCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.retrackTilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.miniMap = new SharpMapTracker.MiniMap();
+            this.loadMapToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // traceTextBox
             // 
-            this.traceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.traceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.traceTextBox.Location = new System.Drawing.Point(13, 351);
             this.traceTextBox.Multiline = true;
             this.traceTextBox.Name = "traceTextBox";
@@ -87,6 +89,7 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadClientToolStripMenuItem,
+            this.loadMapToolStripMenuItem,
             this.toolStripSeparator4,
             this.trackTibiaCastFilesToolStripMenuItem,
             this.toolStripSeparator1,
@@ -156,6 +159,7 @@
             this.trackMonstersCheckBox,
             this.trackNpcsCheckBox,
             this.trackOnlyCurrentFloorCheckBox,
+            this.retrackTilesToolStripMenuItem,
             this.npcAutoTalkCheckBox,
             this.toolStripSeparator3,
             this.alwaysOnTopCheckBox,
@@ -254,9 +258,9 @@
             // 
             // tileCountLabel
             // 
-            this.tileCountLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.tileCountLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.tileCountLabel.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.tileCountLabel.Name = "tileCountLabel";
             this.tileCountLabel.Size = new System.Drawing.Size(47, 19);
@@ -264,9 +268,9 @@
             // 
             // npcCountLabel
             // 
-            this.npcCountLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.npcCountLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.npcCountLabel.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.npcCountLabel.Name = "npcCountLabel";
             this.npcCountLabel.Size = new System.Drawing.Size(52, 19);
@@ -274,19 +278,26 @@
             // 
             // monsterCountLabel
             // 
-            this.monsterCountLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right) 
-            | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
+            this.monsterCountLabel.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Top)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)
+                        | System.Windows.Forms.ToolStripStatusLabelBorderSides.Bottom)));
             this.monsterCountLabel.BorderStyle = System.Windows.Forms.Border3DStyle.Sunken;
             this.monsterCountLabel.Name = "monsterCountLabel";
             this.monsterCountLabel.Size = new System.Drawing.Size(72, 19);
             this.monsterCountLabel.Text = "Monsters: 0";
             // 
+            // retrackTilesToolStripMenuItem
+            // 
+            this.retrackTilesToolStripMenuItem.CheckOnClick = true;
+            this.retrackTilesToolStripMenuItem.Name = "retrackTilesToolStripMenuItem";
+            this.retrackTilesToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.retrackTilesToolStripMenuItem.Text = "Retrack Tiles";
+            // 
             // miniMap
             // 
-            this.miniMap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.miniMap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.miniMap.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.miniMap.CenterLocation = null;
             this.miniMap.Floor = 0;
@@ -294,6 +305,13 @@
             this.miniMap.Name = "miniMap";
             this.miniMap.Size = new System.Drawing.Size(318, 318);
             this.miniMap.TabIndex = 15;
+            // 
+            // loadMapToolStripMenuItem
+            // 
+            this.loadMapToolStripMenuItem.Name = "loadMapToolStripMenuItem";
+            this.loadMapToolStripMenuItem.Size = new System.Drawing.Size(190, 22);
+            this.loadMapToolStripMenuItem.Text = "Load &Map...";
+            this.loadMapToolStripMenuItem.Click += new System.EventHandler(this.loadMapToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -351,5 +369,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem npcAutoTalkCheckBox;
+        private System.Windows.Forms.ToolStripMenuItem retrackTilesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadMapToolStripMenuItem;
     }
 }

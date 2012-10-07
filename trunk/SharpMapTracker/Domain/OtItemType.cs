@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SharpMapTracker
 {
-    public enum OtbItemType
+    public enum OtItemGroup
     {
         None,
         Ground,
@@ -20,7 +20,7 @@ namespace SharpMapTracker
         public UInt16 Id;
         public UInt16 SpriteId;
         public UInt16 GroundSpeed;
-        public OtbItemType Type;
+        public OtItemGroup Group;
         public bool AlwaysOnTop;
         public UInt16 AlwaysOnTopOrder;
         public bool HasUseWith;
