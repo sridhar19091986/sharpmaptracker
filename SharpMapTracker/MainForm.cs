@@ -14,6 +14,7 @@ using SharpTibiaProxy.Network;
 using System.Threading;
 using SharpTibiaProxy.Util;
 using System.Xml.Linq;
+using SharpMapTracker.Domain;
 
 namespace SharpMapTracker
 {
@@ -34,6 +35,7 @@ namespace SharpMapTracker
         public bool TrackSplashes { get; set; }
         public bool TrackMonsters { get; set; }
         public bool TrackNPCs { get; set; }
+        public bool RetrackTiles { get; set; }
         public bool TrackOnlyCurrentFloor { get; set; }
         public bool NPCAutoTalk { get; set; }
 
@@ -43,15 +45,13 @@ namespace SharpMapTracker
 
             Text = "SharpMapTracker v" + Constants.MAP_TRACKER_VERSION;
 
-            map = new OtMap();
-            npcs = new Dictionary<string, NpcInfo>();
-
             DataBindings.Add("TopMost", alwaysOnTopCheckBox, "Checked");
             DataBindings.Add("TrackMoveableItems", trackMoveableItemsCheckBox, "Checked");
             DataBindings.Add("TrackSplashes", trackSplashesCheckBox, "Checked");
             DataBindings.Add("TrackMonsters", trackMonstersCheckBox, "Checked");
             DataBindings.Add("TrackNPCs", trackNpcsCheckBox, "Checked");
             DataBindings.Add("TrackOnlyCurrentFloor", trackOnlyCurrentFloorCheckBox, "Checked");
+            DataBindings.Add("RetrackTiles", retrackTilesToolStripMenuItem, "Checked");
             DataBindings.Add("NPCAutoTalk", npcAutoTalkCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
@@ -68,6 +68,11 @@ namespace SharpMapTracker
         {
             LoadItems();
             NpcWordList.Load();
+
+            map = new OtMap(otItems);
+            npcs = new Dictionary<string, NpcInfo>();
+
+            miniMap.Map = map;
         }
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -293,6 +298,10 @@ namespace SharpMapTracker
         private void SendNextNPCWord(NpcInfo npcInfo)
         {
             CancelSendNextNPCWordSchedule();
+
+            if (!NPCAutoTalk)
+                return;
+
             var word = npcInfo.NotTriedWords.FirstOrDefault();
             if (word == null)
                 Trace.WriteLine("No more words to say to " + npcInfo.Name + ".");
@@ -304,7 +313,7 @@ namespace SharpMapTracker
                 client.Chat.SayToNpc(word);
                 npcInfo.TriedWords.Add(word);
 
-                sendNpcWordScheduleId = client.Scheduler.Add(new Schedule(2000, () => { SendNextNPCWord(npcInfo); }));
+                sendNpcWordScheduleId = client.Scheduler.Add(new Schedule(1000, () => { SendNextNPCWord(npcInfo); }));
             }
         }
 
@@ -336,9 +345,11 @@ namespace SharpMapTracker
 
                         var index = tile.Location.ToIndex();
 
-                        OtMapTile mapTile = map.GetTile(tile.Location);
-                        if (mapTile == null)
-                            mapTile = new OtMapTile(tile.Location);
+                        OtTile mapTile = map.GetTile(tile.Location);
+                        if (mapTile != null && !RetrackTiles)
+                            continue;
+                        else if (mapTile == null)
+                            mapTile = new OtTile(tile.Location);
 
                         mapTile.Clear();
 
@@ -359,8 +370,8 @@ namespace SharpMapTracker
                             {
                                 var item = tile.GetThing(i) as Item;
 
-                                var info = otItems.GetItemBySpriteId((ushort)item.Id);
-                                if (info == null)
+                                var itemType = otItems.GetItemBySpriteId((ushort)item.Id);
+                                if (itemType == null)
                                 {
                                     Trace.TraceWarning("Tibia item not in items.otb. Details: item id " + item.Id.ToString());
                                     continue;
@@ -372,26 +383,21 @@ namespace SharpMapTracker
                                 if (item.IsSplash && !TrackSplashes)
                                     continue;
 
-                                OtMapItem mapItem = new OtMapItem(info);
+                                OtItem mapItem = new OtItem(itemType);
 
-                                if (mapItem.Info.IsStackable)
-                                {
-                                    mapItem.AttrType = OtMapItemAttrTypes.COUNT;
-                                    mapItem.Extra = item.Count;
-                                }
+                                if (mapItem.Type.IsStackable)
+                                    mapItem.SetAttribute(OtItemAttribute.COUNT, item.Count);
 
-                                if (mapItem.Info.Type == OtbItemType.Splash || mapItem.Info.Type == OtbItemType.FluidContainer
+                                if (mapItem.Type.Group == OtItemGroup.Splash || mapItem.Type.Group == OtItemGroup.FluidContainer
                                     && item.SubType < Constants.ReverseFluidMap.Length)
                                 {
-                                    mapItem.AttrType = OtMapItemAttrTypes.COUNT;
-                                    mapItem.Extra = Constants.ReverseFluidMap[item.SubType];
+                                    mapItem.SetAttribute(OtItemAttribute.COUNT, Constants.ReverseFluidMap[item.SubType]);
                                 }
 
                                 mapTile.AddItem(mapItem);
                             }
                         }
 
-                        miniMap.SetColor(mapTile.Location, mapTile.MapColor);
                         map.SetTile(mapTile);
                     }
 
@@ -423,13 +429,36 @@ namespace SharpMapTracker
                 {
                     try
                     {
-                        OtbmWriter.WriteMapToFile(saveFileDialog.FileName, map, client.Version);
+                        map.Save(saveFileDialog.FileName);
                         Trace.WriteLine("Map successfully saved.");
                     }
                     catch (Exception ex)
                     {
                         Trace.WriteLine("[Error] Unable to save map file. Details: " + ex.Message);
                     }
+                }
+            }
+        }
+
+        private void loadMapToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "TibiaCast Files (*.otbm)|*.otbm";
+            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                try
+                {
+                    map.Load(openFileDialog.FileName, RetrackTiles);
+                    var tile = map.Tiles.FirstOrDefault();
+
+                    if (tile != null)
+                        miniMap.CenterLocation = tile.Location;
+
+                    Trace.WriteLine("Map successfully loaded.");
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine("[Error] Unable to load the map. Details: " + ex.Message);
                 }
             }
         }
@@ -457,7 +486,7 @@ namespace SharpMapTracker
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine("Exception while tracking tibia cast files. Details: " + ex.Message);
+                    Trace.WriteLine("Error while tracking tibia cast files. Details: " + ex.Message);
                 }
             }
         }
@@ -570,7 +599,7 @@ namespace SharpMapTracker
                                     Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
                                     Append(", ");
 
-                                if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
+                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
                                      builder.Append(Constants.ReverseFluidMap[item.SubType]).Append(", ");
 
                                 builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
@@ -589,7 +618,7 @@ namespace SharpMapTracker
                                     Append("'}, ").Append(otItem.Id).Append(", ").Append(item.SellPrice).
                                     Append(", ");
 
-                                if (otItem.Type == OtbItemType.Splash || otItem.Type == OtbItemType.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
+                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
                                     builder.Append(Constants.ReverseFluidMap[item.SubType]).Append(", ");
 
                                 builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
@@ -618,7 +647,7 @@ namespace SharpMapTracker
             {
                 npcs.Clear();
                 map.Clear();
-                miniMap.Clear();
+                miniMap.Invalidate();
                 traceTextBox.Text = "";
                 tileCountLabel.Text = "Tiles: 0";
                 npcCountLabel.Text = "NPCs: 0";

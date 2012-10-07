@@ -149,12 +149,12 @@ namespace SharpMapTracker
 
                         switch ((OtbItemGroup)itemGroup)
                         {
-                            case OtbItemGroup.NONE: item.Type = OtbItemType.None; break;
-                            case OtbItemGroup.GROUND: item.Type = OtbItemType.Ground; break;
-                            case OtbItemGroup.SPLASH: item.Type = OtbItemType.Splash; break;
-                            case OtbItemGroup.FLUID: item.Type = OtbItemType.FluidContainer; break;
-                            case OtbItemGroup.CONTAINER: item.Type = OtbItemType.Container; break;
-                            case OtbItemGroup.DEPRECATED: item.Type = OtbItemType.Deprecated; break;
+                            case OtbItemGroup.NONE: item.Group = OtItemGroup.None; break;
+                            case OtbItemGroup.GROUND: item.Group = OtItemGroup.Ground; break;
+                            case OtbItemGroup.SPLASH: item.Group = OtItemGroup.Splash; break;
+                            case OtbItemGroup.FLUID: item.Group = OtItemGroup.FluidContainer; break;
+                            case OtbItemGroup.CONTAINER: item.Group = OtItemGroup.Container; break;
+                            case OtbItemGroup.DEPRECATED: item.Group = OtItemGroup.Deprecated; break;
                             default: break;
                         }
 
