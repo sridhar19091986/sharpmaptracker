@@ -7,12 +7,24 @@ namespace SharpMapTracker
 {
     public enum OtItemGroup
     {
+        //Otb Groups
         None,
         Ground,
         Container,
         FluidContainer,
         Splash,
-        Deprecated
+        Deprecated,
+
+        //Xml Groups
+        Rune,
+        Bed,
+        Door,
+        Teleport,
+        TrashHolder,
+        MailBox,
+        Depot,
+        MagicField,
+        Key
     };
 
     public class OtItemType
@@ -48,5 +60,8 @@ namespace SharpMapTracker
         public UInt16 WareId;
         public string Name;
         public byte[] SpriteHash;
+        public string Article;
+        public string Plural;
+        public string Description;
     }
 }

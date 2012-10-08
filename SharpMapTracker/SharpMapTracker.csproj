@@ -53,9 +53,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="Domain\OtContainer.cs" />
+    <Compile Include="Domain\OtDepot.cs" />
+    <Compile Include="Domain\OtDoor.cs" />
+    <Compile Include="Domain\OtItems.cs" />
+    <Compile Include="Domain\OtMagicField.cs" />
+    <Compile Include="Domain\OtMailBox.cs" />
+    <Compile Include="Domain\OtTeleport.cs" />
     <Compile Include="Domain\OtTown.cs" />
+    <Compile Include="Domain\OtTrashHolder.cs" />
     <Compile Include="FastBitmap.cs" />
-    <Compile Include="FileLoader.cs" />
     <Compile Include="IO\OtFileReader.cs" />
     <Compile Include="IO\OtFileNode.cs" />
     <Compile Include="IO\OtFileWriter.cs" />
@@ -76,7 +83,6 @@
     <Compile Include="NpcInfo.cs" />
     <Compile Include="NpcWordList.cs" />
     <Compile Include="Domain\OtItemType.cs" />
-    <Compile Include="OtbReader.cs" />
     <Compile Include="Domain\OtCreature.cs" />
     <Compile Include="Domain\OtMap.cs" />
     <Compile Include="Domain\OtItem.cs" />

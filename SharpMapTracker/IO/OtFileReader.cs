@@ -1,48 +1,48 @@
 using System.IO;
+using System;
 
 namespace SharpMapTracker.IO
 {
-    public class OtFileReader
+    public class OtFileReader : IDisposable
     {
-        protected byte[] _buffer;
-        protected FileStream _fileStream;
-        protected BinaryReader _reader;
-        protected OtFileNode _root;
+        protected byte[] buffer;
+        protected FileStream fileStream;
+        protected BinaryReader reader;
+        protected OtFileNode root;
+
+        public OtFileReader(string fileName)
+        {
+            fileStream = File.Open(fileName, FileMode.Open);
+            reader = new BinaryReader(fileStream);
+
+            var version = reader.ReadUInt32();
+
+            if (version > 0)
+                throw new Exception("Invalid file version.");
+
+            if (SafeSeek(4))
+            {
+                root = new OtFileNode { Start = 4 };
+
+                if (reader.ReadByte() != OtFileNode.NODE_START || !ParseNode(root))
+                    throw new Exception("Invalid file format.");
+            }
+            else
+            {
+                throw new Exception("Invalid file format.");
+            }
+        }
 
         public OtFileNode GetRootNode()
         {
-            return _root;
-        }
-
-        public bool Open(string fileName)
-        {
-            _fileStream = File.Open(fileName, FileMode.Open);
-            _reader = new BinaryReader(_fileStream);
-
-            var version = _reader.ReadUInt32();
-
-            if(version > 0)
-            {
-                _reader.Close();
-                return false;
-            }
-
-            if(SafeSeek(4))
-            {
-                _root = new OtFileNode {Start = 4};
-
-                if (_reader.ReadByte() == OtFileNode.NODE_START)
-                    return ParseNode(_root);
-            }
-
-            return false;
+            return root;
         }
 
         public void Close()
         {
-            if (_fileStream != null)
+            if (fileStream != null)
             {
-                _fileStream.Close();
+                fileStream.Close();
             }
         }
 
@@ -54,7 +54,7 @@ namespace SharpMapTracker.IO
             while (true)
             {
                 // read node type
-                val = _fileStream.ReadByte();
+                val = fileStream.ReadByte();
                 if (val != -1)
                 {
                     
@@ -64,15 +64,15 @@ namespace SharpMapTracker.IO
                     while (true)
                     {
                         // search child and next node
-                        val = _fileStream.ReadByte();
+                        val = fileStream.ReadByte();
 
                         
                         if (val == OtFileNode.NODE_START)
                         {
-                            var childNode = new OtFileNode {Start = _fileStream.Position};
+                            var childNode = new OtFileNode {Start = fileStream.Position};
                             setPropSize = true;
 
-                            currentNode.PropsSize = _fileStream.Position - currentNode.Start - 2;
+                            currentNode.PropsSize = fileStream.Position - currentNode.Start - 2;
                             currentNode.Child = childNode;
 
                             if (!ParseNode(childNode))
@@ -81,16 +81,16 @@ namespace SharpMapTracker.IO
                         else if (val == OtFileNode.NODE_END)
                         {
                             if (!setPropSize)
-                                currentNode.PropsSize = _fileStream.Position - currentNode.Start - 2;
+                                currentNode.PropsSize = fileStream.Position - currentNode.Start - 2;
 
-                            val = _fileStream.ReadByte();
+                            val = fileStream.ReadByte();
 
                             if (val != -1)
                             {
                                 if (val == OtFileNode.NODE_START)
                                 {
                                     // start next node
-                                    var nextNode = new OtFileNode {Start = _fileStream.Position};
+                                    var nextNode = new OtFileNode {Start = fileStream.Position};
                                     currentNode.Next = nextNode;
                                     currentNode = nextNode;
                                     break;
@@ -100,7 +100,7 @@ namespace SharpMapTracker.IO
                                 {
                                     // up 1 level and move 1 position back
                                     // safeTell(pos) && safeSeek(pos)
-                                    _fileStream.Seek(-1, SeekOrigin.Current);
+                                    fileStream.Seek(-1, SeekOrigin.Current);
                                     return true;
                                 }
                                 
@@ -114,7 +114,7 @@ namespace SharpMapTracker.IO
                         }
                         else if (val == OtFileNode.ESCAPE)
                         {
-                            _fileStream.ReadByte();
+                            fileStream.ReadByte();
                         }
                     }
                 }
@@ -125,55 +125,53 @@ namespace SharpMapTracker.IO
             }
         }
 
-        private byte[] GetProps(OtFileNode node, out long size)
+        private byte[] GetProperties(OtFileNode node, out long size)
         {
-            if (_buffer == null || _buffer.Length < node.PropsSize)
-                _buffer = new byte[node.PropsSize];
+            if (buffer == null || buffer.Length < node.PropsSize)
+                buffer = new byte[node.PropsSize];
 
-            _fileStream.Seek(node.Start + 1, SeekOrigin.Begin);
-            _fileStream.Read(_buffer, 0, (int)node.PropsSize);
+            fileStream.Seek(node.Start + 1, SeekOrigin.Begin);
+            fileStream.Read(buffer, 0, (int)node.PropsSize);
 
             uint j = 0;
             var escaped = false;
 
             for (uint i = 0; i < node.PropsSize; ++i, ++j)
             {
-                if (_buffer[i] == OtFileNode.ESCAPE)
+                if (buffer[i] == OtFileNode.ESCAPE)
                 {
                     ++i;
-                    _buffer[j] = _buffer[i];
+                    buffer[j] = buffer[i];
                     escaped = true;
                 }
                 else if (escaped)
                 {
-                    _buffer[j] = _buffer[i];
+                    buffer[j] = buffer[i];
                 }
             }
             size = j;
-            return _buffer;
+            return buffer;
         }
 
-        public bool GetProps(OtFileNode node, out OtPropertyReader props)
+        public OtPropertyReader GetPropertyReader(OtFileNode node)
         {
             long size;
-            var buff = GetProps(node, out size);
-            
-            if (buff == null)
-            {
-                props = null;
-                return false;
-            }
+            var buff = GetProperties(node, out size);
 
-            props = new OtPropertyReader(new MemoryStream(buff, 0, (int)size));
-            return true;
+            return new OtPropertyReader(new MemoryStream(buff, 0, (int)size));
         }
 
         protected bool SafeSeek(long pos)
         {
-            if (_fileStream == null || _fileStream.Length < pos)
+            if (fileStream == null || fileStream.Length < pos)
                 return false;
 
-            return _fileStream.Seek(pos, SeekOrigin.Begin) == pos;
+            return fileStream.Seek(pos, SeekOrigin.Begin) == pos;
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 }

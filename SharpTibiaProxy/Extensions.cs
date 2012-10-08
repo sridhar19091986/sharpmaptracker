@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace SharpTibiaProxy
 {
@@ -44,5 +45,67 @@ namespace SharpTibiaProxy
                 sb.Append(Convert.ToString(data[i], 16).PadLeft(2, '0').PadRight(3, ' '));
             return sb.ToString().ToUpper();
         }
+
+        #region Xml
+
+        public static ushort GetUInt16(this XAttribute attribute)
+        {
+            if (attribute == null)
+                return 0;
+
+            ushort value;
+            ushort.TryParse(attribute.Value, out value);
+            return value;
+        }
+
+        public static short GetInt16(this XAttribute attribute)
+        {
+            if (attribute == null)
+                return 0;
+
+            short value;
+            short.TryParse(attribute.Value, out value);
+            return value;
+        }
+
+        public static int GetInt32(this XAttribute attribute)
+        {
+            if (attribute == null)
+                return 0;
+
+            int value;
+            int.TryParse(attribute.Value, out value);
+            return value;
+        }
+
+        public static uint GetUInt32(this XAttribute attribute)
+        {
+            if (attribute == null)
+                return 0;
+
+            uint value;
+            uint.TryParse(attribute.Value, out value);
+            return value;
+        }
+
+        public static float GetFloat(this XAttribute attribute)
+        {
+            if (attribute == null)
+                return 0;
+
+            float value;
+            float.TryParse(attribute.Value, out value);
+            return value;
+        }
+
+        public static string GetString(this XAttribute attribute)
+        {
+            if (attribute == null)
+                return "";
+
+            return attribute.Value;
+        }
+
+        #endregion
     }
 }
