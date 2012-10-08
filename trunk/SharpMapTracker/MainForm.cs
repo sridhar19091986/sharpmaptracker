@@ -175,13 +175,13 @@ namespace SharpMapTracker
         {
             try
             {
-                var otbReader = new OtbReader();
-                otItems = otbReader.Open("items.otb", false);
+                otItems = new OtItems();
+                otItems.Load("items.otb");
                 Trace.WriteLine("Open Tibia items successfully loaded.");
             }
             catch (Exception e)
             {
-                MessageBox.Show(this, "Unable to load items.otb. Details: " + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Unable to load items. Details: " + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Application.Exit();
             }
         }
@@ -383,7 +383,7 @@ namespace SharpMapTracker
                                 if (item.IsSplash && !TrackSplashes)
                                     continue;
 
-                                OtItem mapItem = new OtItem(itemType);
+                                OtItem mapItem = OtItem.Create(itemType);
 
                                 if (mapItem.Type.IsStackable)
                                     mapItem.SetAttribute(OtItemAttribute.COUNT, item.Count);

@@ -8,6 +8,7 @@ using SharpMapTracker.IO;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System.Xml;
+using SharpTibiaProxy;
 
 namespace SharpMapTracker.Domain
 {
@@ -90,6 +91,8 @@ namespace SharpMapTracker.Domain
         private Dictionary<uint, OtCreature> creatures;
         private Dictionary<ulong, OtSpawn> spawns;
 
+        private uint loadCreatureId;
+
         public OtMap(OtItems items)
         {
             tiles = new Dictionary<ulong, OtTile>();
@@ -97,7 +100,7 @@ namespace SharpMapTracker.Domain
             spawns = new Dictionary<ulong, OtSpawn>();
             towns = new Dictionary<uint,OtTown>();
 
-            Version = 3;
+            Version = 2;
             Width = 0xFCFC;
             Height = 0xFCFC;
 
@@ -207,9 +210,16 @@ namespace SharpMapTracker.Domain
                     writer.Write((ushort)(tile.Location.Y & 0xFF00));
                     writer.Write((byte)tile.Location.Z);
 
-                    writer.WriteNodeStart((byte)OtMapNodeTypes.TILE);
+                    if(tile.HouseId > 0)
+                        writer.WriteNodeStart((byte)OtMapNodeTypes.HOUSETILE);
+                    else
+                        writer.WriteNodeStart((byte)OtMapNodeTypes.TILE);
+
                     writer.Write((byte)tile.Location.X);
                     writer.Write((byte)tile.Location.Y);
+
+                    if (tile.HouseId > 0)
+                        writer.Write(tile.HouseId);
 
                     if (tile.Flags > 0)
                     {
@@ -217,10 +227,12 @@ namespace SharpMapTracker.Domain
                         writer.Write(tile.Flags);
                     }
 
-                    if (tile.TileId > 0)
+                    if (tile.Ground != null)
                     {
-                        writer.Write((byte)OtMapAttribute.ITEM);
-                        writer.Write(tile.TileId);
+                        writer.WriteNodeStart((byte)OtMapNodeTypes.ITEM);
+                        writer.Write(tile.Ground.Type.Id);
+                        tile.Ground.Serialize(writer, writer.GetPropertyWriter());
+                        writer.WriteNodeEnd(); //Item
                     }
 
                     foreach (var item in tile.Items)
@@ -228,7 +240,7 @@ namespace SharpMapTracker.Domain
                         writer.WriteNodeStart((byte)OtMapNodeTypes.ITEM);
 
                         writer.Write(item.Type.Id);
-                        item.Serialize(writer.GetPropertyWriter());
+                        item.Serialize(writer, writer.GetPropertyWriter());
 
                         writer.WriteNodeEnd(); //Item
                     }
@@ -237,18 +249,18 @@ namespace SharpMapTracker.Domain
                     writer.WriteNodeEnd(); //Tile Area
                 }
 
-                //writer.WriteNodeStart((byte)OtMapNodeTypes.TOWNS);
+                writer.WriteNodeStart((byte)OtMapNodeTypes.TOWNS);
 
-                //foreach (var town in towns.Values)
-                //{
-                //    writer.WriteNodeStart((byte)OtMapNodeTypes.TOWN);
-                //    writer.Write(town.Id);
-                //    writer.Write(town.Name);
-                //    writer.Write(town.TempleLocation);
-                //    writer.WriteNodeEnd(); //Town
-                //}
+                foreach (var town in towns.Values)
+                {
+                    writer.WriteNodeStart((byte)OtMapNodeTypes.TOWN);
+                    writer.Write(town.Id);
+                    writer.Write(town.Name);
+                    writer.Write(town.TempleLocation);
+                    writer.WriteNodeEnd(); //Town
+                }
 
-                //writer.WriteNodeEnd(); //Towns
+                writer.WriteNodeEnd(); //Towns
 
                 writer.WriteNodeEnd(); //Map Data
                 writer.WriteNodeEnd(); //Root
@@ -313,143 +325,104 @@ namespace SharpMapTracker.Domain
             if (!File.Exists(fileName))
                 throw new Exception(string.Format("File not found {0}.", fileName));
 
-            var loader = new OtFileReader();
-            loader.Open(fileName);
-            OtFileNode node = loader.GetRootNode();
-
-            OtPropertyReader props;
-
-            if (!loader.GetProps(node, out props))
-                throw new Exception("Could not read root property.");
-
-            props.ReadByte(); // junk?
-
-            var version = props.ReadUInt32();
-            props.ReadUInt16();
-            props.ReadUInt16();
-
-            var majorVersionItems = props.ReadUInt32();
-            var minorVersionItems = props.ReadUInt32();
-
-            if (version <= 0)
-            {
-                //In otbm version 1 the count variable after splashes/fluidcontainers and stackables
-                //are saved as attributes instead, this solves alot of problems with items
-                //that is changed (stackable/charges/fluidcontainer/splash) during an update.
-                throw new Exception(
-                    "This map needs to be upgraded by using the latest map editor version to be able to load correctly.");
-            }
-
-            if (version > 3)
-            {
-                throw new Exception("Unknown OTBM version detected.");
-            }
-
-            if (majorVersionItems < 3)
-            {
-                throw new Exception(
-                    "This map needs to be upgraded by using the latest map editor version to be able to load correctly.");
-            }
-
-            if (majorVersionItems > Items.MajorVersion)
-            {
-                throw new Exception("The map was saved with a different items.otb version, an upgraded items.otb is required.");
-            }
-
-            /*if (MinorVersionItems < (uint)ClientVersion.ClientVersion810)
-            {
-                throw new Exception("This map needs to be updated.");
-            }*/
-
-            if (minorVersionItems > Items.MinorVersion)
-                Trace.WriteLine("This map needs an updated items.otb.");
-            //if (MinorVersionItems == (uint)ClientVersion.ClientVersion854Bad)
-            //    Trace.WriteLine("This map needs uses an incorrect version of items.otb.");
-
-
-            node = node.Child;
-
-            if ((OtMapNodeTypes)node.Type != OtMapNodeTypes.MAP_DATA)
-            {
-                throw new Exception("Could not read data node.");
-            }
-
-            if (!loader.GetProps(node, out props))
-            {
-                throw new Exception("Could not read map data attributes.");
-            }
-
             string spawnFile = null;
             string houseFile = null;
 
-            while (props.PeekChar() != -1)
+            using (var reader = new OtFileReader(fileName))
             {
-                byte attribute = props.ReadByte();
-                switch ((OtMapAttribute)attribute)
-                {
-                    case OtMapAttribute.DESCRIPTION:
-                        var description = props.GetString();
-                        Descriptions.Add(description);
-                        break;
-                    case OtMapAttribute.EXT_SPAWN_FILE:
-                        spawnFile = props.GetString();
-                        break;
-                    case OtMapAttribute.EXT_HOUSE_FILE:
-                        houseFile = props.GetString();
-                        break;
-                    default:
-                        throw new Exception("Unknown header node.");
-                }
-            }
+                OtFileNode node = reader.GetRootNode();
 
-            OtFileNode nodeMapData = node.Child;
+                OtPropertyReader props = reader.GetPropertyReader(node);
 
-            while (nodeMapData != null)
-            {
-                switch ((OtMapNodeTypes)nodeMapData.Type)
+                props.ReadByte(); // junk?
+
+                var version = props.ReadUInt32();
+                props.ReadUInt16();
+                props.ReadUInt16();
+
+                var majorVersionItems = props.ReadUInt32();
+                var minorVersionItems = props.ReadUInt32();
+
+                if (version <= 0)
                 {
-                    case OtMapNodeTypes.TILE_AREA:
-                        ParseTileArea(loader, nodeMapData, replaceTiles);
-                        break;
-                    case OtMapNodeTypes.TOWNS:
-                        ParseTowns(loader, nodeMapData);
-                        break;
+                    //In otbm version 1 the count variable after splashes/fluidcontainers and stackables
+                    //are saved as attributes instead, this solves alot of problems with items
+                    //that is changed (stackable/charges/fluidcontainer/splash) during an update.
+                    throw new Exception(
+                        "This map needs to be upgraded by using the latest map editor version to be able to load correctly.");
                 }
-                nodeMapData = nodeMapData.Next;
+
+                if (version > 3)
+                {
+                    throw new Exception("Unknown OTBM version detected.");
+                }
+
+                if (majorVersionItems < 3)
+                {
+                    throw new Exception(
+                        "This map needs to be upgraded by using the latest map editor version to be able to load correctly.");
+                }
+
+                if (majorVersionItems > Items.MajorVersion)
+                {
+                    throw new Exception("The map was saved with a different items.otb version, an upgraded items.otb is required.");
+                }
+
+                if (minorVersionItems > Items.MinorVersion)
+                    Trace.WriteLine("This map needs an updated items.otb.");
+
+                node = node.Child;
+
+                if ((OtMapNodeTypes)node.Type != OtMapNodeTypes.MAP_DATA)
+                {
+                    throw new Exception("Could not read data node.");
+                }
+
+                props = reader.GetPropertyReader(node);
+
+                while (props.PeekChar() != -1)
+                {
+                    byte attribute = props.ReadByte();
+                    switch ((OtMapAttribute)attribute)
+                    {
+                        case OtMapAttribute.DESCRIPTION:
+                            var description = props.GetString();
+                            Descriptions.Add(description);
+                            break;
+                        case OtMapAttribute.EXT_SPAWN_FILE:
+                            spawnFile = props.GetString();
+                            break;
+                        case OtMapAttribute.EXT_HOUSE_FILE:
+                            houseFile = props.GetString();
+                            break;
+                        default:
+                            throw new Exception("Unknown header node.");
+                    }
+                }
+
+                OtFileNode nodeMapData = node.Child;
+
+                while (nodeMapData != null)
+                {
+                    switch ((OtMapNodeTypes)nodeMapData.Type)
+                    {
+                        case OtMapNodeTypes.TILE_AREA:
+                            ParseTileArea(reader, nodeMapData, replaceTiles);
+                            break;
+                        case OtMapNodeTypes.TOWNS:
+                            ParseTowns(reader, nodeMapData);
+                            break;
+                    }
+                    nodeMapData = nodeMapData.Next;
+                }
             }
 
             LoadSpawn(Path.Combine(Path.GetDirectoryName(fileName), spawnFile));
         }
 
-        private void LoadSpawn(string fileName)
+        private void ParseTileArea(OtFileReader reader, OtFileNode otbNode, bool replaceTiles)
         {
-            if (!File.Exists(fileName))
-            {
-                Trace.WriteLine("Can't load map spawns.");
-                return;
-            }
-
-            var spawns = XElement.Load(fileName);
-
-            foreach (var spawn in spawns.Elements("spawn"))
-            {
-                foreach (var creature in spawn.Elements())
-                {
-                    
-   
-
-                }
-            }
-
-        }
-
-        private void ParseTileArea(OtFileReader loader, OtFileNode otbNode, bool replaceTiles)
-        {
-            OtPropertyReader props;
-            if (!loader.GetProps(otbNode, out props))
-            {
-                throw new Exception("Invalid map node.");
-            }
+            OtPropertyReader props = reader.GetPropertyReader(otbNode);
 
             int baseX = props.ReadUInt16();
             int baseY = props.ReadUInt16();
@@ -462,7 +435,7 @@ namespace SharpMapTracker.Domain
                 if (nodeTile.Type == (long)OtMapNodeTypes.TILE ||
                     nodeTile.Type == (long)OtMapNodeTypes.HOUSETILE)
                 {
-                    loader.GetProps(nodeTile, out props);
+                    props = reader.GetPropertyReader(nodeTile);
 
                     var tileLocation = new Location(baseX + props.ReadByte(), baseY + props.ReadByte(), baseZ);
 
@@ -495,8 +468,8 @@ namespace SharpMapTracker.Domain
                                         throw new Exception("Unkonw item type " + itemId + " in position " + tileLocation + ".");
                                     }
 
-                                    var item = new OtItem(itemType);
-                                    tile.AddItem(item);
+                                    var item = OtItem.Create(itemType);
+                                    tile.InternalAddItem(item);
 
                                     break;
                                 }
@@ -511,7 +484,7 @@ namespace SharpMapTracker.Domain
                     {
                         if (nodeItem.Type == (long)OtMapNodeTypes.ITEM)
                         {
-                            loader.GetProps(nodeItem, out props);
+                            props = reader.GetPropertyReader(nodeItem);
 
                             ushort itemId = props.ReadUInt16();
 
@@ -521,11 +494,10 @@ namespace SharpMapTracker.Domain
                                 throw new Exception("Unkonw item type " + itemId + " in position " + tileLocation + ".");
                             }
 
-                            var item = new OtItem(itemType);
-                            
-                            item.Deserialize(props);
+                            var item = OtItem.Create(itemType);
+                            item.Deserialize(reader, nodeItem, props, Items);
 
-                            tile.AddItem(item);
+                            tile.InternalAddItem(item);
                         }
                         else
                         {
@@ -542,17 +514,13 @@ namespace SharpMapTracker.Domain
             }
         }
 
-        private void ParseTowns(OtFileReader loader, OtFileNode otbNode)
+        private void ParseTowns(OtFileReader reader, OtFileNode otbNode)
         {
             OtFileNode nodeTown = otbNode.Child;
 
             while (nodeTown != null)
             {
-                OtPropertyReader props;
-                if (!loader.GetProps(nodeTown, out props))
-                {
-                    throw new Exception("Could not read town data.");
-                }
+                OtPropertyReader props = reader.GetPropertyReader(nodeTown);
 
                 uint townid = props.ReadUInt32();
                 string townName = props.GetString();
@@ -563,6 +531,36 @@ namespace SharpMapTracker.Domain
 
                 nodeTown = nodeTown.Next;
             }
+        }
+
+        private void LoadSpawn(string fileName)
+        {
+            if (!File.Exists(fileName))
+            {
+                Trace.WriteLine("Can't load map spawns.");
+                return;
+            }
+
+            var spawns = XElement.Load(fileName);
+
+            foreach (var spawn in spawns.Elements("spawn"))
+            {
+                var centerLocation = new Location(spawn.Attribute("centerx").GetInt32(), spawn.Attribute("centery").GetInt32(),
+                    spawn.Attribute("centerz").GetInt32());
+
+                foreach (var creature in spawn.Elements())
+                {
+                    var cr = new OtCreature();
+                    cr.Id = ++loadCreatureId;
+                    cr.Name = creature.Attribute("name").GetString();
+                    cr.Type = creature.Name.Equals("npc") ? CreatureType.NPC : CreatureType.MONSTER;
+                    cr.Location = new Location(centerLocation.X + creature.Attribute("x").GetInt32(),
+                        centerLocation.Y + creature.Attribute("y").GetInt32(), creature.Attribute("z").GetInt32());
+
+                    AddCreature(cr);
+                }
+            }
+
         }
 
         #endregion
