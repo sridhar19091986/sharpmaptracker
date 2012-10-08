@@ -379,6 +379,9 @@ namespace SharpMapTracker.Domain
                 throw new Exception("Could not read map data attributes.");
             }
 
+            string spawnFile = null;
+            string houseFile = null;
+
             while (props.PeekChar() != -1)
             {
                 byte attribute = props.ReadByte();
@@ -389,10 +392,10 @@ namespace SharpMapTracker.Domain
                         Descriptions.Add(description);
                         break;
                     case OtMapAttribute.EXT_SPAWN_FILE:
-                        SpawnFile = props.GetString();
+                        spawnFile = props.GetString();
                         break;
                     case OtMapAttribute.EXT_HOUSE_FILE:
-                        HouseFile = props.GetString();
+                        houseFile = props.GetString();
                         break;
                     default:
                         throw new Exception("Unknown header node.");
@@ -414,6 +417,30 @@ namespace SharpMapTracker.Domain
                 }
                 nodeMapData = nodeMapData.Next;
             }
+
+            LoadSpawn(Path.Combine(Path.GetDirectoryName(fileName), spawnFile));
+        }
+
+        private void LoadSpawn(string fileName)
+        {
+            if (!File.Exists(fileName))
+            {
+                Trace.WriteLine("Can't load map spawns.");
+                return;
+            }
+
+            var spawns = XElement.Load(fileName);
+
+            foreach (var spawn in spawns.Elements("spawn"))
+            {
+                foreach (var creature in spawn.Elements())
+                {
+                    
+   
+
+                }
+            }
+
         }
 
         private void ParseTileArea(OtFileReader loader, OtFileNode otbNode, bool replaceTiles)
