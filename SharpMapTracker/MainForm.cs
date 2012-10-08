@@ -86,12 +86,12 @@ namespace SharpMapTracker
             if (e.KeyCode == Keys.PageUp || e.KeyValue == 0x6B)
             {
                 e.SuppressKeyPress = true;
-                miniMap.Floor++;
+                miniMap.Floor--;
             }
             else if (e.KeyCode == Keys.PageDown || e.KeyValue == 0x6D)
             {
                 e.SuppressKeyPress = true;
-                miniMap.Floor--;
+                miniMap.Floor++;
             }
             else if (e.KeyCode == Keys.Up)
             {
