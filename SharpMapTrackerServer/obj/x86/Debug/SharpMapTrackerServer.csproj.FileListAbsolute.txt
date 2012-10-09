@@ -1,5 +1,0 @@
-C:\Programming\sharpmaptracker\SharpMapTrackerServer\bin\Debug\SharpMapTrackerServer.exe
-C:\Programming\sharpmaptracker\SharpMapTrackerServer\bin\Debug\SharpMapTrackerServer.pdb
-C:\Programming\sharpmaptracker\SharpMapTrackerServer\obj\x86\Debug\ResolveAssemblyReference.cache
-C:\Programming\sharpmaptracker\SharpMapTrackerServer\obj\x86\Debug\SharpMapTrackerServer.exe
-C:\Programming\sharpmaptracker\SharpMapTrackerServer\obj\x86\Debug\SharpMapTrackerServer.pdb
