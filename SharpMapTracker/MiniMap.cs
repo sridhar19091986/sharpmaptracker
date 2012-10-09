@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using SharpTibiaProxy.Domain;
-using SharpMapTracker.Domain;
+using OpenTibiaCommons.Domain;
 using SharpTibiaProxy;
 
 namespace SharpMapTracker

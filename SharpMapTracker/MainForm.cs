@@ -14,7 +14,7 @@ using SharpTibiaProxy.Network;
 using System.Threading;
 using SharpTibiaProxy.Util;
 using System.Xml.Linq;
-using SharpMapTracker.Domain;
+using OpenTibiaCommons.Domain;
 
 namespace SharpMapTracker
 {
@@ -77,6 +77,8 @@ namespace SharpMapTracker
             NpcWordList.Load();
 
             map = new OtMap(otItems);
+            map.Descriptions.Add("Created with SharpMapTracker v" + Constants.MAP_TRACKER_VERSION);
+
             npcs = new Dictionary<string, NpcInfo>();
 
             miniMap.Map = map;
@@ -665,6 +667,13 @@ namespace SharpMapTracker
         private void highlitghtMissingTilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             miniMap.HighlightMissingTiles = highlitghtMissingTilesCheckBox.Checked;
+        }
+
+        private void shareTrackedMapCheckBox_Click(object sender, EventArgs e)
+        {
+
+
+
         }
     }
 }

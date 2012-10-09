@@ -7,6 +7,9 @@ namespace SharpMapTracker
     {
         public const string MAP_TRACKER_VERSION = "0.6";
 
+        public const string MAP_SHARE_HOST = "brunodunbar.no-ip.info";
+        public const int MAP_SHARE_PORT = 41567;
+
         public enum FluidColors : byte
         {
             FLUID_EMPTY = 0x00,
