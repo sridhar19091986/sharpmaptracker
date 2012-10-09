@@ -21,6 +21,11 @@ namespace SharpTibiaProxy.Util
 
         public readonly long ClientStatus;
 
+        public readonly long PlayerGoX;
+        public readonly long PlayerGoY;
+        public readonly long PlayerGoZ;
+        public readonly long PlayerGoStatus;
+
         public MemoryAddresses(Client client)
         {
             if (client.Version == ClientVersion.Version961)
@@ -34,6 +39,11 @@ namespace SharpTibiaProxy.Util
                 ClientMultiClient = client.BaseAddress + 0x12B387;
 
                 ClientStatus = client.BaseAddress + 0x3B9EA8;
+
+                PlayerGoX = 0;
+                PlayerGoY = 0;
+                PlayerGoZ = 0;
+                PlayerGoStatus = 0;
             }
             else if (client.Version == ClientVersion.Version963)
             {
@@ -46,6 +56,11 @@ namespace SharpTibiaProxy.Util
                 ClientMultiClient = client.BaseAddress + 0x12E807;
 
                 ClientStatus = client.BaseAddress + 0x3BCCC4;
+
+                PlayerGoX = client.BaseAddress + 0x57FEA0;
+                PlayerGoY = client.BaseAddress + 0x57FE98;
+                PlayerGoZ = client.BaseAddress + 0x548004;
+                PlayerGoStatus = client.BaseAddress + 0x548108;
             }
             else
             {

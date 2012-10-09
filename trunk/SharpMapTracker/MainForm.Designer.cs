@@ -171,9 +171,9 @@
             this.npcAutoTalkCheckBox,
             this.toolStripSeparator3,
             this.alwaysOnTopCheckBox,
+            this.highlitghtMissingTilesCheckBox,
             this.toolStripSeparator5,
-            this.clearToolStripMenuItem,
-            this.highlitghtMissingTilesCheckBox});
+            this.clearToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.optionsToolStripMenuItem.Text = "&Options";
@@ -318,6 +318,7 @@
             this.miniMap.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.miniMap.CenterLocation = null;
             this.miniMap.Floor = 0;
+            this.miniMap.HighlightMissingTiles = false;
             this.miniMap.Location = new System.Drawing.Point(13, 27);
             this.miniMap.Map = null;
             this.miniMap.Name = "miniMap";

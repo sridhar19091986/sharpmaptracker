@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using SharpTibiaProxy.Domain;
 using SharpMapTracker.Domain;
+using SharpTibiaProxy;
 
 namespace SharpMapTracker
 {
@@ -15,6 +16,8 @@ namespace SharpMapTracker
     {
         private const int PIXEL_FACTOR = 2;
         private int miniMapSize = 192;
+
+        public event EventHandler<MiniMapClickEventArgs> MiniMapClick;
 
         private int updateOngoing;
         private Location centerLocation;
@@ -63,8 +66,6 @@ namespace SharpMapTracker
         public MiniMap()
         {
             InitializeComponent();
-            //colors = new Dictionary<ulong, Color>();
-
             MouseMove += new MouseEventHandler(MiniMap_MouseMove);
             MouseClick += new MouseEventHandler(MiniMap_MouseClick);
         }
@@ -78,12 +79,12 @@ namespace SharpMapTracker
 
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                CenterLocation = new SharpTibiaProxy.Domain.Location(pos.X, pos.Y, CenterLocation.Z);
+                CenterLocation = pos;
                 Invalidate();
             }
             else if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                Clipboard.SetText(pos.ToString());
+                MiniMapClick.Raise(this, new MiniMapClickEventArgs { Location = pos });
             }
         }
 
@@ -96,12 +97,12 @@ namespace SharpMapTracker
             coorLabel.Text = String.Format("[{0}, {1}, {2}]", pos.X, pos.Y, CenterLocation.Z);
         }
 
-        protected Point LocalToGlobal(int x, int y)
+        protected Location LocalToGlobal(int x, int y)
         {
             int xoffset = centerLocation.X - miniMapSize / 2;
             int yoffset = centerLocation.Y - miniMapSize / 2;
 
-            return new Point(((x * miniMapSize) / Width) + xoffset, ((y * miniMapSize) / Height) + yoffset);
+            return new Location(((x * miniMapSize) / Width) + xoffset, ((y * miniMapSize) / Height) + yoffset, CenterLocation.Z);
         }
 
         public void BeginUpdate()
@@ -163,4 +164,10 @@ namespace SharpMapTracker
                 base.OnPaint(e);
         }
     }
+
+    public class MiniMapClickEventArgs : EventArgs
+    {
+        public Location Location { get; set; }
+    }
+
 }

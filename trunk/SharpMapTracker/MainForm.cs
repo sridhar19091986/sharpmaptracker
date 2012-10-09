@@ -62,6 +62,13 @@ namespace SharpMapTracker
             KeyDown += new KeyEventHandler(MainForm_KeyDown);
             Load += MainForm_Load;
             FormClosed += new FormClosedEventHandler(MainForm_FormClosed);
+            miniMap.MiniMapClick += new EventHandler<MiniMapClickEventArgs>(miniMap_MiniMapClick);
+        }
+
+        void miniMap_MiniMapClick(object sender, MiniMapClickEventArgs e)
+        {
+            if (client != null)
+                client.PlayerGoTo(e.Location);
         }
 
         void MainForm_Load(object sender, EventArgs e)
