@@ -193,6 +193,17 @@ namespace SharpTibiaProxy.Domain
 
         public Constants.LoginStatus Status { get { return (Constants.LoginStatus)Memory.ReadByte(processHandle, MemoryAddresses.ClientStatus); } }
 
+        public void PlayerGoTo(Location location)
+        {
+            if (IsClinentless || MemoryAddresses.PlayerGoStatus == 0 || !LoggedIn)
+                return;
+
+            Memory.WriteUInt16(processHandle, MemoryAddresses.PlayerGoX, (ushort)location.X);
+            Memory.WriteUInt16(processHandle, MemoryAddresses.PlayerGoY, (ushort)location.Y);
+            Memory.WriteByte(processHandle, MemoryAddresses.PlayerGoZ, (byte)location.Z);
+            Memory.WriteByte(processHandle, MemoryAddresses.PlayerGoStatus, 1);
+        }
+
         public void EnableProxy()
         {
             if (Process == null)
