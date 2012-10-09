@@ -24,7 +24,11 @@ namespace SharpTibiaProxy.Util
         public readonly long PlayerGoX;
         public readonly long PlayerGoY;
         public readonly long PlayerGoZ;
-        public readonly long PlayerGoStatus;
+
+        public readonly long ClientBattleListStart;
+        public readonly int ClientBattleListStep = 176;
+        public readonly int ClientBattleListMaxCreatures = 1300;
+        public readonly int ClientBattleListCreatureWalkDistance = 80;
 
         public MemoryAddresses(Client client)
         {
@@ -43,7 +47,8 @@ namespace SharpTibiaProxy.Util
                 PlayerGoX = 0;
                 PlayerGoY = 0;
                 PlayerGoZ = 0;
-                PlayerGoStatus = 0;
+
+                ClientBattleListStart = 0;
             }
             else if (client.Version == ClientVersion.Version963)
             {
@@ -60,7 +65,8 @@ namespace SharpTibiaProxy.Util
                 PlayerGoX = client.BaseAddress + 0x57FEA0;
                 PlayerGoY = client.BaseAddress + 0x57FE98;
                 PlayerGoZ = client.BaseAddress + 0x548004;
-                PlayerGoStatus = client.BaseAddress + 0x548108;
+
+                ClientBattleListStart = client.BaseAddress + 0x548008;
             }
             else
             {
