@@ -159,6 +159,13 @@ namespace SharpMapTracker
 
                 e.Graphics.DrawImage(bitmap, 0, 0, Width, Height);
 
+                var centerX = Width / 2;
+                var centerY = Height / 2;
+
+                var pen = new Pen(Color.White, 2);
+
+                e.Graphics.DrawLine(pen, centerX - 4, centerY, centerX + 4, centerY);
+                e.Graphics.DrawLine(pen, centerX, centerY - 4, centerX, centerY + 4);
             }
             else
                 base.OnPaint(e);
