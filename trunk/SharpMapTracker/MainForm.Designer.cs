@@ -54,6 +54,7 @@
             this.highlitghtMissingTilesCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.shareTrackedMapCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.tileCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -172,6 +173,7 @@
             this.toolStripSeparator3,
             this.alwaysOnTopCheckBox,
             this.highlitghtMissingTilesCheckBox,
+            this.shareTrackedMapCheckBox,
             this.toolStripSeparator5,
             this.clearToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
@@ -267,6 +269,16 @@
             this.clearToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.clearToolStripMenuItem.Text = "&Clear";
             this.clearToolStripMenuItem.Click += new System.EventHandler(this.clearToolStripMenuItem_Click);
+            // 
+            // shareTrackedMapCheckBox
+            // 
+            this.shareTrackedMapCheckBox.Checked = true;
+            this.shareTrackedMapCheckBox.CheckOnClick = true;
+            this.shareTrackedMapCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.shareTrackedMapCheckBox.Name = "shareTrackedMapCheckBox";
+            this.shareTrackedMapCheckBox.Size = new System.Drawing.Size(204, 22);
+            this.shareTrackedMapCheckBox.Text = "Share Tracked Map";
+            this.shareTrackedMapCheckBox.Click += new System.EventHandler(this.shareTrackedMapCheckBox_Click);
             // 
             // statusStrip
             // 
@@ -384,5 +396,6 @@
         private System.Windows.Forms.ToolStripMenuItem retrackTilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadMapToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem highlitghtMissingTilesCheckBox;
+        private System.Windows.Forms.ToolStripMenuItem shareTrackedMapCheckBox;
     }
 }

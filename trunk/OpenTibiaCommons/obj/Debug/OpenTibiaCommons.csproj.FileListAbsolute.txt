@@ -1,0 +1,8 @@
+C:\Programming\sharpmaptracker\OpenTibiaCommons\obj\Debug\ResolveAssemblyReference.cache
+C:\Programming\sharpmaptracker\OpenTibiaCommons\bin\Debug\OpenTibiaCommons.dll
+C:\Programming\sharpmaptracker\OpenTibiaCommons\bin\Debug\OpenTibiaCommons.pdb
+C:\Programming\sharpmaptracker\OpenTibiaCommons\bin\Debug\SharpTibiaProxy.dll
+C:\Programming\sharpmaptracker\OpenTibiaCommons\bin\Debug\BouncyCastle.Crypto.dll
+C:\Programming\sharpmaptracker\OpenTibiaCommons\bin\Debug\SharpTibiaProxy.pdb
+C:\Programming\sharpmaptracker\OpenTibiaCommons\obj\Debug\OpenTibiaCommons.dll
+C:\Programming\sharpmaptracker\OpenTibiaCommons\obj\Debug\OpenTibiaCommons.pdb
