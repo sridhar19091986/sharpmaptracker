@@ -195,14 +195,35 @@ namespace SharpTibiaProxy.Domain
 
         public void PlayerGoTo(Location location)
         {
-            if (IsClinentless || MemoryAddresses.PlayerGoStatus == 0 || !LoggedIn)
+            if (IsClinentless || MemoryAddresses.PlayerGoX == 0 || !LoggedIn)
                 return;
 
             Memory.WriteUInt16(processHandle, MemoryAddresses.PlayerGoX, (ushort)location.X);
             Memory.WriteUInt16(processHandle, MemoryAddresses.PlayerGoY, (ushort)location.Y);
             Memory.WriteByte(processHandle, MemoryAddresses.PlayerGoZ, (byte)location.Z);
-            Memory.WriteByte(processHandle, MemoryAddresses.PlayerGoStatus, 1);
+            Memory.WriteByte(processHandle, MemoryAddresses.ClientBattleListStart + (PlayerBattleListIndex * MemoryAddresses.ClientBattleListStep)
+                + MemoryAddresses.ClientBattleListCreatureWalkDistance, 1);
         }
+
+        public int PlayerBattleListIndex
+        {
+            get
+            {
+                if (IsClinentless || MemoryAddresses.ClientBattleListStart == 0 || !LoggedIn)
+                    return -1;
+
+                for (int i = 0; i < MemoryAddresses.ClientBattleListMaxCreatures; i++)
+                {
+                    if (Memory.ReadUInt32(processHandle, MemoryAddresses.ClientBattleListStart + (i * MemoryAddresses.ClientBattleListStep)) == PlayerId)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+        }
+
 
         public void EnableProxy()
         {

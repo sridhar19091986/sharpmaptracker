@@ -51,9 +51,9 @@
             this.npcAutoTalkCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.alwaysOnTopCheckBox = new System.Windows.Forms.ToolStripMenuItem();
+            this.highlitghtMissingTilesCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.highlitghtMissingTilesCheckBox = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.tileCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.npcCountLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -248,6 +248,14 @@
             this.alwaysOnTopCheckBox.Size = new System.Drawing.Size(204, 22);
             this.alwaysOnTopCheckBox.Text = "Always On Top";
             // 
+            // highlitghtMissingTilesCheckBox
+            // 
+            this.highlitghtMissingTilesCheckBox.CheckOnClick = true;
+            this.highlitghtMissingTilesCheckBox.Name = "highlitghtMissingTilesCheckBox";
+            this.highlitghtMissingTilesCheckBox.Size = new System.Drawing.Size(204, 22);
+            this.highlitghtMissingTilesCheckBox.Text = "Highlitght Missing Tiles";
+            this.highlitghtMissingTilesCheckBox.Click += new System.EventHandler(this.highlitghtMissingTilesToolStripMenuItem_Click);
+            // 
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
@@ -259,14 +267,6 @@
             this.clearToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
             this.clearToolStripMenuItem.Text = "&Clear";
             this.clearToolStripMenuItem.Click += new System.EventHandler(this.clearToolStripMenuItem_Click);
-            // 
-            // highlitghtMissingTilesCheckBox
-            // 
-            this.highlitghtMissingTilesCheckBox.CheckOnClick = true;
-            this.highlitghtMissingTilesCheckBox.Name = "highlitghtMissingTilesCheckBox";
-            this.highlitghtMissingTilesCheckBox.Size = new System.Drawing.Size(204, 22);
-            this.highlitghtMissingTilesCheckBox.Text = "Highlitght Missing Tiles";
-            this.highlitghtMissingTilesCheckBox.Click += new System.EventHandler(this.highlitghtMissingTilesToolStripMenuItem_Click);
             // 
             // statusStrip
             // 
