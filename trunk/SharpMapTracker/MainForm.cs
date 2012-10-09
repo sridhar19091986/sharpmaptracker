@@ -654,5 +654,10 @@ namespace SharpMapTracker
                 monsterCountLabel.Text = "Monsters: 0";
             }
         }
+
+        private void highlitghtMissingTilesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            miniMap.HighlightMissingTiles = highlitghtMissingTilesCheckBox.Checked;
+        }
     }
 }

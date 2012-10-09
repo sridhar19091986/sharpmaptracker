@@ -18,6 +18,17 @@ namespace SharpMapTracker
 
         private int updateOngoing;
         private Location centerLocation;
+        private bool highlightMissingTiles;
+
+        public bool HighlightMissingTiles
+        {
+            get { return highlightMissingTiles; }
+            set
+            {
+                highlightMissingTiles = value;
+                Invalidate();
+            }
+        }
 
         public OtMap Map { get; set; }
 
@@ -124,11 +135,14 @@ namespace SharpMapTracker
                 {
                     for (int y = 0; y < miniMapSize; y++)
                     {
+
                         var color = Color.Black;
 
                         var tile = Map.GetTile(SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z));
                         if (tile != null)
                             color = tile.MapColor;
+                        else if (highlightMissingTiles)
+                            color = Color.Fuchsia;
 
                         for (int px = 0; px < PIXEL_FACTOR; px++)
                         {
