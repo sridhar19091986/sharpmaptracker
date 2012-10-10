@@ -20,6 +20,19 @@ namespace SharpMapTracker.Share
             this.port = port;
         }
 
+        public bool TryConnect()
+        {
+            try
+            {
+                Connect();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public void Connect()
         {
             if (socket != null)

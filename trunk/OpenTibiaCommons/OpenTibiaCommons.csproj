@@ -61,6 +61,7 @@
     <Compile Include="IO\OtFileWriter.cs" />
     <Compile Include="IO\OtPropertyReader.cs" />
     <Compile Include="IO\OtPropertyWriter.cs" />
+    <Compile Include="OtDefinitions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -15,6 +15,8 @@ using System.Threading;
 using SharpTibiaProxy.Util;
 using System.Xml.Linq;
 using OpenTibiaCommons.Domain;
+using SharpMapTracker.Share;
+using OpenTibiaCommons;
 
 namespace SharpMapTracker
 {
@@ -31,6 +33,8 @@ namespace SharpMapTracker
         private DateTime lastPlayerSpeechTime;
         private uint sendNpcWordScheduleId;
 
+        private MapShare mapShare;
+
         public bool TrackMoveableItems { get; set; }
         public bool TrackSplashes { get; set; }
         public bool TrackMonsters { get; set; }
@@ -38,6 +42,7 @@ namespace SharpMapTracker
         public bool RetrackTiles { get; set; }
         public bool TrackOnlyCurrentFloor { get; set; }
         public bool NPCAutoTalk { get; set; }
+        public bool ShareTrackedMap { get; set; }
 
         public MainForm()
         {
@@ -53,6 +58,7 @@ namespace SharpMapTracker
             DataBindings.Add("TrackOnlyCurrentFloor", trackOnlyCurrentFloorCheckBox, "Checked");
             DataBindings.Add("RetrackTiles", retrackTilesToolStripMenuItem, "Checked");
             DataBindings.Add("NPCAutoTalk", npcAutoTalkCheckBox, "Checked");
+            DataBindings.Add("ShareTrackedMap", shareTrackedMapCheckBox, "Checked");
 
             Trace.Listeners.Add(new TextBoxTraceListener(traceTextBox));
             Trace.Listeners.Add(new TextWriterTraceListener("log.txt"));
@@ -82,11 +88,15 @@ namespace SharpMapTracker
             npcs = new Dictionary<string, NpcInfo>();
 
             miniMap.Map = map;
+
+            mapShare = new MapShare();
+            mapShare.Start();
         }
 
         void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Client = null;
+            mapShare.Stop();
             NpcWordList.Save();
         }
 
@@ -349,6 +359,9 @@ namespace SharpMapTracker
 
                     foreach (var tile in e.Tiles)
                     {
+                        if (ShareTrackedMap && !client.IsClinentless && !client.IsOpenTibiaServer)
+                            mapShare.Add(tile);
+
                         if (TrackOnlyCurrentFloor && tile.Location.Z != Client.PlayerLocation.Z)
                             continue;
 
@@ -398,9 +411,9 @@ namespace SharpMapTracker
                                     mapItem.SetAttribute(OtItemAttribute.COUNT, item.Count);
 
                                 if (mapItem.Type.Group == OtItemGroup.Splash || mapItem.Type.Group == OtItemGroup.FluidContainer
-                                    && item.SubType < Constants.ReverseFluidMap.Length)
+                                    && item.SubType < OtDefinitions.ReverseFluidMap.Length)
                                 {
-                                    mapItem.SetAttribute(OtItemAttribute.COUNT, Constants.ReverseFluidMap[item.SubType]);
+                                    mapItem.SetAttribute(OtItemAttribute.COUNT, OtDefinitions.ReverseFluidMap[item.SubType]);
                                 }
 
                                 mapTile.AddItem(mapItem);
@@ -608,8 +621,8 @@ namespace SharpMapTracker
                                     Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
                                     Append(", ");
 
-                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
-                                     builder.Append(Constants.ReverseFluidMap[item.SubType]).Append(", ");
+                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < OtDefinitions.ReverseFluidMap.Length)
+                                    builder.Append(OtDefinitions.ReverseFluidMap[item.SubType]).Append(", ");
 
                                 builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
                             }
@@ -627,8 +640,8 @@ namespace SharpMapTracker
                                     Append("'}, ").Append(otItem.Id).Append(", ").Append(item.SellPrice).
                                     Append(", ");
 
-                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < Constants.ReverseFluidMap.Length)
-                                    builder.Append(Constants.ReverseFluidMap[item.SubType]).Append(", ");
+                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < OtDefinitions.ReverseFluidMap.Length)
+                                    builder.Append(OtDefinitions.ReverseFluidMap[item.SubType]).Append(", ");
 
                                 builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
                             }
@@ -671,9 +684,10 @@ namespace SharpMapTracker
 
         private void shareTrackedMapCheckBox_Click(object sender, EventArgs e)
         {
-
-
-
+            if (shareTrackedMapCheckBox.Checked)
+                mapShare.Start();
+            else
+                mapShare.Stop();
         }
     }
 }
