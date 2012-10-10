@@ -213,6 +213,11 @@ namespace SharpMapTracker
                 return;
             }
 
+            var tile = map.Tiles.FirstOrDefault();
+
+            if (tile != null)
+                miniMap.CenterLocation = tile.Location;
+
             miniMap.EndUpdate();
         }
 
@@ -254,7 +259,7 @@ namespace SharpMapTracker
 
             var key = creature.Name.ToLower().Trim();
             if (!npcs.ContainsKey(key))
-                npcs.Add(key, new NpcInfo(creature));
+                npcs.Add(key, new NpcInfo(creature, otItems));
 
             npcs[key].Shop = e.Shop;
         }
@@ -278,15 +283,16 @@ namespace SharpMapTracker
             {
                 var key = e.Creature.Name.ToLower().Trim();
                 if (!npcs.ContainsKey(key))
-                    npcs.Add(key, new NpcInfo(e.Creature));
+                    npcs.Add(key, new NpcInfo(e.Creature, otItems));
 
                 var npcInfo = npcs[key];
 
                 if (e.Type == MessageClasses.NPC_FROM)
                 {
+                    var playerName = client.BattleList.GetPlayer().Name;
 
                     if (lastPlayerSpeech != null && lastPlayerSpeechTime.AddSeconds(2) > DateTime.Now)
-                        npcInfo.AddStatement(lastPlayerSpeech, e.Text);
+                        npcInfo.AddStatement(lastPlayerSpeech, e.Text.Replace(playerName, "|PLAYERNAME|"));
 
                     if (NPCAutoTalk && !client.IsClinentless && client.LoggedIn)
                     {
@@ -345,7 +351,7 @@ namespace SharpMapTracker
             {
                 var key = e.Creature.Name.ToLower().Trim();
                 if (!npcs.ContainsKey(key))
-                    npcs.Add(key, new NpcInfo(e.Creature));
+                    npcs.Add(key, new NpcInfo(e.Creature, otItems));
             }
         }
 
@@ -401,7 +407,6 @@ namespace SharpMapTracker
 
                                 if (item.Type.IsMoveable && !TrackMoveableItems)
                                     continue;
-
                                 if (item.IsSplash && !TrackSplashes)
                                     continue;
 
@@ -409,12 +414,8 @@ namespace SharpMapTracker
 
                                 if (mapItem.Type.IsStackable)
                                     mapItem.SetAttribute(OtItemAttribute.COUNT, item.Count);
-
-                                if (mapItem.Type.Group == OtItemGroup.Splash || mapItem.Type.Group == OtItemGroup.FluidContainer
-                                    && item.SubType < OtDefinitions.ReverseFluidMap.Length)
-                                {
-                                    mapItem.SetAttribute(OtItemAttribute.COUNT, OtDefinitions.ReverseFluidMap[item.SubType]);
-                                }
+                                else if (mapItem.Type.Group == OtItemGroup.Splash || mapItem.Type.Group == OtItemGroup.FluidContainer)
+                                    mapItem.SetAttribute(OtItemAttribute.COUNT, OtConverter.TibiaFluidToOtFluid(item.SubType));
 
                                 mapTile.AddItem(mapItem);
                             }
@@ -530,128 +531,8 @@ namespace SharpMapTracker
                     {
                         var npcInfo = npcEntry.Value;
 
-                        var npc = new XElement("npc");
-                        npc.Add(new XAttribute("name", npcInfo.Name));
-                        npc.Add(new XAttribute("script", "data/npc/scripts/" + npcInfo.Name + ".lua"));
-                        npc.Add(new XAttribute("walkinterval", "2000"));
-                        npc.Add(new XAttribute("floorchange", "0"));
+                    
 
-                        npc.Add(new XElement("health", new XAttribute("now", "100"), new XAttribute("max", "100")));
-                        npc.Add(new XElement("look", new XAttribute("type", npcInfo.Outfit.LookType),
-                            new XAttribute("head", npcInfo.Outfit.Head), new XAttribute("body", npcInfo.Outfit.Body),
-                            new XAttribute("legs", npcInfo.Outfit.Legs), new XAttribute("feet", npcInfo.Outfit.Feet),
-                            new XAttribute("addons", npcInfo.Outfit.Addons)));
-
-                        if (npcInfo.Voices.Count > 0)
-                        {
-                            var voices = new XElement("voices");
-                            foreach (var voice in npcInfo.Voices)
-                            {
-                                voices.Add(new XElement("voice", new XAttribute("text", voice.Text), new XAttribute("interval2", voice.Interval),
-                                    new XAttribute("margin", "1"), new XAttribute("yell", voice.IsYell ? "yes" : "no")));
-                            }
-
-                            npc.Add(voices);
-                        }
-
-                        npc.Save(Path.Combine(directory, npcInfo.Name + ".xml"));
-
-                        var builder = new StringBuilder();
-
-                        builder.Append("local keywordHandler = KeywordHandler:new()\n");
-                        builder.Append("local npcHandler = NpcHandler:new(keywordHandler)\n");
-                        builder.Append("NpcSystem.parseParameters(npcHandler)\n");
-                        builder.Append("\n");
-                        builder.Append("function onCreatureAppear(cid)			npcHandler:onCreatureAppear(cid)			end\n");
-                        builder.Append("function onCreatureDisappear(cid)		npcHandler:onCreatureDisappear(cid)			end\n");
-                        builder.Append("function onCreatureSay(cid, type, msg)	npcHandler:onCreatureSay(cid, type, msg)	end\n");
-                        builder.Append("function onThink()						npcHandler:onThink()						end\n");
-                        builder.Append("\n");
-
-                        var playerName = client.BattleList.GetPlayer().Name;
-
-                        if (npcInfo.Statements.ContainsKey("hi"))
-                        {
-                            builder.Append("npcHandler:setMessage(MESSAGE_GREET, '")
-                                .Append(npcInfo.Statements["hi"].Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|"))
-                                .Append("')\n");
-                        }
-
-                        if (npcInfo.Statements.ContainsKey("bye"))
-                        {
-                            builder.Append("npcHandler:setMessage(MESSAGE_FAREWELL, '")
-                                .Append(npcInfo.Statements["bye"].Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|"))
-                                .Append("')\n");
-                        }
-
-                        if (npcInfo.Statements.ContainsKey("trade"))
-                        {
-                            builder.Append("npcHandler:setMessage(MESSAGE_SENDTRADE, '")
-                                .Append(npcInfo.Statements["trade"].Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|"))
-                                .Append("')\n");
-                        }
-
-                        builder.Append("\n");
-
-                        foreach (var statement in npcInfo.Statements)
-                        {
-                            if (statement.Key.Equals("hi") || statement.Key.Equals("bye") || statement.Key.Equals("trade"))
-                                continue;
-
-                            builder.Append("keywordHandler:addKeyword({'").Append(statement.Key.Replace("'", "\\'"))
-                                .Append("'}, StdModule.say, {npcHandler = npcHandler, onlyFocus = true, text = '")
-                                .Append(statement.Value.Replace("'", "\\'").Replace(playerName, "|PLAYERNAME|")).Append("'})\n");
-                        }
-
-                        if (npcInfo.Shop != null)
-                        {
-                            builder.Append("\n");
-                            builder.Append("local shopModule = ShopModule:new()\n");
-                            builder.Append("npcHandler:addModule(shopModule)\n");
-                            builder.Append("\n");
-
-                            foreach (var item in npcInfo.Shop.Items.Where(x => x.IsBuyable))
-                            {
-                                var otItem = otItems.GetItemBySpriteId(item.Id);
-
-                                if (otItem == null)
-                                    continue;
-
-                                builder.Append("shopModule:addBuyableItem({'").Append(item.Name.ToLower()).
-                                    Append("'}, ").Append(otItem.Id).Append(", ").Append(item.BuyPrice).
-                                    Append(", ");
-
-                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < OtDefinitions.ReverseFluidMap.Length)
-                                    builder.Append(OtDefinitions.ReverseFluidMap[item.SubType]).Append(", ");
-
-                                builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
-                            }
-
-                            builder.Append("\n");
-
-                            foreach (var item in npcInfo.Shop.Items.Where(x => x.IsSellable))
-                            {
-                                var otItem = otItems.GetItemBySpriteId(item.Id);
-
-                                if (otItem == null)
-                                    continue;
-
-                                builder.Append("shopModule:addSellableItem({'").Append(item.Name.ToLower()).
-                                    Append("'}, ").Append(otItem.Id).Append(", ").Append(item.SellPrice).
-                                    Append(", ");
-
-                                if (otItem.Group == OtItemGroup.Splash || otItem.Group == OtItemGroup.FluidContainer && item.SubType < OtDefinitions.ReverseFluidMap.Length)
-                                    builder.Append(OtDefinitions.ReverseFluidMap[item.SubType]).Append(", ");
-
-                                builder.Append('\'').Append(item.Name.ToLower()).Append("')\n");
-                            }
-                        }
-
-
-                        builder.Append("\n");
-                        builder.Append("npcHandler:addModule(FocusModule:new())");
-
-                        File.WriteAllText(Path.Combine(scriptDirectory, npcInfo.Name + ".lua"), builder.ToString());
                     }
 
                     Trace.WriteLine("NPCs successfully saved.");

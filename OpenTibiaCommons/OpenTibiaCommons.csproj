@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OtConverter.cs" />
     <Compile Include="Domain\OtContainer.cs" />
     <Compile Include="Domain\OtCreature.cs" />
     <Compile Include="Domain\OtDepot.cs" />
@@ -61,7 +62,7 @@
     <Compile Include="IO\OtFileWriter.cs" />
     <Compile Include="IO\OtPropertyReader.cs" />
     <Compile Include="IO\OtPropertyWriter.cs" />
-    <Compile Include="OtDefinitions.cs" />
+    <Compile Include="OtConstants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
