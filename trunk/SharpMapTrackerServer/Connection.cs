@@ -125,12 +125,8 @@ namespace SharpMapTrackerServer
 
                         if (item.Type.IsStackable)
                             item.SetAttribute(OtItemAttribute.COUNT, subType);
-
-                        if (item.Type.Group == OtItemGroup.Splash || item.Type.Group == OtItemGroup.FluidContainer
-                            && subType < OtDefinitions.ReverseFluidMap.Length)
-                        {
-                            item.SetAttribute(OtItemAttribute.COUNT, OtDefinitions.ReverseFluidMap[subType]);
-                        }
+                        else if (item.Type.Group == OtItemGroup.Splash || item.Type.Group == OtItemGroup.FluidContainer)
+                            item.SetAttribute(OtItemAttribute.COUNT, OtConverter.TibiaFluidToOtFluid(subType));
 
                         tile.AddItem(item);
                     }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace OpenTibiaCommons
 {
-    public static class OtDefinitions
+    public static class OtConstants
     {
         public enum FluidColors : byte
         {
