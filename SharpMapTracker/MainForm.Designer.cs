@@ -380,7 +380,6 @@
         private System.Windows.Forms.ToolStripStatusLabel npcCountLabel;
         private System.Windows.Forms.ToolStripStatusLabel monsterCountLabel;
         private System.Windows.Forms.ToolStripMenuItem trackMoveableItemsCheckBox;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem trackSplashesCheckBox;
         private System.Windows.Forms.ToolStripMenuItem trackMonstersCheckBox;
         private System.Windows.Forms.ToolStripMenuItem trackNpcsCheckBox;

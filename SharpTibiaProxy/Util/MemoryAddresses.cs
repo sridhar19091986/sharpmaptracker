@@ -53,12 +53,30 @@ namespace SharpTibiaProxy.Util
             else if (client.Version == ClientVersion.Version963)
             {
                 ClientRsa = client.BaseAddress + 0x324EC0;
-                ClientServerStart = client.BaseAddress + 0x3B34F8; //3250CC
+                ClientServerStart = client.BaseAddress + 0x3B34F8;
                 ClientServerStep = 112;
                 ClientServerMax = 10;
                 ClientServerDistancePort = 100;
                 ClientSelectedCharacter = client.BaseAddress + 0x3BCD10;
                 ClientMultiClient = client.BaseAddress + 0x12E807;
+
+                ClientStatus = client.BaseAddress + 0x3BCCC4;
+
+                PlayerGoX = client.BaseAddress + 0x57FEA0;
+                PlayerGoY = client.BaseAddress + 0x57FE98;
+                PlayerGoZ = client.BaseAddress + 0x548004;
+
+                ClientBattleListStart = client.BaseAddress + 0x548008;
+            }
+            else if (client.Version == ClientVersion.Version970)
+            {
+                ClientRsa = client.BaseAddress + 0x324EC0;
+                ClientServerStart = client.BaseAddress + 0x3B34F8;
+                ClientServerStep = 112;
+                ClientServerMax = 10;
+                ClientServerDistancePort = 100;
+                ClientSelectedCharacter = client.BaseAddress + 0x3BCD10;
+                ClientMultiClient = client.BaseAddress + 0x12EC57;
 
                 ClientStatus = client.BaseAddress + 0x3BCCC4;
 

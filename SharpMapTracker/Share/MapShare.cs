@@ -6,19 +6,20 @@ using OpenTibiaCommons.Domain;
 using System.Threading;
 using System.Diagnostics;
 using SharpTibiaProxy.Network;
+using SharpTibiaProxy.Domain;
 
 namespace SharpMapTracker.Share
 {
     public class MapShare
     {
-        private Queue<object> queue;
+        private Queue<Tile> queue;
         private Connection connection;
         private OutMessage message;
         private Thread thread;
 
         public MapShare()
         {
-            queue = new Queue<object>();
+            queue = new Queue<Tile>();
             message = new OutMessage();
             connection = new Connection(Constants.MAP_SHARE_HOST, Constants.MAP_SHARE_PORT);
         }
@@ -45,24 +46,14 @@ namespace SharpMapTracker.Share
                 Monitor.Pulse(queue);
             }
         }
-        public void AddTile(OtTile tile)
-        {
-            Add(tile);
-        }
-
-        public void AddCreature(OtCreature creature)
-        {
-            Add(creature);
-        }
-
-        private void Add(object obj)
+        public void Add(Tile tile)
         {
             lock (queue)
             {
                 if (thread == null)
                     return;
 
-                queue.Enqueue(obj);
+                queue.Enqueue(new Tile(tile));
                 Monitor.Pulse(queue);
             }
         }
@@ -75,25 +66,27 @@ namespace SharpMapTracker.Share
                 {
                     if (!connection.IsConnected)
                     {
-                        connection.Connect();
+                        connection.TryConnect();
+
+                        if (!connection.IsConnected)
+                            Thread.Sleep(2000);
                     }
-
-                    object obj = null;
-
-                    lock (queue)
+                    else
                     {
-                        if (queue.Count == 0)
-                            Monitor.Wait(queue);
-                        else
-                            obj = queue.Dequeue();
-                    }
+                        Tile tile = null;
 
-                    if (obj != null)
-                    {
-                        if (obj is OtTile)
-                            SendTile((OtTile)obj);
-                        else if (obj is OtCreature)
-                            SendCreature((OtCreature)obj);
+                        lock (queue)
+                        {
+                            if (queue.Count == 0)
+                                Monitor.Wait(queue);
+                            else
+                                tile = queue.Dequeue();
+                        }
+
+                        if (tile != null)
+                        {
+                            SendTile(tile);
+                        }
                     }
                 }
                 catch (Exception e)
@@ -113,46 +106,39 @@ namespace SharpMapTracker.Share
             }
         }
 
-        private void SendTile(OtTile tile)
+        private void SendTile(Tile tile)
         {
-            message.Size = 0;
-            message.ReadPosition = 0;
-            message.WritePosition = 2;
-
+            message.Reset();
             message.WriteByte(0x01);
 
-            if (tile.Ground != null)
-                message.WriteUShort(tile.Ground.Type.Id);
-            else
-                message.WriteUShort(0);
+            message.WriteLocation(tile.Location);
+            message.WriteByte((byte)tile.ThingCount);
 
-            message.WriteByte((byte)tile.ItemCount);
-
-            foreach (var item in tile.Items)
+            for (int i = 0; i < tile.ThingCount; i++)
             {
-                message.WriteUShort(item.Type.Id);
-                if (item.GetAttribute(OtItemAttribute.COUNT) != null)
-                    message.WriteByte((byte)item.GetAttribute(OtItemAttribute.COUNT));
+                var thing = tile.GetThing(i);
+
+                if (thing is Creature)
+                {
+                    var cr = thing as Creature;
+                    message.WriteByte(0x01);
+                    message.WriteUInt(cr.Id);
+                    message.WriteString(cr.Name);
+                    message.WriteByte((byte)cr.Type);
+                }
+                else
+                {
+                    var item = thing as Item;
+                    message.WriteByte(0x02);
+                    message.WriteUShort((ushort)item.Id);
+                    message.WriteByte(item.SubType);
+                }
             }
 
+            message.WriteInternalHead();
+            Adler.Generate(message, true);
             message.WriteHead();
-            connection.Send(message);
-        }
 
-        private void SendCreature(OtCreature creature)
-        {
-            message.Size = 0;
-            message.ReadPosition = 0;
-            message.WritePosition = 2;
-
-            message.WriteByte(0x02);
-
-            message.WriteUInt(creature.Id);
-            message.WriteByte((byte)creature.Type);
-            message.WriteString(creature.Name);
-            message.WriteLocation(creature.Location);
-
-            message.WriteHead();
             connection.Send(message);
         }
     }

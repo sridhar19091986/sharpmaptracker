@@ -29,6 +29,12 @@ namespace SharpTibiaProxy.Domain
 #endif
         }
 
+        public Tile(Tile tile)
+        {
+            Location = tile.Location;
+            things = new List<Thing>(tile.things);
+        }
+
         public bool IsBlocked { get { return things.Any(x => x.IsBlockingPath); } }
 
         public void AddThing(Thing thing)

@@ -83,7 +83,7 @@ namespace OpenTibiaCommons.Domain
         public string SpawnFile { get; set; }
 
         public OtItems Items { get; private set; }
-        
+
         public List<string> Descriptions { get; private set; }
 
         private Dictionary<uint, OtTown> towns;
@@ -98,7 +98,7 @@ namespace OpenTibiaCommons.Domain
             tiles = new Dictionary<ulong, OtTile>();
             creatures = new Dictionary<uint, OtCreature>();
             spawns = new Dictionary<ulong, OtSpawn>();
-            towns = new Dictionary<uint,OtTown>();
+            towns = new Dictionary<uint, OtTown>();
 
             Version = 2;
             Width = 0xFCFC;
@@ -107,6 +107,16 @@ namespace OpenTibiaCommons.Domain
             Items = items;
 
             Descriptions = new List<string>();
+        }
+
+        public bool HasTile(ulong index)
+        {
+            return tiles.ContainsKey(index);
+        }
+
+        public bool HasTile(Location location)
+        {
+            return HasTile(location.ToIndex());
         }
 
         public OtTile GetTile(Location location)
@@ -122,9 +132,14 @@ namespace OpenTibiaCommons.Domain
             return null;
         }
 
+        public void SetTile(ulong index, OtTile tile)
+        {
+            tiles[index] = tile;
+        }
+
         public void SetTile(OtTile tile)
         {
-            tiles[tile.Location.ToIndex()] = tile;
+            SetTile(tile.Location.ToIndex(), tile);
         }
 
         public void AddCreature(OtCreature creature)
@@ -166,6 +181,9 @@ namespace OpenTibiaCommons.Domain
         public void Save(string fileName)
         {
             var dir = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
             var baseFileName = Path.GetFileNameWithoutExtension(fileName);
             string otbmFileName = baseFileName + ".otbm";
             HouseFile = baseFileName + "-house.xml";
@@ -214,7 +232,7 @@ namespace OpenTibiaCommons.Domain
                     writer.Write((ushort)(tile.Location.Y & 0xFF00));
                     writer.Write((byte)tile.Location.Z);
 
-                    if(tile.HouseId > 0)
+                    if (tile.HouseId > 0)
                         writer.WriteNodeStart((byte)OtMapNodeTypes.HOUSETILE);
                     else
                         writer.WriteNodeStart((byte)OtMapNodeTypes.TILE);
@@ -480,7 +498,7 @@ namespace OpenTibiaCommons.Domain
                             default:
                                 throw new Exception(string.Format("{0} Unknown tile attribute.", tileLocation));
                         }
-                    }   
+                    }
 
                     OtFileNode nodeItem = nodeTile.Child;
 
@@ -510,7 +528,7 @@ namespace OpenTibiaCommons.Domain
                         nodeItem = nodeItem.Next;
                     }
 
-                    if(GetTile(tileLocation) == null || replaceTiles)
+                    if (GetTile(tileLocation) == null || replaceTiles)
                         SetTile(tile);
                 }
 
