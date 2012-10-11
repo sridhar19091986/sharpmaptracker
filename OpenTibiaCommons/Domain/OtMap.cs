@@ -575,9 +575,12 @@ namespace OpenTibiaCommons.Domain
                     var cr = new OtCreature();
                     cr.Id = ++loadCreatureId;
                     cr.Name = creature.Attribute("name").GetString();
-                    cr.Type = creature.Name.Equals("npc") ? CreatureType.NPC : CreatureType.MONSTER;
+                    cr.Type = creature.Name.LocalName.Equals("npc") ? CreatureType.NPC : CreatureType.MONSTER;
                     cr.Location = new Location(centerLocation.X + creature.Attribute("x").GetInt32(),
                         centerLocation.Y + creature.Attribute("y").GetInt32(), creature.Attribute("z").GetInt32());
+
+                    if (char.IsUpper(cr.Name[0]))
+                        cr.Type = CreatureType.NPC;
 
                     AddCreature(cr);
                 }
