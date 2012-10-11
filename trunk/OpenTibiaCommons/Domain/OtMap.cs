@@ -71,6 +71,15 @@ namespace OpenTibiaCommons.Domain
 
         #endregion
 
+        private Dictionary<uint, OtTown> towns;
+        private Dictionary<ulong, OtTile> tiles;
+        private Dictionary<uint, OtCreature> creatures;
+        private Dictionary<ulong, OtSpawn> spawns;
+
+        private int npcCount;
+        private int monsterCount;
+        private uint loadCreatureId;
+
         public uint Version { get; set; }
 
         public ushort Width { get; set; }
@@ -85,13 +94,6 @@ namespace OpenTibiaCommons.Domain
         public OtItems Items { get; private set; }
 
         public List<string> Descriptions { get; private set; }
-
-        private Dictionary<uint, OtTown> towns;
-        private Dictionary<ulong, OtTile> tiles;
-        private Dictionary<uint, OtCreature> creatures;
-        private Dictionary<ulong, OtSpawn> spawns;
-
-        private uint loadCreatureId;
 
         public OtMap(OtItems items)
         {
@@ -154,8 +156,16 @@ namespace OpenTibiaCommons.Domain
                     spawns.Add(spawnIndex, new OtSpawn(spawnLocation, SPAWN_RADIUS));
 
                 var spwan = spawns[spawnIndex];
-                spwan.AddCreature(creature);
-                creatures.Add(creature.Id, creature);
+
+                if (spwan.AddCreature(creature))
+                {
+                    if (creature.Type == CreatureType.NPC)
+                        npcCount++;
+                    else if (creature.Type == CreatureType.MONSTER)
+                        monsterCount++;
+
+                    creatures.Add(creature.Id, creature);
+                }
             }
         }
 
@@ -163,8 +173,8 @@ namespace OpenTibiaCommons.Domain
         public IEnumerable<OtSpawn> Spawns { get { return spawns.Values; } }
 
         public int TileCount { get { return tiles.Count; } }
-        public int NpcCount { get { return creatures.Count(x => x.Value.Type == CreatureType.NPC); } }
-        public int MonsterCount { get { return creatures.Count(x => x.Value.Type == CreatureType.MONSTER); } }
+        public int NpcCount { get { return npcCount; } }
+        public int MonsterCount { get { return monsterCount; } }
 
         public void Clear()
         {
@@ -173,6 +183,9 @@ namespace OpenTibiaCommons.Domain
                 tiles.Clear();
                 spawns.Clear();
                 creatures.Clear();
+
+                monsterCount = 0;
+                npcCount = 0;
             }
         }
 
