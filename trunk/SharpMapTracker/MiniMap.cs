@@ -15,13 +15,23 @@ namespace SharpMapTracker
     public partial class MiniMap : UserControl
     {
         private const int PIXEL_FACTOR = 2;
-        private int miniMapSize = 192;
+        private const int MINIMAP_SIZE = 192;
 
         public event EventHandler<MiniMapClickEventArgs> MiniMapClick;
 
         private int updateOngoing;
         private Location centerLocation;
         private bool highlightMissingTiles;
+        private Bitmap bitmap;
+
+        public MiniMap()
+        {
+            bitmap = new Bitmap(MINIMAP_SIZE * PIXEL_FACTOR, MINIMAP_SIZE * PIXEL_FACTOR);
+
+            InitializeComponent();
+            MouseMove += new MouseEventHandler(MiniMap_MouseMove);
+            MouseClick += new MouseEventHandler(MiniMap_MouseClick);
+        }
 
         public bool HighlightMissingTiles
         {
@@ -63,13 +73,6 @@ namespace SharpMapTracker
             }
         }
 
-        public MiniMap()
-        {
-            InitializeComponent();
-            MouseMove += new MouseEventHandler(MiniMap_MouseMove);
-            MouseClick += new MouseEventHandler(MiniMap_MouseClick);
-        }
-
         void MiniMap_MouseClick(object sender, MouseEventArgs e)
         {
             if (CenterLocation == null)
@@ -99,10 +102,10 @@ namespace SharpMapTracker
 
         protected Location LocalToGlobal(int x, int y)
         {
-            int xoffset = centerLocation.X - miniMapSize / 2;
-            int yoffset = centerLocation.Y - miniMapSize / 2;
+            int xoffset = centerLocation.X - MINIMAP_SIZE / 2;
+            int yoffset = centerLocation.Y - MINIMAP_SIZE / 2;
 
-            return new Location(((x * miniMapSize) / Width) + xoffset, ((y * miniMapSize) / Height) + yoffset, CenterLocation.Z);
+            return new Location(((x * MINIMAP_SIZE) / Width) + xoffset, ((y * MINIMAP_SIZE) / Height) + yoffset, CenterLocation.Z);
         }
 
         public void BeginUpdate()
@@ -124,22 +127,21 @@ namespace SharpMapTracker
         {
             if (CenterLocation != null && Map != null && updateOngoing == 0)
             {
-                Bitmap bitmap = new Bitmap(miniMapSize * PIXEL_FACTOR, miniMapSize * PIXEL_FACTOR);
                 FastBitmap processor = new FastBitmap(bitmap);
 
                 processor.LockImage();
 
-                int xoffset = CenterLocation.X - miniMapSize / 2;
-                int yoffset = CenterLocation.Y - miniMapSize / 2;
+                int xoffset = CenterLocation.X - MINIMAP_SIZE / 2;
+                int yoffset = CenterLocation.Y - MINIMAP_SIZE / 2;
 
-                for (int x = 0; x < miniMapSize; x++)
+                for (int x = 0; x < MINIMAP_SIZE; x++)
                 {
-                    for (int y = 0; y < miniMapSize; y++)
+                    for (int y = 0; y < MINIMAP_SIZE; y++)
                     {
 
                         var color = Color.Black;
 
-                        var tile = Map.GetTile(SharpTibiaProxy.Domain.Location.ToIndex(x + xoffset, y + yoffset, CenterLocation.Z));
+                        var tile = Map.GetTile(new Location(x + xoffset, y + yoffset, CenterLocation.Z));
                         if (tile != null)
                             color = tile.MapColor;
                         else if (highlightMissingTiles)

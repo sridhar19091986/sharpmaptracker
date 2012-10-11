@@ -133,14 +133,12 @@ namespace SharpMapTrackerServer
                 }
             }
 
-            var index = tile.Location.ToIndex();
-            if (!map.HasTile(index))
-                map.SetTile(index, tile);
+            if (map.GetTile(tile.Location) == null)
+                map.SetTile(tile);
         }
 
         private void OnConnectionClosed()
         {
-
             Console.WriteLine("[Info] Connection closed from " + socket.RemoteEndPoint.ToString() + ".");
 
             var mapName = "mapdump_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".otbm";

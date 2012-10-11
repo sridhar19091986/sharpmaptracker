@@ -469,19 +469,24 @@ namespace SharpMapTracker
             openFileDialog.Filter = "TibiaCast Files (*.otbm)|*.otbm";
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                try
+                lock (map)
                 {
-                    map.Load(openFileDialog.FileName, RetrackTiles);
-                    var tile = map.Tiles.FirstOrDefault();
+                    try
+                    {
+                        map.Load(openFileDialog.FileName, RetrackTiles);
+                        var tile = map.Tiles.FirstOrDefault();
 
-                    if (tile != null)
-                        miniMap.CenterLocation = tile.Location;
+                        if (tile != null)
+                            miniMap.CenterLocation = tile.Location;
 
-                    Trace.WriteLine("Map successfully loaded.");
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine("[Error] Unable to load the map. Details: " + ex.Message);
+                        UpdateCounters(map.TileCount, map.NpcCount, map.MonsterCount);
+
+                        Trace.WriteLine("Map successfully loaded.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine("[Error] Unable to load the map. Details: " + ex.Message);
+                    }
                 }
             }
         }
