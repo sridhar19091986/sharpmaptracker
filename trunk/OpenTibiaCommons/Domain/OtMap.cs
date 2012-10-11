@@ -75,6 +75,7 @@ namespace OpenTibiaCommons.Domain
         private Dictionary<ulong, OtTile> tiles;
         private Dictionary<uint, OtCreature> creatures;
         private Dictionary<ulong, OtSpawn> spawns;
+        private ISet<string> npcs;
 
         private int npcCount;
         private int monsterCount;
@@ -101,6 +102,7 @@ namespace OpenTibiaCommons.Domain
             creatures = new Dictionary<uint, OtCreature>();
             spawns = new Dictionary<ulong, OtSpawn>();
             towns = new Dictionary<uint, OtTown>();
+            npcs = new HashSet<string>();
 
             Version = 2;
             Width = 0xFCFC;
@@ -362,6 +364,7 @@ namespace OpenTibiaCommons.Domain
 
             string spawnFile = null;
             string houseFile = null;
+            var tileLocations = new HashSet<ulong>();
 
             using (var reader = new OtFileReader(fileName))
             {
@@ -442,7 +445,7 @@ namespace OpenTibiaCommons.Domain
                     switch ((OtMapNodeTypes)nodeMapData.Type)
                     {
                         case OtMapNodeTypes.TILE_AREA:
-                            ParseTileArea(reader, nodeMapData, replaceTiles);
+                            ParseTileArea(reader, nodeMapData, replaceTiles, tileLocations);
                             break;
                         case OtMapNodeTypes.TOWNS:
                             ParseTowns(reader, nodeMapData);
@@ -452,10 +455,10 @@ namespace OpenTibiaCommons.Domain
                 }
             }
 
-            LoadSpawn(Path.Combine(Path.GetDirectoryName(fileName), spawnFile));
+            LoadSpawn(Path.Combine(Path.GetDirectoryName(fileName), spawnFile), tileLocations);
         }
 
-        private void ParseTileArea(OtFileReader reader, OtFileNode otbNode, bool replaceTiles)
+        private void ParseTileArea(OtFileReader reader, OtFileNode otbNode, bool replaceTiles, ISet<ulong> tileLocations)
         {
             OtPropertyReader props = reader.GetPropertyReader(otbNode);
 
@@ -541,7 +544,15 @@ namespace OpenTibiaCommons.Domain
                         nodeItem = nodeItem.Next;
                     }
 
-                    if (GetTile(tileLocation) == null || replaceTiles)
+                    var index = tileLocation.ToIndex();
+                    var hasTile = HasTile(index);
+
+                    if (!hasTile)
+                    {
+                        SetTile(tile);
+                        tileLocations.Add(tileLocation.ToIndex());
+                    }
+                    else if (replaceTiles)
                         SetTile(tile);
                 }
 
@@ -568,7 +579,7 @@ namespace OpenTibiaCommons.Domain
             }
         }
 
-        private void LoadSpawn(string fileName)
+        private void LoadSpawn(string fileName, ISet<ulong> tileLocations)
         {
             if (!File.Exists(fileName))
             {
@@ -595,7 +606,13 @@ namespace OpenTibiaCommons.Domain
                     if (char.IsUpper(cr.Name[0]))
                         cr.Type = CreatureType.NPC;
 
-                    AddCreature(cr);
+                    if (tileLocations.Contains(cr.Location.ToIndex()) && (cr.Type != CreatureType.NPC || !npcs.Contains(cr.Name)))
+                    {
+                        AddCreature(cr);
+
+                        if (cr.Type == CreatureType.NPC) //Only one NPC allowed per name.
+                            npcs.Add(cr.Name);
+                    }
                 }
             }
 
