@@ -22,7 +22,7 @@ namespace OpenTibiaCommons.Domain
             creatures = new OtCreature[size, size];
         }
 
-        public void AddCreature(OtCreature creature)
+        public bool AddCreature(OtCreature creature)
         {
             var relativeLocation = GetRelativeLocation(creature.Location);
 
@@ -30,7 +30,13 @@ namespace OpenTibiaCommons.Domain
                 throw new Exception("Can't add this creature to this spawn. Spawn Location: " + Location + ", Creature Location: " + creature.Location);
 
             creature.Location = relativeLocation;
-            creatures[relativeLocation.X + Radius, relativeLocation.Y + Radius] = creature;
+            if (creatures[relativeLocation.X + Radius, relativeLocation.Y + Radius] == null)
+            {
+                creatures[relativeLocation.X + Radius, relativeLocation.Y + Radius] = creature;
+                return true;
+            }
+
+            return false;
         }
 
         private Location GetRelativeLocation(Location loc)
