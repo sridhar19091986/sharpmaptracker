@@ -215,7 +215,7 @@ namespace SharpMapTracker
 
             var tile = map.Tiles.FirstOrDefault();
 
-            if (tile != null)
+            if (tile != null && miniMap.CenterLocation == null)
                 miniMap.CenterLocation = tile.Location;
 
             miniMap.EndUpdate();
@@ -476,7 +476,7 @@ namespace SharpMapTracker
                         map.Load(openFileDialog.FileName, RetrackTiles);
                         var tile = map.Tiles.FirstOrDefault();
 
-                        if (tile != null)
+                        if (tile != null && miniMap.CenterLocation == null)
                             miniMap.CenterLocation = tile.Location;
 
                         UpdateCounters(map.TileCount, map.NpcCount, map.MonsterCount);
@@ -532,13 +532,8 @@ namespace SharpMapTracker
                     if (!Directory.Exists(scriptDirectory))
                         Directory.CreateDirectory(scriptDirectory);
 
-                    foreach (var npcEntry in npcs)
-                    {
-                        var npcInfo = npcEntry.Value;
-
-                    
-
-                    }
+                    foreach (var npcEntry in npcs.Values)
+                        npcEntry.Save(directory);
 
                     Trace.WriteLine("NPCs successfully saved.");
                 }
@@ -557,9 +552,8 @@ namespace SharpMapTracker
                 map.Clear();
                 miniMap.Invalidate();
                 traceTextBox.Text = "";
-                tileCountLabel.Text = "Tiles: 0";
-                npcCountLabel.Text = "NPCs: 0";
-                monsterCountLabel.Text = "Monsters: 0";
+
+                UpdateCounters(map.TileCount, map.NpcCount, map.MonsterCount);
             }
         }
 

@@ -1,0 +1,5 @@
+C:\Programming\sharpmaptracker\TibiaCastDownloader\bin\Debug\TibiaCastDownloader.exe
+C:\Programming\sharpmaptracker\TibiaCastDownloader\bin\Debug\TibiaCastDownloader.pdb
+C:\Programming\sharpmaptracker\TibiaCastDownloader\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Programming\sharpmaptracker\TibiaCastDownloader\obj\x86\Debug\TibiaCastDownloader.exe
+C:\Programming\sharpmaptracker\TibiaCastDownloader\obj\x86\Debug\TibiaCastDownloader.pdb
