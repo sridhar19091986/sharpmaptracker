@@ -477,9 +477,7 @@ namespace OpenTibiaCommons.Domain
 
                     var tileLocation = new Location(baseX + props.ReadByte(), baseY + props.ReadByte(), baseZ);
 
-                    var tile = GetTile(tileLocation);
-                    if (tile == null)
-                        tile = new OtTile(tileLocation);
+                    var tile = new OtTile(tileLocation);
 
                     if (nodeTile.Type == (long)OtMapNodeTypes.HOUSETILE)
                     {
